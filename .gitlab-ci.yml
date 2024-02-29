@@ -6,6 +6,7 @@ default:
       sudo dnf install
       --setopt=install_weak_deps=0 -y
       askalono-cli
+      git-core
       python3.9
       python3.10-devel
       python3.11-devel
