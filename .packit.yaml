@@ -23,3 +23,11 @@ jobs:
       - go-vendor-tools
     targets:
       - fedora-all-x86_64
+    trigger: pull_request
+
+  - job: copr_build
+    packages:
+      - go-vendor-tools
+    targets:
+      - fedora-all-x86_64
+    trigger: push
