@@ -1,0 +1,13 @@
+# Copyright (C) 2024 Maxwell G <maxwell@gtmx.me>
+# SPDX-License-Identifier: MIT
+
+*.rpm
+*.tar*
+.nox/
+/NEWS_FRAGMENT.md
+/GIT_MSG
+/dist/
+__pycache__/
+venv/
+/fedora*/
+outgoing/

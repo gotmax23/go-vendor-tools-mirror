@@ -1,0 +1,128 @@
+# Copyright (C) 2024 Maxwell G <maxwell@gtmx.me>
+# SPDX-License-Identifier: MIT
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "go-vendor-tools"
+description = "Tools for handling Go library vendoring in Fedora"
+dynamic = ["version"]
+authors = [{ name = "Maxwell G", email = "maxwell@gtmx.me" }]
+readme = "README.md"
+license = "MIT AND BSD-3-Clause"
+license-files.globs = ["LICENSES/*.txt"]
+classifiers = [
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Development Status :: 3 - Alpha",
+    "Typing :: Typed",
+]
+dependencies = [
+    "click",
+    "license_expression",
+    "tomli; python_version<'3.11'"
+]
+requires-python = ">=3.9"
+
+[project.scripts]
+go_vendor_archive = "go_vendor_tools.cli.go_vendor_archive:main"
+go_vendor_license = "go_vendor_tools.cli.go_vendor_license:main"
+
+[project.optional-dependencies]
+# User-facing
+all = [
+    "tomlkit",
+]
+# Dev
+codeqa = [
+    "ruff>=0.2.0",
+    "reuse",
+]
+formatters = [
+    "black",
+    "isort",
+]
+typing = [
+    "go-vendor-tools[all]",
+    "mypy",
+    "pytest",
+    "typing_extensions",
+    # For checking noxfile.py
+    "nox",
+]
+test = [
+    "pytest",
+]
+dev = [
+    "go-vendor-tools[all]",
+    "go-vendor-tools[codeqa]",
+    "go-vendor-tools[formatters]",
+    "go-vendor-tools[test]",
+    "go-vendor-tools[typing]",
+    "nox",
+]
+
+[project.urls]
+Homepage = "https://sr.ht/~gotmax23/go-vendor-tools"
+Source = "https://git.sr.ht/~gotmax23/go-vendor-tools"
+"Mailing List" = "https://lists.sr.ht/~gotmax23/go-vendor-tools"
+Changelog = "https://git.sr.ht/~gotmax23/go-vendor-tools/tree/main/item/NEWS.md"
+
+
+[tool.hatch.version]
+path = "src/go_vendor_tools/__init__.py"
+
+
+[tool.pytest.ini_options]
+addopts = [
+    "--import-mode=importlib",
+]
+
+
+[tool.isort]
+profile = "black"
+add_imports = [
+    'from __future__ import annotations',
+]
+
+
+[tool.mypy]
+check_untyped_defs = true
+
+[[tool.mypy.overrides]]
+module = ["license_expression.*"]
+ignore_missing_imports = true
+
+
+
+[tool.coverage.run]
+source = [
+    "go_vendor_tools",
+]
+
+[tool.coverage.paths]
+source = [
+    "src",
+    "*/site-packages",
+]
+
+[tool.coverage.report]
+# https://coverage.readthedocs.io/en/latest/excluding.html#advanced-exclusion
+# These should use single quotes in TOML, as they're regular expressions.
+exclude_lines = [
+    'pragma: no cover',
+    'raise NotImplementedError',
+    'if __name__ == .__main__.:',
+    'if TYPE_CHECKING:',
+    'if t\.TYPE_CHECKING:',
+    '@(abc\.)?abstractmethod',
+    '@overload',
+]
+
