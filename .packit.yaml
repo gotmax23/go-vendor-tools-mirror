@@ -12,9 +12,9 @@ packages:
     specfile_path: go-vendor-tools.spec
     actions:
       fix-spec-file:
-        - "pipx run fclogr dev-entries"
+        - "pipx run fclogr dev-entries go-vendor-tools.spec"
       create-archive:
-        - "pipx run fclogr dev-entries --archive"
+        - "pipx run fclogr dev-entries --archive go-vendor-tools.spec"
         - "sh -c 'ls go-vendor-tools-*.tar.gz'"
     release_suffix: ""
 jobs:
