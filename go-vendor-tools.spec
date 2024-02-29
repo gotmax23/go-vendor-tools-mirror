@@ -38,6 +38,8 @@ Tools for handling Go library vendoring in Fedora
 %pyproject_install
 %pyproject_save_files go_vendor_tools
 
+install -Dpm 0644 rpm/macros.go_vendor_tools -t %{buildroot}%{_rpmmacrodir}
+
 
 %check
 %pytest
@@ -47,6 +49,7 @@ Tools for handling Go library vendoring in Fedora
 %doc README.md
 %license LICENSES/*
 %{_bindir}/go_vendor*
+%{_rpmmacrodir}/macros.go_vendor_tools
 
 %pyproject_extras_subpkg -n go-vendor-tools all
 
