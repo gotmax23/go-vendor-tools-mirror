@@ -1,0 +1,25 @@
+---
+default:
+  image: "registry.fedoraproject.org/fedora:latest"
+  before_script:
+    - >-
+      sudo dnf install
+      --setopt=install_weak_deps=0 -y
+      askalono-cli
+      python3.9
+      python3.10-devel
+      python3.11-devel
+      python3.12-devel
+      nox
+
+test:
+  script:
+    - "nox -e test"
+
+formatters:
+  script:
+    - "nox -e formatters -- --check"
+
+codeqa:
+  script:
+    - "nox -e codeqa"
