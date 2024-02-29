@@ -36,7 +36,7 @@ Tools for handling Go library vendoring in Fedora
 
 %install
 %pyproject_install
-%pyproject_save_files go-vendor-tools
+%pyproject_save_files go_vendor_tools
 
 
 %check
@@ -51,4 +51,3 @@ Tools for handling Go library vendoring in Fedora
 %pyproject_extras_subpkg -n go-vendor-tools all
 
 %changelog
-
