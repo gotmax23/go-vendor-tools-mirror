@@ -30,4 +30,4 @@ jobs:
       - go-vendor-tools
     targets:
       - fedora-all-x86_64
-    trigger: push
+    trigger: commit
