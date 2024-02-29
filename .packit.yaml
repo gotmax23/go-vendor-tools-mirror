@@ -43,6 +43,8 @@ jobs:
   - job: copr_build
     packages:
       - go-vendor-tools
+      - autorestic
+      - fzf
     targets:
       - fedora-all-x86_64
     trigger: pull_request
@@ -50,6 +52,8 @@ jobs:
   - job: copr_build
     packages:
       - go-vendor-tools
+      - autorestic
+      - fzf
     targets:
       - fedora-all-x86_64
     trigger: commit
