@@ -1,0 +1,5 @@
+# Copyright (C) 2024 Maxwell G <maxwell@gtmx.me>
+# SPDX-License-Identifier: MIT
+
+SHA512 (fzf-0.46.1.tar.gz) = c2e07be08bc2d93981acfd9857f395e0c803046754d8d61e888fa4dc4d0f6f3d62eb19b518273cce23ae2eeffe68f2ecc692cb09cdcdfc30df9443419e3fc4cb
+SHA512 (fzf-0.46.1-vendor.tar.xz) = 4e6986da12765cbaf7409877ec41143a0633f23245db326a1efa8c51a79c3aeff157b4b65def36ea5b4c302f22e99400e29b5fb3406ac0ad5c3b5ebfac6c04a0
