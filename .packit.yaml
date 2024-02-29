@@ -1,0 +1,25 @@
+# Copyright (C) 2024 Maxwell G <maxwell@gtmx.me>
+# SPDX-License-Identifier: MIT
+
+upstream_package_name: go-vendor-tools
+srpm_build_deps:
+  - pipx
+  - git-core
+  # TODO: Set up integration testing
+  # - wait-for-copr
+packages:
+  go-vendor-tools:
+    specfile_path: go-vendor-tools.spec
+    actions:
+      fix-spec-file:
+        - "pipx run fclogr dev-entries"
+      create-archive:
+        - "pipx run fclogr dev-entries --archive"
+        - "sh -c 'ls go-vendor-tools-*.tar.gz'"
+    release_suffix: ""
+jobs:
+  - job: copr_build
+    packages:
+      - go-vendor-tools
+    targets:
+      - fedora-all-x86_64
