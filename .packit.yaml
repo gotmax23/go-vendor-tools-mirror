@@ -31,3 +31,4 @@ jobs:
     targets:
       - fedora-all-x86_64
     trigger: commit
+    branch: main
