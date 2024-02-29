@@ -3,6 +3,7 @@
 
 upstream_package_name: go-vendor-tools
 srpm_build_deps:
+  - golang-bin
   - git-core
   - pipx
   - rpmdevtools
