@@ -17,6 +17,8 @@ BuildArch:      noarch
 BuildRequires:  gnupg2
 BuildRequires:  python3-devel
 
+Requires:       askalono-cli
+
 
 %description
 Tools for handling Go library vendoring in Fedora
