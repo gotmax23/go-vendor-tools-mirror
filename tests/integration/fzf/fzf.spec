@@ -21,6 +21,7 @@ License:        Apache-2.0 AND BSD-3-Clause AND MIT
 URL:            %{gourl}
 Source0:        %{gosource}
 Source1:        fzf-%{version}-vendor.tar.xz
+Source2:        expected-licenses.list
 
 BuildRequires:  go-vendor-tools
 
@@ -37,10 +38,12 @@ BuildRequires:  go-vendor-tools
 %global debug_package %{nil}
 
 %install
-%go_vendor_license_install
+# Specify -n manually for testing purposes
+%go_vendor_license_install -n not-fzf
 
 %check
 %go_vendor_license_check
+diff -u %{S:2} licenses.list
 
 %files -f licenses.list
 %doc doc ADVANCED.md BUILD.md CHANGELOG.md README-VIM.md README.md

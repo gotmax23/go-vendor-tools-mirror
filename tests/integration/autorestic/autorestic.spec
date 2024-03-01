@@ -22,6 +22,7 @@ URL:            %{gourl}
 Source0:        %{gosource}
 Source1:        autorestic-%{version}-vendor.tar.xz
 Source2:        licenses.toml
+Source3:        expected-licenses.list
 
 BuildRequires:  go-vendor-tools
 
@@ -41,6 +42,7 @@ install -Dpm 0755 -t %{buildroot}%{_bindir} autorestic
 
 %check
 %go_vendor_license_check -c %{S:2}
+diff -u licenses.list %{S:3}
 %if %{with check}
 %gocheck
 %endif
