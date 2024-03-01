@@ -4,12 +4,12 @@
 # Path to the go_vendor_licenses helper script
 %__go_vendor_licenses go_vendor_license
 
-%go_vendor_license_install(c:nL) %{shrink:
+%go_vendor_license_install(c:n:) %{shrink:
     %{__go_vendor_licenses}
     %{-c:--config %{-c*}}
     install
     --destdir %{buildroot}
-    --install-directory %{_defaultlicensedir}/%{?-n}%{!?-n:%{NAME}}
+    --install-directory %{_defaultlicensedir}/%{?-n*}%{!?-n:%{NAME}}
     --filelist licenses.list
 }
 
