@@ -17,17 +17,13 @@ import license_expression
 from go_vendor_tools.config.licenses import LicenseConfig, LicenseEntry, load_config
 from go_vendor_tools.gomod import get_unlicensed_mods
 from go_vendor_tools.hashing import get_hash
-from go_vendor_tools.licensing import (
-    LicenseResults,
-    compare_licenses,
-    get_license_file_paths,
-    get_license_results,
-    simplify_license,
-)
+from go_vendor_tools.license_detection.base import LicenseData, LicenseDetector
+from go_vendor_tools.license_detection.load import DETECTORS, get_detctors
+from go_vendor_tools.licensing import compare_licenses, simplify_license
 
 COLOR = None
-RED = "\033[31m"
-CLEAR = "\033[0m"
+RED = "\033[31m"  # ]
+CLEAR = "\033[0m"  # ]
 
 
 def red(__msg: str, /, *, file: IO[str] = sys.stdout) -> None:
@@ -37,6 +33,35 @@ def red(__msg: str, /, *, file: IO[str] = sys.stdout) -> None:
     print(f"{RED}{__msg}{CLEAR}", file=file)
 
 
+def split_kv_options(kv_config: list[str]) -> dict[str, str]:
+    results: dict[str, str] = {}
+    for opt in kv_config:
+        if ";" in opt:
+            results |= split_kv_options(opt.split(";"))
+        else:
+            key, _, value = opt.partition("=")
+            results[key] = value
+    return results
+
+
+def choose_license_detector(
+    choice: str | None, license_config: LicenseConfig, kv_config: list[str] | None
+) -> LicenseDetector:
+    kv_config = kv_config or []
+    cli_config = split_kv_options(kv_config)
+    available, missing = get_detctors(cli_config, license_config)
+    if choice:
+        if choice in missing:
+            sys.exit(f"Failed to get detector {choice!r}: {missing[choice]}")
+        return available[choice]
+    if not available:
+        print("Failed to load license detectors:", file=sys.stderr)
+        for detector, err in missing.items():
+            print(f"! {detector}: {err}")
+        sys.exit()
+    return next(iter(available.values()))
+
+
 def parseargs() -> argparse.Namespace:
     """
     Parse arguments and return an `argparse.Namespace`
@@ -44,7 +69,7 @@ def parseargs() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Handle licenses for vendored go projects"
     )
-    parser.add_argument("--config", type=Path)
+    parser.add_argument("--config", type=Path, dest="config_path")
     parser.add_argument(
         "-C",
         "--directory",
@@ -57,7 +82,23 @@ def parseargs() -> argparse.Namespace:
         action=argparse.BooleanOptionalAction,
         default=False if os.environ.get("NO_COLOR") else None,
     )
+    parser.add_argument(
+        "-d",
+        "--detector",
+        choices=DETECTORS,
+        help="Choose a license detector. Choices: %(choices)s. Default: autodetect",
+    )
+    parser.add_argument(
+        "-D",
+        "--dc",
+        "--detector-config",
+        help="KEY=VALUE pairs to pass to the license detector."
+        " Can be passed multiple times",
+        dest="detector_config",
+        action="append",
+    )
     subparsers = parser.add_subparsers(dest="subcommand")
+    subparsers.required = True
     report_parser = subparsers.add_parser("report", help="Main subcommand")
     report_parser.add_argument("-i", "--ignore-undetected", action="store_true")
     report_parser.add_argument(
@@ -92,6 +133,10 @@ def parseargs() -> argparse.Namespace:
     )
 
     args = parser.parse_args()
+    args.config = load_config(args.config_path)
+    args.detector = choose_license_detector(
+        args.detector, args.config, args.detector_config
+    )
     global COLOR  # noqa: PLW0603
     COLOR = args.color
     if args.subcommand == "report" and not args.mode:
@@ -116,7 +161,7 @@ def red_if_true(items: Collection[object], message: str, bullet: str = "- ") -> 
 
 
 def print_licenses(
-    results: LicenseResults,
+    results: LicenseData,
     unlicensed_mods: Collection[Path],
     mode: str,
     show_undetected: bool,
@@ -126,7 +171,7 @@ def print_licenses(
         for (
             license_path,
             license_name,
-        ) in results.simplified_license_map.items():
+        ) in results.license_map.items():
             print(f"{license_path.relative_to(directory)}: {license_name}")
     if (
         results.undetected_licenses
@@ -154,21 +199,27 @@ def print_licenses(
 
 
 def report_command(args: argparse.Namespace) -> None:
-    config = load_config(args.config)
-    results = get_license_results(args.directory, config)
-    unlicensed_mods = get_unlicensed_mods(
-        args.directory, (*results.simplified_license_map, *results.undetected_licenses)
-    )
+    detector: LicenseDetector = args.detector
+    directory: Path = args.directory
+    ignore_undetected: bool = args.ignore_undetected
+    mode: str = args.mode
+    verify: str | None = args.verify
+    del args
+
+    license_data: LicenseData = detector.detect(directory)
+    unlicensed_mods = get_unlicensed_mods(directory, license_data.license_file_paths)
     print_licenses(
-        results,
+        license_data,
         unlicensed_mods,
-        args.mode,
-        not args.ignore_undetected,
-        args.directory,
+        mode,
+        not ignore_undetected,
+        directory,
     )
-    if args.verify and not compare_licenses(results.license_expression, args.verify):
+    if verify and not compare_licenses(license_data.license_expression, verify):
         sys.exit("Failed to verify license. Expected ^")
-    sys.exit(bool(results.undetected_licenses or results.unmatched_extra_licenses))
+    sys.exit(
+        bool(license_data.undetected_licenses or license_data.unmatched_extra_licenses)
+    )
 
 
 def copy_licenses(
@@ -192,13 +243,20 @@ def install_command(args: argparse.Namespace) -> None:
     """
     Install license files into the license directory
     """
-    config = load_config(args.config)
     directory: Path = args.directory
+    detector: LicenseDetector = args.detector
     install_destdir: Path = args.install_destdir
     install_directory: Path = args.install_directory
     install_filelist: Path = args.install_filelist
-    license_paths = get_license_file_paths(directory, config)
-    copy_licenses(license_paths, install_destdir, install_directory, install_filelist)
+    del args
+
+    license_data: LicenseData = detector.detect(directory)
+    copy_licenses(
+        license_data.license_file_paths,
+        install_destdir,
+        install_directory,
+        install_filelist,
+    )
 
 
 def get_relpath(base_directory: Path, path: Path) -> Path:
@@ -227,8 +285,8 @@ def explicit_command(args: argparse.Namespace) -> None:
         sys.exit("--config must be specified!")
 
     data: LicenseConfig = {}
-    if args.config.is_file():
-        with args.config.open("r", encoding="utf-8") as fp:
+    if args.config_path.is_file():
+        with args.config_path.open("r", encoding="utf-8") as fp:
             data = cast("LicenseConfig", tomlkit.load(fp))
 
     licenses = data.setdefault("licenses", tomlkit.aot())
@@ -243,7 +301,7 @@ def explicit_command(args: argparse.Namespace) -> None:
         expression=expression,
     )
     replace_entry(licenses, entry, relpath)
-    with args.config.open("w", encoding="utf-8") as fp:
+    with args.config_path.open("w", encoding="utf-8") as fp:
         tomlkit.dump(data, fp)
 
 

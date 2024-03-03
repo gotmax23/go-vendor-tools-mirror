@@ -17,7 +17,7 @@ BuildArch:      noarch
 BuildRequires:  gnupg2
 BuildRequires:  python3-devel
 
-Requires:       askalono-cli
+Requires:       (askalono-cli or trivy)
 
 
 %description
