@@ -69,7 +69,7 @@ def parseargs() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Handle licenses for vendored go projects"
     )
-    parser.add_argument("--config", type=Path, dest="config_path")
+    parser.add_argument("-c", "--config", type=Path, dest="config_path")
     parser.add_argument(
         "-C",
         "--directory",
