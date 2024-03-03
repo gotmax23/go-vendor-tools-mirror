@@ -11,7 +11,7 @@ Version:                1.7.11
 %global common_description %{expand:
 Config driven, easy backup cli for restic.}
 
-Name:           autorestic
+Name:           test-autorestic
 Release:        1%{?dist}
 Summary:        Config driven, easy backup cli for restic
 
@@ -34,7 +34,7 @@ BuildRequires:  go-vendor-tools
 
 %build
 %global gomodulesmode GO111MODULE=on
-%gobuild -o %{name} %{goipath}
+%gobuild -o autorestic %{goipath}
 
 %install
 install -Dpm 0755 -t %{buildroot}%{_bindir} autorestic

@@ -12,7 +12,7 @@ Version:                0.46.1
 %global common_description %{expand:
 :cherry_blossom: A command-line fuzzy finder.}
 
-Name:           fzf
+Name:           test-fzf
 Release:        1%{?dist}
 Summary:        :cherry_blossom: A command-line fuzzy finder
 
@@ -28,7 +28,7 @@ BuildRequires:  go-vendor-tools
 %description %{common_description}
 
 %prep
-%autosetup -p1 -b1
+%autosetup -p1 -b1 %{forgesetupargs}
 %goprep -ke
 
 %build
