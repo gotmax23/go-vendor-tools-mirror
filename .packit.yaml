@@ -48,6 +48,7 @@ jobs:
       - fzf
     targets:
       - fedora-all-x86_64
+      - epel-9-x86_64
     trigger: pull_request
 
   - job: copr_build
@@ -56,6 +57,11 @@ jobs:
       - autorestic
       - fzf
     targets:
-      - fedora-all-x86_64
+      - fedora-39-x86_64
+      - fedora-40-x86_64
+      - fedora-rawhide-x86_64
+      - epel-9-x86_64
+    owner: "@go-sig"
+    project: go-vendor-tools-dev
     trigger: commit
     branch: main
