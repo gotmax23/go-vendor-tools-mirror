@@ -6,7 +6,6 @@ from __future__ import annotations
 import os
 from glob import iglob
 from pathlib import Path
-from shutil import copy2
 
 import nox
 
@@ -120,7 +119,7 @@ def bump(session: nox.Session):
     # Bump changelog, commit, and tag
     git(session, "add", SPECFILE, f"src/{PROJECT}/__init__.py")
     session.run("releaserr", "clog", version, "--tag")
-    session.run("releaserr", "build", "--sign", "--backend", "generic", "--isolated")
+    session.run("releaserr", "build", "--backend", "generic", "--isolated")
 
 
 @nox.session
@@ -136,10 +135,9 @@ def publish(session: nox.Session):
 
     # Push to git, publish artifacts to sourcehut, and release to copr
     if not session.interactive or input(
-        "Push to Sourcehut and copr build (Y/n)"
+        "Push to forge and copr build (Y/n)"
     ).lower() in ("", "y"):
         git(session, "push", "--follow-tags")
-        session.run("hut", "git", "artifact", "upload", *iglob("dist/*"), external=True)
         copr_release(session)
 
     # Post-release bump
@@ -150,12 +148,10 @@ def publish(session: nox.Session):
 
 @nox.session
 def copr_release(session: nox.Session):
-    install(session, "copr-cli", "requests-gssapi", "specfile")
-    tmp = Path(session.create_tmp())
-    dest = tmp / SPECFILE
-    copy2(SPECFILE, dest)
-    session.run("python", "contrib/fedoraify.py", str(dest))
-    session.run("copr-cli", "build", "--nowait", f"gotmax23/{PROJECT}", str(dest))
+    install(session, "copr-cli", "requests-gssapi")
+    session.run(
+        "copr-cli", "build", "--nowait", f"gotmax23/{PROJECT}", f"{PROJECT}.spec"
+    )
 
 
 @nox.session

@@ -2,19 +2,21 @@
 # SPDX-License-Identifier: MIT
 # License text: https://spdx.org/licenses/MIT
 
+%global forgeurl https://gitlab.com/gotmax23/go-vendor-tools
+%define tag v%{version}
+
 Name:           go-vendor-tools
 Version:        0.0.1
+%forgemeta
 Release:        1%{?dist}
 Summary:        Tools for handling Go library vendoring in Fedora
 
 License:        MIT
-URL:            https://sr.ht/~gotmax23/go-vendor-tools
-%global furl    https://git.sr.ht/~gotmax23/go-vendor-tools
-Source0:        %{furl}/refs/download/v%{version}/go-vendor-tools-%{version}.tar.gz
+URL:            %{forgeurl}
+Source0:        %{forgesource}
 
 BuildArch:      noarch
 
-BuildRequires:  gnupg2
 BuildRequires:  python3-devel
 
 Requires:       (askalono-cli or trivy)
@@ -25,7 +27,7 @@ Tools for handling Go library vendoring in Fedora
 
 
 %prep
-%autosetup -p1
+%autosetup -p1 %{forgesetupargs}
 
 
 %generate_buildrequires
