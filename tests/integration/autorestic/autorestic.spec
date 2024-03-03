@@ -38,10 +38,11 @@ BuildRequires:  go-vendor-tools
 
 %install
 install -Dpm 0755 -t %{buildroot}%{_bindir} autorestic
-%go_vendor_license_install -c %{S:2}
+# Explicitly specify askalono for testing purposes
+%go_vendor_license_install -c %{S:2} -d askalono -D askalono_path=/usr/bin/askalono
 
 %check
-%go_vendor_license_check -c %{S:2}
+%go_vendor_license_check -c %{S:2} -d askalono -D askalono_path=/usr/bin/askalono
 diff -u licenses.list %{S:3}
 %if %{with check}
 %gocheck
