@@ -131,7 +131,7 @@ class AskalonoeLicenseDetector(LicenseDetector[AskalonoLicenseData]):
         undetected -= set(extra_licenses)
 
         filtered_license_map = filter_unwanted_paths(
-            license_map, self.license_config["exclude_globs"]
+            license_map, self.license_config["exclude_directories"]
         )
         filtered_license_map = dict(
             sorted(filtered_license_map.items(), key=lambda item: item[0])

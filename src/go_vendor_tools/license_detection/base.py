@@ -45,7 +45,7 @@ def get_extra_licenses(
 
 
 def filter_unwanted_paths(
-    license_map: dict[Path, str], exclude_globs: Sequence[str]
+    license_map: dict[Path, str], exclude_directories: Sequence[str]
 ) -> dict[Path, str]:
     """
     Filter licenses files from unwanted paths
@@ -53,7 +53,7 @@ def filter_unwanted_paths(
     return {
         path: exp
         for path, exp in license_map.items()
-        if not any(path.is_relative_to(patt) for patt in exclude_globs)
+        if not any(path.is_relative_to(directory) for directory in exclude_directories)
     }
 
 

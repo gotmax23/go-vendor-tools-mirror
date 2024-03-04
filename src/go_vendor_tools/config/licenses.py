@@ -27,7 +27,7 @@ class LicenseConfig(TypedDict, total=False):
 
     detector: str | None
     licenses: list[LicenseEntry]
-    exclude_globs: list[str]
+    exclude_directories: list[str]
 
 
 def create_license_config(data: dict[str, Any] | None = None) -> LicenseConfig:
