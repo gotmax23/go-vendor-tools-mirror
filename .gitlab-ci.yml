@@ -37,7 +37,7 @@ build-srpms:
         sudo dnf install -y epel-release
         crb enable
         cargo install askalono-cli
-        sudo cp ~/.local/share/cargo/bin/askalono /usr/bin/askalono
+        sudo cp ~/.cargo/bin/askalono /usr/bin/askalono
         sudo chmod a+x /usr/bin/askalono
       else
         sudo dnf install --setopt=install_weak_deps=0 -y askalono-cli
