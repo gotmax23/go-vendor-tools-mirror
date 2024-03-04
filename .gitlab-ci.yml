@@ -55,6 +55,7 @@ build-srpms:
       rpm-build
       rpmdevtools
   script:
+    - export GO_VENDOR_ARCHIVE_USE_MODULE_PROXY=1
     - pipx run nox -e integration
     - pipx run nox -e coverage
   artifacts:
