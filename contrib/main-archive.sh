@@ -7,7 +7,7 @@
 set -euo pipefail
 
 _path="$(command -v fclogr 2>/dev/null || :)"
-_default_path="pipx run --spec 'fclogr>=0.8.0' fclogr"
+_default_path="pipx run --spec fclogr>=0.8.0 fclogr"
 FCLOGR="${FCLOGR:-${_path:-${_default_path}}}"
 IFS=" " read -r -a command <<< "${FCLOGR}"
 
