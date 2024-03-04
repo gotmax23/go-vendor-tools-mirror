@@ -33,6 +33,9 @@ def get_go_module_dirs(directory: Path) -> list[Path]:
 
 
 def get_unlicensed_mods(directory: Path, license_paths: Collection[Path]) -> set[Path]:
-    licensed_dirs = {path.parent for path in license_paths}
+    licensed_dirs = {
+        first.parent if (first := path.parent).name == "LICENSES" else first
+        for path in license_paths
+    }
     all_dirs = set(get_go_module_dirs(directory))
     return all_dirs - licensed_dirs
