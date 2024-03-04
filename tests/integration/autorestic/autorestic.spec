@@ -15,7 +15,9 @@ Name:           test-autorestic
 Release:        1%{?dist}
 Summary:        Config driven, easy backup cli for restic
 
+%if %{undefined el9}
 SourceLicense:  Apache-2.0
+%endif
 # Misorder on purpose to make sure the license simplification logic works
 License:        BSD-2-Clause AND BSD-3-Clause AND MIT AND MPL-2.0 AND Apache-2.0
 URL:            %{gourl}

@@ -16,7 +16,9 @@ Name:           test-fzf
 Release:        1%{?dist}
 Summary:        :cherry_blossom: A command-line fuzzy finder
 
+%if %{undefined el9}
 SourceLicense:  MIT
+%endif
 License:        Apache-2.0 AND BSD-3-Clause AND MIT
 URL:            %{gourl}
 Source0:        %{gosource}
