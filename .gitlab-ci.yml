@@ -36,6 +36,7 @@ build-srpms:
         sudo dnf install --setopt=install_weak_deps=0 -y cargo
         sudo dnf install -y epel-release
         crb enable
+        sudo dnf install --setopt=install_weak_deps=0 -y epel-rpm-macros
         cargo install askalono-cli
         sudo cp ~/.cargo/bin/askalono /usr/bin/askalono
         sudo chmod a+x /usr/bin/askalono
@@ -49,6 +50,7 @@ build-srpms:
       git-core
       packit
       pipx
+      redhat-rpm-macros
       rpmdevtools
   script:
     - packit srpm -p go-vendor-tools
