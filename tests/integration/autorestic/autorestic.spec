@@ -21,7 +21,7 @@ License:        BSD-2-Clause AND BSD-3-Clause AND MIT AND MPL-2.0 AND Apache-2.0
 URL:            %{gourl}
 Source0:        %{gosource}
 Source1:        autorestic-%{version}-vendor.tar.xz
-Source2:        licenses.toml
+Source2:        go-vendor-tools.toml
 Source3:        expected-licenses.list
 
 BuildRequires:  go-vendor-tools

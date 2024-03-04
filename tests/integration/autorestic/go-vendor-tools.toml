@@ -1,11 +1,11 @@
 # Copyright (C) 2024 Maxwell G <maxwell@gtmx.me>
 # SPDX-License-Identifier: MIT
 
-[[licenses]]
+[[licensing.licenses]]
 path = "vendor/gopkg.in/yaml.v3/LICENSE"
 sha256sum = "d18f6323b71b0b768bb5e9616e36da390fbd39369a81807cca352de4e4e6aa0b"
 expression = "BSD-3-Clause"
-[[licenses]]
+[[licensing.licenses]]
 path = "vendor/gopkg.in/yaml.v2/LICENSE.libyaml"
 sha256sum = "a94710b55e03b5285f77d048c5ba61bb9d6ee04a06c0eb90e68821e11b0c707a"
 expression = "MIT"
