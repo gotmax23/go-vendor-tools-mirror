@@ -52,14 +52,21 @@ build-srpms:
       rpmdevtools
   script:
     - packit srpm -p go-vendor-tools
-    - packit srpm -p autorestic
-    - packit srpm -p fzf
+    - |-
+      for package in ${PACKAGES}; do
+        packit srpm -p "${package}"
+      done
   image: "$IMAGE"
   parallel:
     matrix:
-      - IMAGE:
-          - "registry.fedoraproject.org/fedora:rawhide"
-          - "registry.fedoraproject.org/fedora:40"
-          - "registry.fedoraproject.org/fedora:39"
-          - "registry.fedoraproject.org/fedora:38"
-          - "quay.io/centos/centos:stream9"
+        - IMAGE: "registry.fedoraproject.org/fedora:rawhide"
+          PACKAGES: "autorestic fzf"
+        - IMAGE: "registry.fedoraproject.org/fedora:40"
+          PACKAGES: "autorestic fzf"
+        - IMAGE: "registry.fedoraproject.org/fedora:39"
+          PACKAGES: "autorestic fzf"
+        # autorestic requires Go 1.21+. These releases have an older version.
+        - IMAGE: "registry.fedoraproject.org/fedora:38"
+          PACKAGES: "fzf"
+        - IMAGE: "quay.io/centos/centos:stream9"
+          PACKAGES: "fzf"
