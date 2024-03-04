@@ -58,6 +58,8 @@ build-srpms:
     - pipx run nox -e integration
     - pipx run nox -e coverage
   artifacts:
+    paths:
+      - htmlcov/
     reports:
       coverage_report:
         coverage_format: cobertura
