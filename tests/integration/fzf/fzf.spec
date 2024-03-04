@@ -7,7 +7,7 @@
 Version:                0.46.1
 %global tag             %{version}
 
-%gometa -L -f
+%gometa -f
 
 %global common_description %{expand:
 :cherry_blossom: A command-line fuzzy finder.}
