@@ -37,7 +37,7 @@ packages:
     actions:
       fix-spec-file: []
       create-archive:
-        - bash -x ../../../contrib/integration-archive.sh --top-level-dir
+        - bash -x ../../../contrib/integration-archive.sh
       post-upstream-clone:
         - bash -x ../../../contrib/wait-for-copr.sh
 jobs:
