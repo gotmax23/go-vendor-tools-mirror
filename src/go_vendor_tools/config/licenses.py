@@ -35,6 +35,7 @@ def create_license_config(data: dict[str, Any] | None = None) -> LicenseConfig:
     data.setdefault("detector", None)
     data.setdefault("licenses", [])
     data.setdefault("exclude_globs", [])
+    data.setdefault("exclude_directories", [])
     return cast("LicenseConfig", data)
 
 
