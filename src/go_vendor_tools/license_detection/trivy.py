@@ -18,7 +18,12 @@ from typing import TYPE_CHECKING, Any, Literal, TypedDict, cast
 from go_vendor_tools.config.licenses import LicenseConfig
 from go_vendor_tools.licensing import combine_licenses, get_extra_licenses
 
-from .base import LicenseData, LicenseDetector, LicenseDetectorNotAvailableError
+from .base import (
+    LicenseData,
+    LicenseDetector,
+    LicenseDetectorNotAvailableError,
+    filter_unwanted_paths,
+)
 
 if TYPE_CHECKING:
     from _typeshed import StrPath
@@ -98,11 +103,17 @@ class TrivyLicenseDetector(LicenseDetector[TrivyLicenseData]):
                 license_map[path] = name
 
             extra, unmatched = get_extra_licenses(self.license_config["licenses"])
-            license_map |= extra
+        license_map |= extra
+        filtered_license_map = filter_unwanted_paths(
+            license_map, self.license_config["exclude_globs"]
+        )
+        filtered_license_map = dict(
+            sorted(filtered_license_map.items(), key=lambda item: item[0])
+        )
 
         return TrivyLicenseData(
             directory=Path(directory),
-            license_map=dict(sorted(license_map.items(), key=lambda item: item[0])),
+            license_map=filtered_license_map,
             # Trivy doesn't include undetected_licenses
             undetected_licenses=[],
             unmatched_extra_licenses=unmatched,

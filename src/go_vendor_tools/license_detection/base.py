@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import abc
 import dataclasses
-from collections.abc import Collection
+from collections.abc import Collection, Sequence
 from itertools import chain
 from pathlib import Path
 from typing import TYPE_CHECKING, Generic, TypeVar
@@ -42,6 +42,19 @@ def get_extra_licenses(
         else:
             not_matched.append(path)
     return results, not_matched
+
+
+def filter_unwanted_paths(
+    license_map: dict[Path, str], exclude_globs: Sequence[str]
+) -> dict[Path, str]:
+    """
+    Filter licenses files from unwanted paths
+    """
+    return {
+        path: exp
+        for path, exp in license_map.items()
+        if not any(path.is_relative_to(patt) for patt in exclude_globs)
+    }
 
 
 @dataclasses.dataclass()

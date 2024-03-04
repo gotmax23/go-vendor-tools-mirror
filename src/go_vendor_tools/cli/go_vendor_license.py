@@ -14,7 +14,8 @@ from typing import IO, cast
 
 import license_expression
 
-from go_vendor_tools.config.licenses import LicenseConfig, LicenseEntry, load_config
+from go_vendor_tools.config.base import load_config
+from go_vendor_tools.config.licenses import LicenseConfig, LicenseEntry
 from go_vendor_tools.gomod import get_unlicensed_mods
 from go_vendor_tools.hashing import get_hash
 from go_vendor_tools.license_detection.base import LicenseData, LicenseDetector
@@ -133,7 +134,7 @@ def parseargs() -> argparse.Namespace:
     )
 
     args = parser.parse_args()
-    args.config = load_config(args.config_path)
+    args.config = load_config(args.config_path)["licensing"]
     args.detector = choose_license_detector(
         args.detector, args.config, args.detector_config
     )
@@ -284,12 +285,15 @@ def explicit_command(args: argparse.Namespace) -> None:
     if not args.config:
         sys.exit("--config must be specified!")
 
-    data: LicenseConfig = {}
+    loaded = tomlkit.document()
     if args.config_path.is_file():
         with args.config_path.open("r", encoding="utf-8") as fp:
-            data = cast("LicenseConfig", tomlkit.load(fp))
+            loaded = tomlkit.load(fp)
+    if "licensing" not in loaded:
+        loaded.add("licensing", tomlkit.table())
+    data = loaded["licensing"]
 
-    licenses = data.setdefault("licenses", tomlkit.aot())
+    licenses = cast(dict, data).setdefault("licenses", tomlkit.aot())
     relpath = get_relpath(args.directory, args.license_file)
     try:
         expression = simplify_license(args.license_expression)
@@ -302,7 +306,7 @@ def explicit_command(args: argparse.Namespace) -> None:
     )
     replace_entry(licenses, entry, relpath)
     with args.config_path.open("w", encoding="utf-8") as fp:
-        tomlkit.dump(data, fp)
+        tomlkit.dump(loaded, fp)
 
 
 def main() -> None:
