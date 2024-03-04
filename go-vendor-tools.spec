@@ -41,6 +41,7 @@ Tools for handling Go library vendoring in Fedora
 
 %install
 %pyproject_install
+# TODO: Use -l flag once supported by EL 9.
 %pyproject_save_files go_vendor_tools
 
 install -Dpm 0644 rpm/macros.go_vendor_tools -t %{buildroot}%{_rpmmacrodir}
