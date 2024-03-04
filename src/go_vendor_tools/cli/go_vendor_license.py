@@ -285,10 +285,11 @@ def explicit_command(args: argparse.Namespace) -> None:
     if not args.config:
         sys.exit("--config must be specified!")
 
-    loaded = tomlkit.document()
     if args.config_path.is_file():
         with args.config_path.open("r", encoding="utf-8") as fp:
             loaded = tomlkit.load(fp)
+    else:
+        loaded = tomlkit.document()
     if "licensing" not in loaded:
         loaded.add("licensing", tomlkit.table())
     data = loaded["licensing"]
