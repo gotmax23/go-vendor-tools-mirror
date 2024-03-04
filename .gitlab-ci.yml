@@ -50,7 +50,7 @@ build-srpms:
       git-core
       packit
       pipx
-      redhat-rpm-macros
+      redhat-rpm-config
       rpmdevtools
   script:
     - packit srpm -p go-vendor-tools
