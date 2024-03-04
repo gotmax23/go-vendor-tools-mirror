@@ -54,7 +54,7 @@ def run_command(
     default="vendor.tar.xz",
     type=click.Path(dir_okay=False, file_okay=True, path_type=Path, resolve_path=True),
 )
-@click.option("--top-level-dir / --no-top-level-dir", default=False)
+@click.option("--top-level-dir / --no-top-level-dir", default=None)
 @click.option(
     "--use-module-proxy / --no-use-module-proxy",
     "-p",
@@ -75,6 +75,8 @@ def main(
     config = load_config(config_path)
     if use_module_proxy is None:
         use_module_proxy = config["archive"]["use_module_proxy"]
+    if top_level_dir is None:
+        top_level_dir = config["archive"]["use_top_level_dir"]
     cwd = path
     cm: AbstractContextManager[str] = nullcontext(str(path))
     # Treat as an archive if it's not a directory
