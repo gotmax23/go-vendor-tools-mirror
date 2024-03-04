@@ -17,12 +17,9 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 import click
-import requests
 
 from go_vendor_tools.archive import add_files_to_archive
-from go_vendor_tools.config.archive import ExtraFileEntry
 from go_vendor_tools.config.base import load_config
-from go_vendor_tools.exceptions import ArchiveError
 
 if TYPE_CHECKING:
     from _typeshed import StrPath
@@ -32,21 +29,6 @@ GO_PROXY_ENV = {
     "GOPROXY": "https://proxy.golang.org,direct",
     "GOSUMDB": "sum.golang.org",
 }
-
-
-def download_extra_file(extra_file: ExtraFileEntry, directory: Path) -> None:
-    """
-    Basic file downloader.
-    Meant for small text files, as all downloading is done in memory.
-    """
-    print(f"Downloading {extra_file['url']}...")
-    req = requests.get(extra_file["url"])
-    if not req.ok:
-        raise ArchiveError(f"Failed to download requested file: {extra_file['url']}")
-    dest = directory / extra_file["dest"]
-    dest.parent.mkdir(parents=True, exist_ok=True)
-    with (dest).open("wb") as fp:
-        fp.write(req.content)
 
 
 def run_command(
@@ -111,8 +93,6 @@ def main(
         run_command(runner, ["go", "mod", "vendor"])
         for command in config["archive"]["post_commands"]:
             run_command(runner, command)
-        for entry in config["archive"]["extra_files"]:
-            download_extra_file(entry, cwd)
         print("Creating archive...")
         with tarfile.open(output, "w:xz") as tf:
             add_files_to_archive(

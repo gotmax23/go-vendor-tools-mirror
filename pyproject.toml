@@ -26,7 +26,6 @@ classifiers = [
 ]
 dependencies = [
     "click",
-    "requests",
     "license_expression",
     "tomli; python_version<'3.11'"
 ]
@@ -54,7 +53,6 @@ typing = [
     "go-vendor-tools[all]",
     "mypy",
     "pytest",
-    "types-requests",
     "typing_extensions",
     # For checking noxfile.py
     "nox",
