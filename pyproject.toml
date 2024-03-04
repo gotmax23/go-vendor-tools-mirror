@@ -25,7 +25,6 @@ classifiers = [
     "Typing :: Typed",
 ]
 dependencies = [
-    "click",
     "license_expression",
     "tomli; python_version<'3.11'"
 ]

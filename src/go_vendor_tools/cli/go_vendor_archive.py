@@ -4,22 +4,24 @@
 
 from __future__ import annotations
 
+import argparse
+import dataclasses
 import os
 import shlex
 import shutil
 import subprocess
+import sys
 import tarfile
 import tempfile
 from collections.abc import Callable, Sequence
 from contextlib import AbstractContextManager, nullcontext
 from functools import partial
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
-
-import click
+from typing import TYPE_CHECKING, Any, ClassVar
 
 from go_vendor_tools.archive import add_files_to_archive
-from go_vendor_tools.config.base import load_config
+from go_vendor_tools.config.base import BaseConfig, load_config
+from go_vendor_tools.exceptions import ArchiveError
 
 if TYPE_CHECKING:
     from _typeshed import StrPath
@@ -40,67 +42,81 @@ def run_command(
     return runner(command, **kwargs)
 
 
-@click.command(
-    context_settings={"help_option_names": ["-h", "--help"], "show_default": True}
-)
-@click.argument(
-    "path",
-    type=click.Path(exists=True, path_type=Path),
-    required=True,
-)
-@click.option(
-    "-O",
-    "--output",
-    default="vendor.tar.xz",
-    type=click.Path(dir_okay=False, file_okay=True, path_type=Path, resolve_path=True),
-)
-@click.option("--top-level-dir / --no-top-level-dir", default=None)
-@click.option(
-    "--use-module-proxy / --no-use-module-proxy",
-    "-p",
-    default=None,
-    is_flag=True,
-    help="Whether to enable Google's Go module proxy",
-)
-@click.option("-c", "--config", "config_path", type=click.Path(path_type=Path))
-def main(
-    path: Path,
-    output: Path,
-    top_level_dir: bool,
-    use_module_proxy: bool | None,
-    config_path: Path | None,
-) -> None:
-    if not output.name.endswith((".tar.xz", "txz")):
-        raise ValueError(f"{output} must end with '.tar.xz' or '.txz'")
-    config = load_config(config_path)
-    if use_module_proxy is None:
-        use_module_proxy = config["archive"]["use_module_proxy"]
-    if top_level_dir is None:
-        top_level_dir = config["archive"]["use_top_level_dir"]
-    cwd = path
-    cm: AbstractContextManager[str] = nullcontext(str(path))
+@dataclasses.dataclass()
+class ArchiveArgs:
+    path: Path
+    output: Path
+    use_top_level_dir: bool
+    use_module_proxy: bool
+    config_path: Path
+    config: BaseConfig
+
+    CONFIG_OPTS: ClassVar[tuple[str, ...]] = ("use_module_proxy", "use_top_level_dir")
+
+    @classmethod
+    def construct(cls, **kwargs: Any) -> ArchiveArgs:
+        kwargs["config"] = load_config(kwargs["config_path"])
+        for opt in cls.CONFIG_OPTS:
+            if kwargs[opt] is None:
+                kwargs[opt] = kwargs["config"]["archive"][opt]
+
+        if not kwargs["output"].name.endswith((".tar.xz", "txz")):
+            raise ValueError(f"{kwargs['output']} must end with '.tar.xz' or '.txz'")
+
+        if not kwargs["path"].exists():
+            raise ArchiveError(f"{kwargs['path']} does not exist!")
+        return ArchiveArgs(**kwargs)
+
+
+def parseargs(argv: list[str] | None = None) -> ArchiveArgs:
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "-O", "--output", type=Path, default="vendor.tar.gz", help="%(default)s"
+    )
+    parser.add_argument(
+        "--top-level-dir",
+        default=None,
+        dest="use_top_level_dir",
+        action=argparse.BooleanOptionalAction,
+    )
+    parser.add_argument("--use-module-proxy", action="store_true", default=None)
+    parser.add_argument("-p", action="store_true", dest="use_module_proxy")
+    parser.add_argument("-c", "--config", type=Path, dest="config_path")
+    parser.add_argument("path", type=Path)
+    args = parser.parse_args(argv)
+    return ArchiveArgs.construct(**vars(args))
+
+
+def main(argv: list[str] | None = None) -> None:
+    args = parseargs(argv)
+
+    cwd = args.path
+    cm: AbstractContextManager[str] = nullcontext(str(args.path))
     # Treat as an archive if it's not a directory
-    if path.is_file():
-        print(f"* Treating {path} as an archive. Unpacking...")
+    if args.path.is_file():
+        print(f"* Treating {args.path} as an archive. Unpacking...")
         cm = tempfile.TemporaryDirectory()
-        shutil.unpack_archive(path, cm.name)
+        shutil.unpack_archive(args.path, cm.name)
         cwd = Path(cm.name)
         cwd /= next(cwd.iterdir())
     with cm:
-        env = os.environ | GO_PROXY_ENV if use_module_proxy else None
+        env = os.environ | GO_PROXY_ENV if args.use_module_proxy else None
         runner = partial(subprocess.run, cwd=cwd, check=True, env=env)
-        for command in config["archive"]["pre_commands"]:
+        for command in args.config["archive"]["pre_commands"]:
             run_command(runner, command)
         run_command(runner, ["go", "mod", "tidy"])
         run_command(runner, ["go", "mod", "vendor"])
-        for command in config["archive"]["post_commands"]:
+        for command in args.config["archive"]["post_commands"]:
             run_command(runner, command)
         print("Creating archive...")
-        with tarfile.open(output, "w:xz") as tf:
+        with tarfile.open(args.output, "w:xz") as tf:
             add_files_to_archive(
-                tf, Path(cwd), ARCHIVE_FILES, top_level_dir=top_level_dir
+                tf, Path(cwd), ARCHIVE_FILES, top_level_dir=args.use_top_level_dir
             )
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except ArchiveError as exc:
+        sys.exit(str(exc))
