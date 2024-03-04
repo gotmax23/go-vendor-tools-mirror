@@ -11,7 +11,8 @@ Version:        0.0.1
 Release:        1%{?dist}
 Summary:        Tools for handling Go library vendoring in Fedora
 
-License:        MIT
+# BSD-3-Clause: src/go_vendor_tools/archive.py
+License:        MIT AND BSD-3-Clause
 URL:            %{forgeurl}
 Source0:        %{forgesource}
 
