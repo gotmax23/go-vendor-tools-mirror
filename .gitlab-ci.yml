@@ -10,11 +10,11 @@ default:
       --setopt=install_weak_deps=0 -y
       askalono-cli
       git-core
+      nox
       python3.9
       python3.10-devel
       python3.11-devel
       python3.12-devel
-      nox
 
 test:
   script:
@@ -27,3 +27,37 @@ formatters:
 codeqa:
   script:
     - "nox -e codeqa"
+
+build-srpms:
+  before_script:
+    - |-
+      if [ -z "$(rpm -E '%{?rhel}'" ]; then
+        sudo dnf install -y epel-release
+        crb enable
+        sudo dnf install --setopt=install_weak_deps=0 -y askalono-cli
+      else
+        sudo dnf install --setopt=install_weak_deps=0 -y cargo
+        cargo install askalono-cli
+        sudo cp ~/.local/share/cargo/bin/askalono /usr/bin/askalono
+        sudo chmod a+x /usr/bin/askalono
+      fi
+    - >-
+      sudo dnf install
+      --setopt=install_weak_deps=0 -y
+      git-core
+      packit
+      pipx
+      rpmdevtools
+  script:
+    - packit srpm -p go-vendor-tools
+    - packit srpm -p autorestic
+    - packit srpm -p fzf
+  image: "$IMAGE"
+  parallel:
+    matrix:
+      - IMAGE:
+          - "registry.fedoraproject.org/fedora:rawhide"
+          - "registry.fedoraproject.org/fedora:40"
+          - "registry.fedoraproject.org/fedora:39"
+          - "registry.fedoraproject.org/fedora:38"
+          - "quay.io/centos/centos:stream9"
