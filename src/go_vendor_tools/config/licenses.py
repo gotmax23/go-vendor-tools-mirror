@@ -7,17 +7,11 @@ Configuration for the go_vendor_licenses command
 
 from __future__ import annotations
 
-import sys
 from pathlib import Path
 from typing import Any, TypedDict, cast
 
 from ..exceptions import LicenseError
 from ..hashing import verify_hash
-
-if sys.version_info >= (3, 11):
-    pass
-else:
-    pass
 
 
 class LicenseEntry(TypedDict, total=False):
@@ -31,16 +25,16 @@ class LicenseConfig(TypedDict, total=False):
     TypedDict representing the script's config file
     """
 
+    detector: str | None
     licenses: list[LicenseEntry]
     exclude_globs: list[str]
 
 
 def create_license_config(data: dict[str, Any] | None = None) -> LicenseConfig:
     data = {} if data is None else data.copy()
-    if "licenses" not in data:
-        data["licenses"] = []
-    if "exclude_globs" not in data:
-        data["exclude_globs"] = []
+    data.setdefault("detector", None)
+    data.setdefault("licenses", [])
+    data.setdefault("exclude_globs", [])
     return cast("LicenseConfig", data)
 
 

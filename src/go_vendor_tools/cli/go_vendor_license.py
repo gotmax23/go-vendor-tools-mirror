@@ -136,6 +136,8 @@ def parseargs() -> argparse.Namespace:
 
     args = parser.parse_args()
     args.config = load_config(args.config_path)["licensing"]
+    if not args.detector:
+        args.detector = args.config["detector"]
     args.detector = choose_license_detector(
         args.detector, args.config, args.detector_config
     )
