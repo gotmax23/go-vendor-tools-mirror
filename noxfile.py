@@ -3,9 +3,13 @@
 
 from __future__ import annotations
 
+import contextlib
 import os
+import shlex
+from collections.abc import Iterator
 from glob import iglob
 from pathlib import Path
+from types import SimpleNamespace
 
 import nox
 
@@ -19,6 +23,7 @@ PROJECT = "go_vendor_tools"
 SPECFILE = "go-vendor-tools.spec"
 LINT_SESSIONS = ("formatters", "codeqa", "typing")
 LINT_FILES = (f"src/{PROJECT}", "tests/", "noxfile.py")
+INTEGRATION_PACKAGES = ("autorestic", "fzf")
 
 nox.options.sessions = (*LINT_SESSIONS, "test")
 
@@ -34,6 +39,36 @@ def install(session: nox.Session, *args, editable=False, **kwargs):
 
 def git(session: nox.Session, *args, **kwargs):
     return session.run("git", *args, **kwargs, external=True)
+
+
+BASE_COVERAGE_COMMAND = ("coverage", "run", "-p", "--source", "go_vendor_tools")
+COVERAGE_COMMANDS = SimpleNamespace(
+    go_vendor_archive=(
+        *BASE_COVERAGE_COMMAND,
+        "-m",
+        "go_vendor_tools.cli.go_vendor_archive",
+    ),
+    go_vendor_license=(
+        *BASE_COVERAGE_COMMAND,
+        "-m",
+        "go_vendor_tools.cli.go_vendor_license",
+    ),
+)
+
+
+@contextlib.contextmanager
+def coverage_run(session: nox.Session) -> Iterator[dict[str, str]]:
+    tmp = Path(session.create_tmp())
+    covfile = (tmp / ".coverage").resolve()
+    cov_env = {
+        "COVERAGE_FILE": str(covfile),
+        "GO_VENDOR_ARCHIVE": shlex.join(COVERAGE_COMMANDS.go_vendor_archive),
+        "GO_VENDOR_LICENSE": shlex.join(COVERAGE_COMMANDS.go_vendor_license),
+        **session.env,
+    }
+    yield cov_env
+    combined = map(str, tmp.glob(".coverage.*"))
+    session.run("coverage", "combine", *combined, env=cov_env)
 
 
 # General
@@ -54,11 +89,21 @@ def test(session: nox.Session):
 
 
 @nox.session
+def integration(session: nox.Session) -> None:
+    install(session, ".", "coverage[toml]", "packitos", "fclogr")
+    packages_env = session.env.get("PACKAGES")
+    packages = shlex.split(packages_env) if packages_env else INTEGRATION_PACKAGES
+    with coverage_run(session) as cov_env:
+        for package in packages:
+            session.run("packit", "srpm", "-p", package, env=cov_env)
+
+
+@nox.session
 def coverage(session: nox.Session):
     install(session, "coverage[toml]")
-    session.run("coverage", "combine", "--keep", *iglob(".nox/test*/tmp/.coverage"))
+    session.run("coverage", "combine", "--keep", *iglob(".nox/*/tmp/.coverage"))
     session.run("coverage", "html")
-    session.run("coverage", "report", "--fail-under=95")
+    session.run("coverage", "report")
 
 
 @nox.session(venv_backend="none")

@@ -46,18 +46,21 @@ build-srpms:
     - >-
       sudo dnf install
       --setopt=install_weak_deps=0 -y
-      golang-bin
       git-core
+      golang-bin
+      nox
       packit
       pipx
       redhat-rpm-config
       rpmdevtools
   script:
-    - packit srpm -p go-vendor-tools
-    - |-
-      for package in ${PACKAGES}; do
-        packit srpm -p "${package}"
-      done
+    - nox -e integration
+    - nox -e coverage
+  artifacts:
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: coverage.xml
   image: "$IMAGE"
   parallel:
     matrix:
