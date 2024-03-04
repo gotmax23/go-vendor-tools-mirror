@@ -47,7 +47,7 @@ BuildRequires:  go-vendor-tools
 %go_vendor_license_check
 diff -u %{S:2} licenses.list
 
-%files -f licenses.list
+%files -f %{go_vendor_license_filelist}
 %doc doc ADVANCED.md BUILD.md CHANGELOG.md README-VIM.md README.md
 
 %changelog

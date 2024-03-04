@@ -50,7 +50,7 @@ diff -u licenses.list %{S:3}
 %gocheck
 %endif
 
-%files -f licenses.list
+%files -f %{go_vendor_license_filelist}
 %doc docs CHANGELOG.md DEVELOPMENT.md README.md
 %{_bindir}/autorestic
 
