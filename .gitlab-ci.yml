@@ -33,14 +33,14 @@ build-srpms:
     - |-
       if [ -n "$(rpm -E '%{?rhel}')" ]; then
         dnf install -y sudo
+        sudo dnf install --setopt=install_weak_deps=0 -y cargo
         sudo dnf install -y epel-release
         crb enable
-        sudo dnf install --setopt=install_weak_deps=0 -y askalono-cli
-      else
-        sudo dnf install --setopt=install_weak_deps=0 -y cargo
         cargo install askalono-cli
         sudo cp ~/.local/share/cargo/bin/askalono /usr/bin/askalono
         sudo chmod a+x /usr/bin/askalono
+      else
+        sudo dnf install --setopt=install_weak_deps=0 -y askalono-cli
       fi
     - >-
       sudo dnf install
