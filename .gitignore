@@ -12,3 +12,4 @@ venv/
 /fedora*/
 outgoing/
 .coverage*
+coverage.xml

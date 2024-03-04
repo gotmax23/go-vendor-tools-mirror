@@ -102,6 +102,7 @@ def integration(session: nox.Session) -> None:
 def coverage(session: nox.Session):
     install(session, "coverage[toml]")
     session.run("coverage", "combine", "--keep", *iglob(".nox/*/tmp/.coverage"))
+    session.run("coverage", "xml")
     session.run("coverage", "html")
     session.run("coverage", "report")
 
