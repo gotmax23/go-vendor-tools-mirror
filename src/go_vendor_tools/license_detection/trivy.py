@@ -105,7 +105,9 @@ class TrivyLicenseDetector(LicenseDetector[TrivyLicenseData]):
             extra, unmatched = get_extra_licenses(self.license_config["licenses"])
         license_map |= extra
         filtered_license_map = filter_unwanted_paths(
-            license_map, self.license_config["exclude_directories"]
+            license_map,
+            self.license_config["exclude_directories"],
+            self.license_config["exclude_files"],
         )
         filtered_license_map = dict(
             sorted(filtered_license_map.items(), key=lambda item: item[0])
