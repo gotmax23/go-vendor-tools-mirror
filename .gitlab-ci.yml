@@ -45,6 +45,7 @@ build-srpms:
     - >-
       sudo dnf install
       --setopt=install_weak_deps=0 -y
+      golang-bin
       git-core
       packit
       pipx
