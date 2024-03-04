@@ -14,9 +14,9 @@ packages:
     specfile_path: go-vendor-tools.spec
     actions:
       fix-spec-file:
-        - "pipx run --spec 'fclogr>=0.8.0' fclogr dev-entries --archive go-vendor-tools.spec"
+        - "./contrib/main-archive.sh go-vendor-tools.spec"
       create-archive:
-        - "pipx run --spec 'fclogr>=0.8.0' fclogr dev-entries --archive go-vendor-tools.spec"
+        - "./contrib/main-archive.sh go-vendor-tools.spec"
         - "sh -c 'ls go-vendor-tools-*.tar.gz'"
     release_suffix: ""
   # Integration packages
