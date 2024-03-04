@@ -47,12 +47,12 @@ build-srpms:
       sudo dnf install
       --setopt=install_weak_deps=0 -y
       git-core
+      go-rpm-macros
       golang-bin
-      krb5-devel
-      packit
       pipx
       python3-devel
       redhat-rpm-config
+      rpm-build
       rpmdevtools
   script:
     - pipx run nox -e integration

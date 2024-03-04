@@ -90,12 +90,20 @@ def test(session: nox.Session):
 
 @nox.session
 def integration(session: nox.Session) -> None:
-    install(session, ".", "coverage[toml]", "packitos", "fclogr")
+    install(session, ".", "coverage[toml]", "fclogr")
     packages_env = session.env.get("PACKAGES")
     packages = shlex.split(packages_env) if packages_env else INTEGRATION_PACKAGES
     with coverage_run(session) as cov_env:
         for package in packages:
-            session.run("packit", "srpm", "-p", package, env=cov_env)
+            with session.chdir(Path("tests/integration", package)):
+                for script in ("integration-archive", "verify-license"):
+                    session.run(
+                        "bash",
+                        "-x",
+                        f"../../../contrib/{script}.sh",
+                        env=cov_env,
+                        external=True,
+                    )
 
 
 @nox.session
