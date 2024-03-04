@@ -7,10 +7,13 @@ Configuration for the go_vendor_archive command
 
 from __future__ import annotations
 
+import os
 from typing import Any, TypedDict, cast
 
 DEFAULT_USE_TOP_LEVEL_DIR = False
-DEFAULT_USE_MODULE_PROXY = False
+DEFAULT_USE_MODULE_PROXY = (
+    bool(os.environ.get("GO_VENDOR_ARCHIVE_USE_MODULE_PROXY")) or False
+)
 
 
 class ArchiveConfig(TypedDict):
