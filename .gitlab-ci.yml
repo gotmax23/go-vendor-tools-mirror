@@ -31,7 +31,7 @@ codeqa:
 build-srpms:
   before_script:
     - |-
-      if [ -z "$(rpm -E '%{?rhel}'" ]; then
+      if [ -z "$(rpm -E '%{?rhel}')" ]; then
         sudo dnf install -y epel-release
         crb enable
         sudo dnf install --setopt=install_weak_deps=0 -y askalono-cli
