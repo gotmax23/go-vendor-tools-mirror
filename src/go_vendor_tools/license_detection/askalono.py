@@ -11,6 +11,7 @@ import dataclasses
 import json
 import shutil
 import subprocess
+from collections.abc import Callable
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, TypedDict, cast
 
@@ -42,6 +43,21 @@ class AskalonoLicenseResult(TypedDict):
 class AskalonoLicenseDict(TypedDict):
     path: str
     result: AskalonoLicenseResult
+
+
+def _remove_line(file: StrPath, key: Callable[[str], bool]) -> None:
+    """
+    Used to remove vendor directory from .gitignore to avoid confusing askalono
+    """
+    lines: list[str] = []
+    with open(file, "r+", encoding="utf-8") as fp:
+        for line in fp:
+            if not key(line):
+                continue
+            lines.append(line)
+        fp.seek(0)
+        fp.writelines(lines)
+        fp.truncate()
 
 
 def _get_askalono_data(directory: StrPath) -> list[AskalonoLicenseDict]:
@@ -122,6 +138,9 @@ class AskalonoeLicenseDetector(LicenseDetector[AskalonoLicenseData]):
         self.license_config = license_config
 
     def detect(self, directory: StrPath) -> AskalonoLicenseData:
+        gitignore = Path(directory, ".gitignore")
+        if gitignore.is_file():
+            _remove_line(gitignore, lambda line: line.startswith("vendor"))
         results, undetected = _filter_license_data(_get_askalono_data(directory))
         extra_licenses, unmatched = get_extra_licenses(self.license_config["licenses"])
         license_map = _get_simplified_license_map(
