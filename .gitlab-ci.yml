@@ -48,14 +48,15 @@ build-srpms:
       --setopt=install_weak_deps=0 -y
       git-core
       golang-bin
-      nox
+      krb5-devel
       packit
       pipx
+      python3-devel
       redhat-rpm-config
       rpmdevtools
   script:
-    - nox -e integration
-    - nox -e coverage
+    - pipx run nox -e integration
+    - pipx run nox -e coverage
   artifacts:
     reports:
       coverage_report:
