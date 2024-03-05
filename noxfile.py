@@ -25,7 +25,7 @@ LINT_SESSIONS = ("formatters", "codeqa", "typing")
 LINT_FILES = (f"src/{PROJECT}", "tests/", "noxfile.py")
 INTEGRATION_PACKAGES = ("autorestic", "fzf")
 
-nox.options.sessions = (*LINT_SESSIONS, "test")
+nox.options.sessions = ("lint", "covtest")
 
 
 # Helpers
@@ -113,6 +113,22 @@ def coverage(session: nox.Session):
     session.run("coverage", "xml")
     session.run("coverage", "html")
     session.run("coverage", "report")
+
+
+@nox.session()
+def covtest(session: nox.Session):
+    session.run("rm", "-f", *iglob(".nox/*/tmp/.coverage*"), external=True)
+    test_sessions = (f"test-{v}" for v in test.python)  # type: ignore[attr-defined]
+    for target in test_sessions:
+        session.notify(target, ["--cov"])
+
+
+@nox.session(name="all")
+def all_(session: nox.Session):
+    lint(session)
+    covtest(session)
+    session.notify("integration")
+    session.notify("coverage")
 
 
 @nox.session(venv_backend="none")
