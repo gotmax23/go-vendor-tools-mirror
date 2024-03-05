@@ -14,6 +14,7 @@ DEFAULT_USE_TOP_LEVEL_DIR = False
 DEFAULT_USE_MODULE_PROXY = (
     bool(os.environ.get("GO_VENDOR_ARCHIVE_USE_MODULE_PROXY")) or False
 )
+DEFAULT_TIDY = False
 
 
 class ArchiveConfig(TypedDict):
@@ -23,6 +24,7 @@ class ArchiveConfig(TypedDict):
     pre_commands: list[list[str]]
     # Commands to run after downloading modules
     post_commands: list[list[str]]
+    tidy: bool
 
 
 def create_archive_config(config: dict[str, Any] | None = None) -> ArchiveConfig:

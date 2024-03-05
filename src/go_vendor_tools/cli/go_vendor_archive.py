@@ -48,10 +48,15 @@ class ArchiveArgs:
     output: Path
     use_top_level_dir: bool
     use_module_proxy: bool
+    tidy: bool
     config_path: Path
     config: BaseConfig
 
-    CONFIG_OPTS: ClassVar[tuple[str, ...]] = ("use_module_proxy", "use_top_level_dir")
+    CONFIG_OPTS: ClassVar[tuple[str, ...]] = (
+        "use_module_proxy",
+        "use_top_level_dir",
+        "tidy",
+    )
 
     @classmethod
     def construct(cls, **kwargs: Any) -> ArchiveArgs:
@@ -82,6 +87,12 @@ def parseargs(argv: list[str] | None = None) -> ArchiveArgs:
     parser.add_argument("--use-module-proxy", action="store_true", default=None)
     parser.add_argument("-p", action="store_true", dest="use_module_proxy")
     parser.add_argument("-c", "--config", type=Path, dest="config_path")
+    parser.add_argument(
+        "--tidy",
+        help="%(default)s",
+        action=argparse.BooleanOptionalAction,
+        default=None,
+    )
     parser.add_argument("path", type=Path)
     args = parser.parse_args(argv)
     return ArchiveArgs.construct(**vars(args))
@@ -104,7 +115,8 @@ def main(argv: list[str] | None = None) -> None:
         runner = partial(subprocess.run, cwd=cwd, check=True, env=env)
         for command in args.config["archive"]["pre_commands"]:
             run_command(runner, command)
-        run_command(runner, ["go", "mod", "tidy"])
+        if args.tidy:
+            run_command(runner, ["go", "mod", "tidy"])
         run_command(runner, ["go", "mod", "vendor"])
         for command in args.config["archive"]["post_commands"]:
             run_command(runner, command)
