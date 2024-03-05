@@ -106,6 +106,29 @@ def integration(session: nox.Session) -> None:
                     )
 
 
+@nox.session(name="integration-test-build")
+def integration_test_build(session: nox.Session):
+    install(session, ".", "coverage[toml]", editable=True)
+    with coverage_run(session) as cov_env:
+        coverage_command = shlex.join(COVERAGE_COMMANDS.go_vendor_license)
+        assert coverage_command[0]
+        rpm_eval = Path("rpmeval.sh").resolve()
+        with session.chdir("tests/integration/fzf"):
+            # fmt: off
+            session.run(
+                "bash",
+                "-x",
+                str(rpm_eval),
+                "-D", f"__go_vendor_license {coverage_command}",
+                "-D", f"_specdir {Path.cwd()}",
+                "-D", f"_sourcedir {Path.cwd()}",
+                "--nodeps",
+                "-ba", "fzf.spec",
+                env=cov_env|{"RPM": "rpmbuild"},
+            )
+            # fmt: on
+
+
 @nox.session
 def coverage(session: nox.Session):
     install(session, "coverage[toml]")
@@ -128,6 +151,7 @@ def all_(session: nox.Session):
     lint(session)
     covtest(session)
     session.notify("integration")
+    session.notify("integration-test-build")
     session.notify("coverage")
 
 
