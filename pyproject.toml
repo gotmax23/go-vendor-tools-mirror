@@ -57,6 +57,7 @@ typing = [
     "nox",
 ]
 test = [
+    "go-vendor-tools[all]",
     "pytest",
 ]
 dev = [
