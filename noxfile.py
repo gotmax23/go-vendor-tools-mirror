@@ -193,7 +193,7 @@ def typing(session: nox.Session):
 def bump(session: nox.Session):
     version = session.posargs[0]
 
-    install(session, "releaserr", "fclogr")
+    install(session, "build", "releaserr", "fclogr")
     session.run("releaserr", "--version")
 
     session.run("releaserr", "check-tag", version)
@@ -221,7 +221,7 @@ def bump(session: nox.Session):
 @nox.session
 def publish(session: nox.Session):
     # Setup
-    install(session, "releaserr")
+    install(session, "twine", "releaserr")
     session.run("releaserr", "--version")
 
     session.run("releaserr", "ensure-clean")
