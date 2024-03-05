@@ -25,12 +25,13 @@ test:
     - |-
       if [ -n "$(rpm -E '%{?rhel}')" ]; then
         dnf install -y sudo
-        sudo dnf install --setopt=install_weak_deps=0 -y cargo
-        sudo dnf install -y epel-release
+        sudo dnf install -y epel-release /usr/bin/unzip wget
         crb enable
         sudo dnf install --setopt=install_weak_deps=0 -y epel-rpm-macros
-        cargo install askalono-cli
-        sudo cp ~/.cargo/bin/askalono /usr/bin/askalono
+        wget https://github.com/jpeddicord/askalono/releases/download/0.4.6/askalono-Linux.zip
+        unzip askalono-Linux.zip
+        chmod a+x askalono
+        sudo mv askalono /usr/bin/askalono
         sudo chmod a+x /usr/bin/askalono
       else
         sudo dnf install --setopt=install_weak_deps=0 -y askalono-cli
