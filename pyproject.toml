@@ -41,8 +41,9 @@ all = [
 ]
 # Dev
 codeqa = [
-    "ruff>=0.3.0",
     "reuse",
+    "ruff>=0.3.0",
+    "shellcheck-py",
 ]
 formatters = [
     "black",

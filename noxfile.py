@@ -168,6 +168,7 @@ def lint(session: nox.Session):
 def codeqa(session: nox.Session):
     install(session, ".[codeqa]")
     session.run("ruff", "check", *session.posargs, *LINT_FILES)
+    session.run("shellcheck", *iglob("contrib/*.sh"))
     session.run("reuse", "lint")
 
 
