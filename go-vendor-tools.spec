@@ -24,7 +24,8 @@ Requires:       (askalono-cli or trivy)
 
 
 %description
-Tools for handling Go library vendoring in Fedora
+go-vendor-tools provides tools and macros for handling Go library vendoring in
+Fedora.
 
 
 %prep
