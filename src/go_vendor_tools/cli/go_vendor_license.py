@@ -5,12 +5,13 @@
 from __future__ import annotations
 
 import argparse
+import json
 import os
 import shutil
 import sys
 from collections.abc import Collection, Iterable, Iterator
 from pathlib import Path
-from typing import IO, cast
+from typing import IO, Any, cast
 
 import license_expression
 
@@ -62,6 +63,15 @@ def choose_license_detector(
             print(f"! {detector}: {err}")
         sys.exit()
     return next(iter(available.values()))
+
+
+def _add_json_argument(parser: argparse.ArgumentParser, **kwargs) -> None:
+    our_kwargs: dict[str, Any] = {
+        "type": Path,
+        "help": "Write license data to a JSON file",
+    }
+    kwargs = our_kwargs | kwargs
+    parser.add_argument("--write-json", **kwargs)
 
 
 def parseargs(argv: list[str] | None = None) -> argparse.Namespace:
@@ -127,6 +137,7 @@ def parseargs(argv: list[str] | None = None) -> argparse.Namespace:
         type=str,
         choices=("all", "expression", "list"),
     )
+    _add_json_argument(report_parser)
     explict_parser = subparsers.add_parser(
         "explicit", help="Add manual license entry to a config file"
     )
@@ -146,6 +157,8 @@ def parseargs(argv: list[str] | None = None) -> argparse.Namespace:
     install_parser.add_argument(
         "--filelist", dest="install_filelist", type=Path, required=True
     )
+    # TODO: Should we support writing JSON from the install command or just reading it?
+    # _add_json_argument(install_parser)
 
     args = parser.parse_args(argv)
     if args.subcommand != "explicit":
@@ -225,6 +238,11 @@ def print_licenses(
     print(results.license_expression)
 
 
+def write_license_json(data: LicenseData, file: Path) -> None:
+    with file.open("w", encoding="utf-8") as fp:
+        json.dump(data.to_jsonable(), fp)
+
+
 def report_command(args: argparse.Namespace) -> None:
     detector: LicenseDetector = args.detector
     directory: Path = args.directory
@@ -232,6 +250,7 @@ def report_command(args: argparse.Namespace) -> None:
     ignore_unlicensed_mods: bool = args.ignore_unlicensed_mods
     mode: str = args.mode
     verify: str | None = args.verify
+    write_json: Path | None = args.write_json
     del args
 
     license_data: LicenseData = detector.detect(directory)
@@ -248,6 +267,8 @@ def report_command(args: argparse.Namespace) -> None:
         not ignore_unlicensed_mods,
         directory,
     )
+    if write_json:
+        write_license_json(license_data, write_json)
     if verify and not compare_licenses(license_data.license_expression, verify):
         sys.exit("Failed to verify license. Expected ^")
     sys.exit(
