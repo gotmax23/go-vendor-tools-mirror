@@ -1,0 +1,5 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+
+Files: tests/pytests/test_data/case1/**
+Copyright: None
+License: MIT

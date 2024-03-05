@@ -22,7 +22,7 @@ ALLOW_EDITABLE = os.environ.get("ALLOW_EDITABLE", str(not IN_CI)).lower() in (
 PROJECT = "go_vendor_tools"
 SPECFILE = "go-vendor-tools.spec"
 LINT_SESSIONS = ("formatters", "codeqa", "typing")
-LINT_FILES = (f"src/{PROJECT}", "tests/", "noxfile.py")
+LINT_FILES = (f"src/{PROJECT}", "tests/pytests", "noxfile.py")
 INTEGRATION_PACKAGES = ("autorestic", "fzf")
 
 nox.options.sessions = ("lint", "covtest")
@@ -85,7 +85,7 @@ def test(session: nox.Session):
         env["COVERAGE_FILE"] = str(tmp / ".coverage")
 
     install(session, *packages, editable=True)
-    session.run("pytest", *session.posargs, env=env)
+    session.run("pytest", "src", "tests/pytests", *session.posargs, env=env)
 
 
 @nox.session

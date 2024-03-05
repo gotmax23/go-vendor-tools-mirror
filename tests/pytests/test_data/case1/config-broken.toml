@@ -1,0 +1,8 @@
+[[licensing.licenses]]
+path = "LICENSE.MIT"
+sha256sum = "b85dcd3e453d05982552c52b5fc9e0bdd6d23c6f8e844b984a88af32570b0ccf"
+expression = "MIT"
+[[licensing.licenses]]
+path = "LICENSE.BSD3"
+sha256sum = "5a93d5831e1297ab10fe643e1a631e83be392896da14ee2951285a79012df69d"
+expression = "BSD-3-Clause"
