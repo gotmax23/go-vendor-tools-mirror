@@ -102,7 +102,18 @@ def parseargs(argv: list[str] | None = None) -> argparse.Namespace:
     subparsers = parser.add_subparsers(dest="subcommand")
     subparsers.required = True
     report_parser = subparsers.add_parser("report", help="Main subcommand")
-    report_parser.add_argument("-i", "--ignore-undetected", action="store_true")
+    report_parser.add_argument(
+        "-i",
+        "--ignore-undetected",
+        action="store_true",
+        help="Whether to show undetected licenses in the output",
+    )
+    report_parser.add_argument(
+        "-L",
+        "--ignore-unlicensed-mods",
+        action="store_true",
+        help="Whether to show Go modules without licenses in the output",
+    )
     report_parser.add_argument(
         "--verify",
         help="Verify license expression to make sure it matches caluclated expression",
@@ -161,7 +172,7 @@ def bullet_iterator(it: Iterable[object], bullet: str = "- ") -> Iterator[str]:
 def red_if_true(items: Collection[object], message: str, bullet: str = "- ") -> None:
     if not items:
         return
-    red(message)
+    print(message)
     red("\n".join(bullet_iterator(items, bullet)))
 
 
@@ -170,6 +181,7 @@ def print_licenses(
     unlicensed_mods: Collection[Path],
     mode: str,
     show_undetected: bool,
+    show_unlicensed,
     directory: Path,
 ) -> None:
     if mode in ("all", "list"):
@@ -182,15 +194,19 @@ def print_licenses(
         results.undetected_licenses
         or unlicensed_mods
         or results.unmatched_extra_licenses
-    ) and show_undetected:
+    ):
         if mode != "expression":
             print()
-        red_if_true(
-            results.undetected_licenses,
-            "The following license files were found "
-            "but the correct license identifier couldn't be determined:",
-        )
-        red_if_true(unlicensed_mods, "The following modules are missing license files:")
+        if show_undetected:
+            red_if_true(
+                results.undetected_licenses,
+                "The following license files were found "
+                "but the correct license identifier couldn't be determined:",
+            )
+        if show_unlicensed:
+            red_if_true(
+                unlicensed_mods, "The following modules are missing license files:"
+            )
         red_if_true(
             results.unmatched_extra_licenses,
             "The following license files that were specified in the configuration"
@@ -207,6 +223,7 @@ def report_command(args: argparse.Namespace) -> None:
     detector: LicenseDetector = args.detector
     directory: Path = args.directory
     ignore_undetected: bool = args.ignore_undetected
+    ignore_unlicensed_mods: bool = args.ignore_unlicensed_mods
     mode: str = args.mode
     verify: str | None = args.verify
     del args
@@ -218,12 +235,17 @@ def report_command(args: argparse.Namespace) -> None:
         unlicensed_mods,
         mode,
         not ignore_undetected,
+        not ignore_unlicensed_mods,
         directory,
     )
     if verify and not compare_licenses(license_data.license_expression, verify):
         sys.exit("Failed to verify license. Expected ^")
     sys.exit(
-        bool(license_data.undetected_licenses or license_data.unmatched_extra_licenses)
+        bool(
+            (license_data.undetected_licenses and not ignore_undetected)
+            or (unlicensed_mods and not ignore_unlicensed_mods)
+            or license_data.unmatched_extra_licenses
+        )
     )
 
 
