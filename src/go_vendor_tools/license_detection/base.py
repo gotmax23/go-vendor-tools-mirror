@@ -17,8 +17,9 @@ from typing import TYPE_CHECKING, Generic, TypeVar
 import license_expression
 
 from go_vendor_tools.config.licenses import LicenseConfig, LicenseEntry
+from go_vendor_tools.exceptions import LicenseError
 from go_vendor_tools.hashing import verify_hash
-from go_vendor_tools.licensing import LicenseError, combine_licenses
+from go_vendor_tools.licensing import combine_licenses
 
 if TYPE_CHECKING:
     from _typeshed import StrPath
