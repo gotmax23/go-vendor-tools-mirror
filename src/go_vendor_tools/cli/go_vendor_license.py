@@ -14,6 +14,7 @@ from typing import IO, cast
 
 import license_expression
 
+from go_vendor_tools import __version__
 from go_vendor_tools.config.base import load_config
 from go_vendor_tools.config.licenses import LicenseConfig, LicenseEntry
 from go_vendor_tools.gomod import get_unlicensed_mods
@@ -70,6 +71,7 @@ def parseargs(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Handle licenses for vendored go projects"
     )
+    parser.add_argument("--version", action="version", version=__version__)
     parser.add_argument("-c", "--config", type=Path, dest="config_path")
     parser.add_argument(
         "-C",

@@ -19,6 +19,7 @@ from functools import partial
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, ClassVar
 
+from go_vendor_tools import __version__
 from go_vendor_tools.archive import add_files_to_archive
 from go_vendor_tools.config.base import BaseConfig, load_config
 from go_vendor_tools.exceptions import ArchiveError
@@ -75,6 +76,7 @@ class ArchiveArgs:
 
 def parseargs(argv: list[str] | None = None) -> ArchiveArgs:
     parser = argparse.ArgumentParser()
+    parser.add_argument("--version", action="version", version=__version__)
     parser.add_argument(
         "-O", "--output", type=Path, default="vendor.tar.gz", help="%(default)s"
     )
