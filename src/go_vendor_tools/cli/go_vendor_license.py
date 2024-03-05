@@ -63,7 +63,7 @@ def choose_license_detector(
     return next(iter(available.values()))
 
 
-def parseargs() -> argparse.Namespace:
+def parseargs(argv: list[str] | None = None) -> argparse.Namespace:
     """
     Parse arguments and return an `argparse.Namespace`
     """
@@ -134,13 +134,14 @@ def parseargs() -> argparse.Namespace:
         "--filelist", dest="install_filelist", type=Path, required=True
     )
 
-    args = parser.parse_args()
-    args.config = load_config(args.config_path)["licensing"]
-    if not args.detector:
-        args.detector = args.config["detector"]
-    args.detector = choose_license_detector(
-        args.detector, args.config, args.detector_config
-    )
+    args = parser.parse_args(argv)
+    if args.subcommand != "explicit":
+        args.config = load_config(args.config_path)["licensing"]
+        if not args.detector:
+            args.detector = args.config["detector"]
+        args.detector = choose_license_detector(
+            args.detector, args.config, args.detector_config
+        )
     global COLOR  # noqa: PLW0603
     COLOR = args.color
     if args.subcommand == "report" and not args.mode:
@@ -285,7 +286,7 @@ def explicit_command(args: argparse.Namespace) -> None:
         import tomlkit
     except ImportError:
         sys.exit("tomlkit is required for the 'explicit' subcommand")
-    if not args.config:
+    if not args.config_path:
         sys.exit("--config must be specified!")
 
     if args.config_path.is_file():
@@ -313,8 +314,8 @@ def explicit_command(args: argparse.Namespace) -> None:
         tomlkit.dump(loaded, fp)
 
 
-def main() -> None:
-    args = parseargs()
+def main(argv: list[str] | None = None) -> None:
+    args = parseargs(argv)
     if args.subcommand == "report":
         report_command(args)
     elif args.subcommand == "explicit":
