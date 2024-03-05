@@ -60,3 +60,5 @@ install -Dpm 0644 rpm/macros.go_vendor_tools -t %{buildroot}%{_rpmmacrodir}
 %pyproject_extras_subpkg -n go-vendor-tools all
 
 %changelog
+* Tue Mar 05 2024 Maxwell G <maxwell@gtmx.me> - 0.0.1-1
+- Release 0.0.1.
