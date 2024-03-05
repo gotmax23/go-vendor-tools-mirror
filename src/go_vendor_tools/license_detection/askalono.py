@@ -52,7 +52,7 @@ def _remove_line(file: StrPath, key: Callable[[str], bool]) -> None:
     lines: list[str] = []
     with open(file, "r+", encoding="utf-8") as fp:
         for line in fp:
-            if not key(line):
+            if key(line):
                 continue
             lines.append(line)
         fp.seek(0)
