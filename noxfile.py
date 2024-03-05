@@ -90,7 +90,7 @@ def test(session: nox.Session):
 
 @nox.session
 def integration(session: nox.Session) -> None:
-    install(session, ".", "coverage[toml]", "fclogr")
+    install(session, ".", "coverage[toml]", "fclogr", editable=True)
     packages_env = session.env.get("PACKAGES")
     packages = shlex.split(packages_env) if packages_env else INTEGRATION_PACKAGES
     with coverage_run(session) as cov_env:
