@@ -41,6 +41,7 @@ all = [
 ]
 # Dev
 codeqa = [
+    "pymarkdownlnt",
     "reuse",
     "ruff>=0.3.0",
     "shellcheck-py",
@@ -101,6 +102,9 @@ check_untyped_defs = true
 module = ["license_expression.*"]
 ignore_missing_imports = true
 
+
+[tool.pymarkdown.plugins.first-line-heading]
+enabled = false
 
 
 [tool.coverage.run]
