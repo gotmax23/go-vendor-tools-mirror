@@ -54,6 +54,9 @@ build-srpms:
       redhat-rpm-config
       rpm-build
       rpmdevtools
+    - >-
+      sudo dnf install -y
+      https://github.com/aquasecurity/trivy/releases/download/v0.49.1/trivy_0.49.1_Linux-64bit.rpm
   script:
     - export GO_VENDOR_ARCHIVE_USE_MODULE_PROXY=1
     - pipx run nox -e integration
