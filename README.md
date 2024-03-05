@@ -46,7 +46,7 @@ Release:        %autorelease
 Summary:        Config driven, easy backup cli for restic
 
 # NOTE: Generated with:
-#   $ go_vendor_license -d <UNPACKED ARCHIVE> report expression
+#   $ go_vendor_license -C <UNPACKED ARCHIVE> report expression
 License:        Apache-2.0 AND BSD-2-Clause AND BSD-3-Clause AND MIT AND MPL-2.0
 URL:            %{gourl}
 Source0:        %{gosource}
