@@ -105,6 +105,8 @@ ignore_missing_imports = true
 
 [tool.pymarkdown.plugins.first-line-heading]
 enabled = false
+[tool.pymarkdown.plugins.no-inline-html]
+enabled = false
 
 
 [tool.coverage.run]
