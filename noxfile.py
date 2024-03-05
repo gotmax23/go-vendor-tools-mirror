@@ -229,25 +229,10 @@ def publish(session: nox.Session):
     # Upload to PyPI
     session.run("releaserr", "upload")
 
-    # Push to git, publish artifacts to sourcehut, and release to copr
-    if not session.interactive or input(
-        "Push to forge and copr build (Y/n)"
-    ).lower() in ("", "y"):
-        git(session, "push", "--follow-tags")
-        copr_release(session)
-
     # Post-release bump
     session.run("releaserr", "post-version", "-s", "file")
     git(session, "add", f"src/{PROJECT}/__init__.py")
     git(session, "commit", "-S", "-m", "Post release version bump")
-
-
-@nox.session
-def copr_release(session: nox.Session):
-    install(session, "copr-cli", "requests-gssapi")
-    session.run(
-        "copr-cli", "build", "--nowait", f"gotmax23/{PROJECT}", f"{PROJECT}.spec"
-    )
 
 
 @nox.session
