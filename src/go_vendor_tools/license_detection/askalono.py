@@ -142,7 +142,9 @@ class AskalonoeLicenseDetector(LicenseDetector[AskalonoLicenseData]):
         if gitignore.is_file():
             _remove_line(gitignore, lambda line: line.startswith("vendor"))
         results, undetected = _filter_license_data(_get_askalono_data(directory))
-        extra_licenses, unmatched = get_extra_licenses(self.license_config["licenses"])
+        extra_licenses, unmatched = get_extra_licenses(
+            self.license_config["licenses"], directory
+        )
         license_map = _get_simplified_license_map(
             Path(directory), results, extra_licenses
         )

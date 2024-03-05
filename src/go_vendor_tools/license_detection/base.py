@@ -25,13 +25,13 @@ if TYPE_CHECKING:
 
 
 def get_extra_licenses(
-    licenses: list[LicenseEntry],
+    licenses: list[LicenseEntry], directory: StrPath
 ) -> tuple[dict[Path, str], list[Path]]:
     results: dict[Path, str] = {}
     not_matched: list[Path] = []
     seen: set[Path] = set()
     for lic in licenses:
-        path = Path(lic["path"])
+        path = Path(directory, lic["path"])
         if path in results:
             raise LicenseError(
                 f"{path} was specified multiple times in the configuration!"

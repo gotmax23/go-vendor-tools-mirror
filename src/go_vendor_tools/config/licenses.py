@@ -7,11 +7,7 @@ Configuration for the go_vendor_licenses command
 
 from __future__ import annotations
 
-from pathlib import Path
 from typing import Any, TypedDict, cast
-
-from ..exceptions import LicenseError
-from ..hashing import verify_hash
 
 
 class LicenseEntry(TypedDict, total=False):
@@ -39,23 +35,3 @@ def create_license_config(data: dict[str, Any] | None = None) -> LicenseConfig:
     data.setdefault("exclude_directories", [])
     data.setdefault("exclude_files", [])
     return cast("LicenseConfig", data)
-
-
-def get_extra_licenses(
-    licenses: list[LicenseEntry],
-) -> tuple[dict[Path, str], list[Path]]:
-    results: dict[Path, str] = {}
-    not_matched: list[Path] = []
-    seen: set[Path] = set()
-    for lic in licenses:
-        path = Path(lic["path"])
-        if path in results:
-            raise LicenseError(
-                f"{path} was specified multiple times in the configuration!"
-            )
-        seen.add(path)
-        if verify_hash(path, lic["sha256sum"]):
-            results[path] = lic["expression"]
-        else:
-            not_matched.append(path)
-    return results, not_matched

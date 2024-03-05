@@ -16,13 +16,14 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, Literal, TypedDict, cast
 
 from go_vendor_tools.config.licenses import LicenseConfig
-from go_vendor_tools.licensing import combine_licenses, get_extra_licenses
+from go_vendor_tools.licensing import combine_licenses
 
 from .base import (
     LicenseData,
     LicenseDetector,
     LicenseDetectorNotAvailableError,
     filter_unwanted_paths,
+    get_extra_licenses,
 )
 
 if TYPE_CHECKING:
@@ -102,7 +103,9 @@ class TrivyLicenseDetector(LicenseDetector[TrivyLicenseData]):
             else:
                 license_map[path] = name
 
-            extra, unmatched = get_extra_licenses(self.license_config["licenses"])
+            extra, unmatched = get_extra_licenses(
+                self.license_config["licenses"], directory
+            )
         license_map |= extra
         filtered_license_map = filter_unwanted_paths(
             license_map,
