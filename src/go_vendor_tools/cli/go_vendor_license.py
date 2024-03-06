@@ -354,7 +354,9 @@ def explicit_command(args: argparse.Namespace) -> None:
     licenses = cast(dict, data).setdefault("licenses", tomlkit.aot())
     relpath = get_relpath(args.directory, args.license_file)
     try:
-        expression = simplify_license(args.license_expression)
+        expression = (
+            simplify_license(args.license_expression) if args.license_expression else ""
+        )
     except license_expression.ExpressionError as exc:
         sys.exit(f"Failed to parse license: {exc}")
     entry = LicenseEntry(

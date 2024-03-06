@@ -12,12 +12,15 @@ import license_expression
 licensing = license_expression.get_spdx_licensing()
 
 
-def combine_licenses(*expressions: str) -> license_expression.LicenseExpression:
+def combine_licenses(*expressions: str | None) -> license_expression.LicenseExpression:
     """
     Combine SPDX license expressions with AND
     """
+    # Set a file's license to an empty string or None to exclude it from the
+    # calculation.
+    filtered = [expression for expression in expressions if expression]
     return license_expression.combine_expressions(
-        expressions, licensing=licensing
+        filtered, licensing=licensing
     ).simplify()
 
 
