@@ -33,7 +33,7 @@ def red(__msg: str, /, *, file: IO[str] = sys.stdout) -> None:
     color = COLOR
     if color is None:
         color = file.isatty()
-    print(f"{RED}{__msg}{CLEAR}", file=file)
+    print(f"{RED if color else ''}{__msg}{CLEAR if color else ''}", file=file)
 
 
 def split_kv_options(kv_config: list[str]) -> dict[str, str]:
