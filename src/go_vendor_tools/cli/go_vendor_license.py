@@ -17,7 +17,11 @@ import license_expression
 
 from go_vendor_tools import __version__
 from go_vendor_tools.config.base import load_config
-from go_vendor_tools.config.licenses import LicenseConfig, LicenseEntry
+from go_vendor_tools.config.licenses import (
+    LicenseConfig,
+    LicenseEntry,
+    create_license_config,
+)
 from go_vendor_tools.gomod import get_unlicensed_mods
 from go_vendor_tools.hashing import get_hash
 from go_vendor_tools.license_detection.base import LicenseData, LicenseDetector
@@ -101,6 +105,7 @@ def parseargs(argv: list[str] | None = None) -> argparse.Namespace:
         choices=DETECTORS,
         default=os.environ.get("GO_VENDOR_LICENSE_DETECTOR"),
         help="Choose a license detector. Choices: %(choices)s. Default: autodetect",
+        dest="detector_name",
     )
     parser.add_argument(
         "-D",
@@ -159,14 +164,18 @@ def parseargs(argv: list[str] | None = None) -> argparse.Namespace:
     )
     # TODO: Should we support writing JSON from the install command or just reading it?
     # _add_json_argument(install_parser)
+    generate_buildrequires_parser = subparsers.add_parser(  # noqa F841
+        "generate_buildrequires"
+    )
 
     args = parser.parse_args(argv)
-    if args.subcommand != "explicit":
+    if args.subcommand not in ("explicit",):
         args.config = load_config(args.config_path)["licensing"]
-        if not args.detector:
-            args.detector = args.config["detector"]
+        if not args.detector_name:
+            args.detector_name = args.config["detector"]
+    if args.subcommand in ("report", "install"):
         args.detector = choose_license_detector(
-            args.detector, args.config, args.detector_config
+            args.detector_name, args.config, args.detector_config
         )
     global COLOR  # noqa: PLW0603
     COLOR = args.color
@@ -369,6 +378,22 @@ def explicit_command(args: argparse.Namespace) -> None:
         tomlkit.dump(loaded, fp)
 
 
+def generate_buildrequires_command(args: argparse.Namespace) -> None:
+    detector: str = args.detector_name
+    del args
+
+    if not detector:
+        # If the detector is not explicitly specified, attempt to fall back to
+        # the one whose dependencies are already installed.
+        available, missing = get_detctors({}, create_license_config())
+        detector = next(iter(available), "") or next(iter(missing))
+    elif detector not in DETECTORS:
+        sys.exit(f"{detector!r} is does not exist! Choices: {tuple(DETECTORS)}")
+    detector_cls = DETECTORS[detector]
+    for requirement in detector_cls.PACKAGES_NEEDED:
+        print(requirement)
+
+
 def main(argv: list[str] | None = None) -> None:
     args = parseargs(argv)
     if args.subcommand == "report":
@@ -377,6 +402,8 @@ def main(argv: list[str] | None = None) -> None:
         explicit_command(args)
     elif args.subcommand == "install":
         install_command(args)
+    elif args.subcommand == "generate_buildrequires":
+        generate_buildrequires_command(args)
 
 
 if __name__ == "__main__":

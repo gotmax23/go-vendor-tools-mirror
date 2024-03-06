@@ -33,6 +33,9 @@ BuildRequires:  go-vendor-tools
 %autosetup -p1 -b1 %{forgesetupargs}
 %goprep -ke
 
+%generate_buildrequires
+%go_vendor_license_buildrequires
+
 %build
 %dnl We don't care about building or installing the package for the purposes of
 %dnl the integration test.
@@ -40,11 +43,17 @@ BuildRequires:  go-vendor-tools
 %global debug_package %{nil}
 
 %install
+# Check go_vendor_license_buildrequires
+(%{go_vendor_license_buildrequires -d askalono}) | tee buildrequires
+test "$(cat buildrequires)" = "askalono-cli"
+(%{go_vendor_license_buildrequires -d trivy}) | tee buildrequires
+test "$(cat buildrequires)" = "trivy"
 # Specify -n manually for testing purposes
 %go_vendor_license_install -n not-fzf
 
 %check
 %go_vendor_license_check
+
 diff -u %{S:2} licenses.list
 
 %files -f %{go_vendor_license_filelist}

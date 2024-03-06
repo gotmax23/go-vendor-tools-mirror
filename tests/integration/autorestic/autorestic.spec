@@ -34,6 +34,9 @@ BuildRequires:  go-vendor-tools
 %autosetup -p1 %{forgesetupargs} -a1
 %goprep -ke
 
+%generate_buildrequires
+(%{go_vendor_license_buildrequires -c %{S:2}}) | tee buildrequires
+
 %build
 %global gomodulesmode GO111MODULE=on
 %gobuild -o autorestic %{goipath}
@@ -46,6 +49,7 @@ install -Dpm 0755 -t %{buildroot}%{_bindir} autorestic
 %check
 %go_vendor_license_check -c %{S:2} -d askalono -D askalono_path=/usr/bin/askalono
 diff -u licenses.list %{S:3}
+test "$(cat buildrequires)" = "askalono-cli"
 %if %{with check}
 %gocheck
 %endif

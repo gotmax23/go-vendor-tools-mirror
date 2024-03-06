@@ -20,7 +20,7 @@ BuildArch:      noarch
 
 BuildRequires:  python3-devel
 
-Requires:       (askalono-cli or trivy)
+Recommends:     (askalono-cli or trivy)
 
 
 %description

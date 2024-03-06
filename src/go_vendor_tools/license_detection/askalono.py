@@ -124,6 +124,8 @@ class AskalonoLicenseData(LicenseData):
 
 
 class AskalonoeLicenseDetector(LicenseDetector[AskalonoLicenseData]):
+    PACKAGES_NEEDED = ("askalono-cli",)
+
     def __init__(
         self, cli_config: dict[str, str], license_config: LicenseConfig
     ) -> None:

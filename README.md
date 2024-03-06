@@ -73,6 +73,11 @@ BuildRequires:  go-vendor-tools
 # NOTE: -e disables automatic extraction. %%autosetup already does this.
 %goprep -k -e
 
+%generate_buildrequires
+# NOTE: go-vendor-tools has its own macro to generate buildrequires needed to
+# NOTE: run the license detector.
+%go_vendor_license_buildrequires
+
 %build
 %gobuild -o %{gobuilddir}/bin/autorestic %{goipath}
 

@@ -4,6 +4,15 @@
 # Path to the go_vendor_licenses helper script
 %__go_vendor_license go_vendor_license
 
+# Generate requirements needed for the selected backend
+%go_vendor_license_buildrequires(c:d:D:) %{shrink:
+    %{__go_vendor_license}
+    %{-c:--config %{-c*}}
+    %{-d:--detector %{-d*}}
+    %{-D:--detector-config %{-D*}}
+    generate_buildrequires
+}
+
 # NOTE(gotmax23): This is parameterized on purpose. We may add options to have
 # multiple license filelists for different subpackages in the future.
 %go_vendor_license_filelist() licenses.list
