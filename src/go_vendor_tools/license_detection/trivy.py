@@ -94,7 +94,7 @@ class TrivyLicenseDetector(LicenseDetector[TrivyLicenseData]):
             raise ValueError("Failed to read Trivy license data")
 
         license_map: dict[Path, str] = {}
-        for result in licenses["Licenses"]:
+        for result in licenses.get("Licenses", []):
             path = Path(result["FilePath"])
             name = result["Name"]
             # License files can have multiple matches in trivy
@@ -103,9 +103,9 @@ class TrivyLicenseDetector(LicenseDetector[TrivyLicenseData]):
             else:
                 license_map[path] = name
 
-            extra, unmatched = get_extra_licenses(
-                self.license_config["licenses"], directory
-            )
+        extra, unmatched = get_extra_licenses(
+            self.license_config["licenses"], directory
+        )
         license_map |= extra
         filtered_license_map = filter_unwanted_paths(
             license_map,
