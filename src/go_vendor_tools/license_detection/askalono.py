@@ -20,8 +20,9 @@ from .base import (
     LicenseData,
     LicenseDetector,
     LicenseDetectorNotAvailableError,
-    filter_unwanted_paths,
+    filter_license_map,
     get_extra_licenses,
+    is_unwanted_path,
 )
 
 if TYPE_CHECKING:
@@ -150,8 +151,17 @@ class AskalonoeLicenseDetector(LicenseDetector[AskalonoLicenseData]):
         )
         # Remove manually specified licenses
         undetected -= set(extra_licenses)
+        undetected = {
+            path
+            for path in undetected
+            if not is_unwanted_path(
+                path,
+                self.license_config["exclude_directories"],
+                self.license_config["exclude_files"],
+            )
+        }
 
-        filtered_license_map = filter_unwanted_paths(
+        filtered_license_map = filter_license_map(
             license_map,
             self.license_config["exclude_directories"],
             self.license_config["exclude_files"],

@@ -45,7 +45,20 @@ def get_extra_licenses(
     return results, not_matched
 
 
-def filter_unwanted_paths(
+def is_unwanted_path(
+    path: Path,
+    exclude_directories: Collection[StrPath],
+    exclude_files: Collection[StrPath],
+) -> bool:
+    return (
+        # Hardcoded exception
+        "testdata" in path.parts
+        or path in exclude_files
+        or any(path.is_relative_to(directory) for directory in exclude_directories)
+    )
+
+
+def filter_license_map(
     license_map: dict[Path, str],
     exclude_directories: Collection[StrPath],
     exclude_files: Collection[StrPath],
@@ -58,10 +71,7 @@ def filter_unwanted_paths(
     return {
         path: exp
         for path, exp in license_map.items()
-        if not (
-            path in exclude_files
-            or any(path.is_relative_to(directory) for directory in exclude_directories)
-        )
+        if not is_unwanted_path(path, exclude_directories, exclude_files)
     }
 
 

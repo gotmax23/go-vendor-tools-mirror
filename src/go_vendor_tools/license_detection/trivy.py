@@ -22,7 +22,7 @@ from .base import (
     LicenseData,
     LicenseDetector,
     LicenseDetectorNotAvailableError,
-    filter_unwanted_paths,
+    filter_license_map,
     get_extra_licenses,
 )
 
@@ -107,7 +107,7 @@ class TrivyLicenseDetector(LicenseDetector[TrivyLicenseData]):
             self.license_config["licenses"], directory
         )
         license_map |= extra
-        filtered_license_map = filter_unwanted_paths(
+        filtered_license_map = filter_license_map(
             license_map,
             self.license_config["exclude_directories"],
             self.license_config["exclude_files"],
