@@ -86,6 +86,9 @@ path = "src/go_vendor_tools/__init__.py"
 addopts = [
     "--import-mode=importlib",
 ]
+testpaths = [
+    "tests/pytests",
+]
 
 
 [tool.isort]
