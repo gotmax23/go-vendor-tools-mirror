@@ -161,7 +161,11 @@ def parseargs(argv: list[str] | None = None) -> argparse.Namespace:
         args.mode = "list" if args.verify else "all"
     if not args.directory.is_dir():
         sys.exit(f"{args.directory} must exist and be a directory")
-    if not (modtxt := args.directory / "vendor/modules.txt"):
+    if (
+        args.subcommand == "report"
+        and not args.ignore_unlicensed_mods
+        and not (modtxt := args.directory / "vendor/modules.txt").is_file()
+    ):
         sys.exit(f"{modtxt} does not exist!")
     return args
 
@@ -231,7 +235,11 @@ def report_command(args: argparse.Namespace) -> None:
     del args
 
     license_data: LicenseData = detector.detect(directory)
-    unlicensed_mods = get_unlicensed_mods(directory, license_data.license_file_paths)
+    unlicensed_mods = (
+        set()
+        if ignore_unlicensed_mods
+        else get_unlicensed_mods(directory, license_data.license_file_paths)
+    )
     print_licenses(
         license_data,
         unlicensed_mods,
