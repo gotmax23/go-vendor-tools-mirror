@@ -8,6 +8,7 @@ Base configuration
 from __future__ import annotations
 
 import sys
+from pathlib import Path
 from typing import TYPE_CHECKING, Any, TypedDict, cast
 
 from go_vendor_tools.config.archive import ArchiveConfig, create_archive_config
@@ -36,10 +37,14 @@ def create_base_config(data: dict[str, Any] | None = None) -> BaseConfig:
     return cast(BaseConfig, data)
 
 
-def load_config(config: StrPath | None = None) -> BaseConfig:
+def load_config(
+    config: StrPath | None = None, allow_missing: bool = False
+) -> BaseConfig:
     """
     Load the configuration TOML file if `config` is not None
     """
+    if allow_missing and config and not Path(config).is_file():
+        config = None
     if not config:
         return create_base_config()
     with open(config, "rb") as fp:

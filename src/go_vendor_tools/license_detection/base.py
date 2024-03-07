@@ -111,6 +111,7 @@ class LicenseData:
         "unmatched_extra_licenses",
         "license_file_paths",
     )
+    replace = dataclasses.replace
 
     def __post_init__(self) -> None:
         self.license_set = set(self.license_map.values())

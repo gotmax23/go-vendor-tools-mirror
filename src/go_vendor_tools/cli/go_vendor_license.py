@@ -9,7 +9,8 @@ import json
 import os
 import shutil
 import sys
-from collections.abc import Collection, Iterable, Iterator
+from collections.abc import Collection, Iterable, Iterator, MutableSequence
+from functools import cache
 from pathlib import Path
 from typing import IO, Any, cast
 
@@ -27,6 +28,13 @@ from go_vendor_tools.hashing import get_hash
 from go_vendor_tools.license_detection.base import LicenseData, LicenseDetector
 from go_vendor_tools.license_detection.load import DETECTORS, get_detctors
 from go_vendor_tools.licensing import compare_licenses, simplify_license
+
+try:
+    import tomlkit
+except ImportError:
+    HAS_TOMLKIT = False
+else:
+    HAS_TOMLKIT = True
 
 COLOR = None
 RED = "\033[31m"  # ]
@@ -137,12 +145,22 @@ def parseargs(argv: list[str] | None = None) -> argparse.Namespace:
         metavar="EXPRESSION",
     )
     report_parser.add_argument(
+        "--prompt",
+        action=argparse.BooleanOptionalAction,
+        help="Whether to prompt to fill in undetected licenses."
+        " Default: %(default)s",
+    )
+    report_parser.add_argument(
         "mode",
         nargs="?",
         type=str,
         choices=("all", "expression", "list"),
+        default="all",
     )
     _add_json_argument(report_parser)
+    report_parser.add_argument(
+        "--write-config", help="Write a base config.", action="store_true"
+    )
     explict_parser = subparsers.add_parser(
         "explicit", help="Add manual license entry to a config file"
     )
@@ -170,7 +188,10 @@ def parseargs(argv: list[str] | None = None) -> argparse.Namespace:
 
     args = parser.parse_args(argv)
     if args.subcommand not in ("explicit",):
-        args.config = load_config(args.config_path)["licensing"]
+        loaded = load_config(
+            args.config_path, allow_missing=getattr(args, "write_config", False)
+        )
+        args.config = loaded["licensing"]
         if not args.detector_name:
             args.detector_name = args.config["detector"]
     if args.subcommand in ("report", "install"):
@@ -179,8 +200,6 @@ def parseargs(argv: list[str] | None = None) -> argparse.Namespace:
         )
     global COLOR  # noqa: PLW0603
     COLOR = args.color
-    if args.subcommand == "report" and not args.mode:
-        args.mode = "list" if args.verify else "all"
     if not args.directory.is_dir():
         sys.exit(f"{args.directory} must exist and be a directory")
     if (
@@ -252,6 +271,77 @@ def write_license_json(data: LicenseData, file: Path) -> None:
         json.dump(data.to_jsonable(), fp)
 
 
+@cache
+def need_tomlkit(action="this action"):
+    if not HAS_TOMLKIT:
+        message = f"tomlkit is required for {action}. Please install it!"
+        sys.exit(message)
+
+
+def load_tomlkit_if_exists(path: Path | None) -> tomlkit.TOMLDocument:
+    if path and path.is_file():
+        with path.open("r", encoding="utf-8") as fp:
+            loaded = tomlkit.load(fp)
+    else:
+        loaded = tomlkit.document()
+    return loaded
+
+
+def tomlkit_dump(obj: Any, path: Path) -> None:
+    need_tomlkit()
+    with path.open("w") as fp:
+        tomlkit.dump(obj, fp)
+
+
+def prompt_missing_licenses(
+    data: LicenseData,
+) -> tuple[LicenseData, list[LicenseEntry]]:
+    entries: list[LicenseEntry] = []
+    if not data.undetected_licenses:
+        return data, entries
+    print("Undetected licenses found! Please enter them manually.")
+    undetected_licenses = set(data.undetected_licenses)
+    license_map: dict[Path, str] = dict(data.license_map)
+    for undetected in sorted(data.undetected_licenses):
+        print(f"* Undetected license: {undetected}")
+        expression_str = input("Enter SPDX expression: ")
+        expression: str = (
+            str(simplify_license(expression_str)) if expression_str else ""
+        )
+        print(f"Expression simplified to {expression!r}")
+        license_map[undetected] = expression
+        entries.append(
+            LicenseEntry(
+                path=str(undetected),
+                sha256sum=get_hash(data.directory / undetected),
+                expression=expression,
+            )
+        )
+        undetected_licenses.remove(undetected)
+    assert not undetected_licenses
+    return (
+        data.replace(undetected_licenses=undetected_licenses, license_map=license_map),
+        entries,
+    )
+
+
+def _write_config_verify_path(config_path: Path | None) -> Path:
+    if config_path:
+        return config_path
+    need_tomlkit("--write-config")
+
+    default = Path.cwd() / "go-vendor-tools.toml"
+    if default.is_file():
+        sys.exit("--write-config: Please pass --config to write configuration file!")
+    else:
+        print(
+            "WARNING --write-config: No --config path specified"
+            f" Will write to {default}",
+            file=sys.stderr,
+        )
+    return config_path or default
+
+
 def report_command(args: argparse.Namespace) -> None:
     detector: LicenseDetector = args.detector
     directory: Path = args.directory
@@ -260,7 +350,16 @@ def report_command(args: argparse.Namespace) -> None:
     mode: str = args.mode
     verify: str | None = args.verify
     write_json: Path | None = args.write_json
+    write_config: Path | None = args.write_config
+    prompt: bool = args.prompt
+    config_path: Path | None = args.config_path
     del args
+
+    if write_config:
+        config_path = _write_config_verify_path(config_path)
+        loaded = load_tomlkit_if_exists(config_path)
+        write_config_data = loaded.setdefault("licensing", {})
+        write_config_data |= {"detector": detector.NAME}
 
     license_data: LicenseData = detector.detect(directory)
     unlicensed_mods = (
@@ -268,6 +367,16 @@ def report_command(args: argparse.Namespace) -> None:
         if ignore_unlicensed_mods
         else get_unlicensed_mods(directory, license_data.license_file_paths)
     )
+    if prompt:
+        license_data, license_entries_to_add = prompt_missing_licenses(license_data)
+        if license_entries_to_add:
+            license_config_list: MutableSequence
+            # fmt: on
+            license_config_list = write_config_data.setdefault(
+                "licensing", {}
+            ).setdefault("licenses", tomlkit.aot() if HAS_TOMLKIT else [])
+            # fmt: off
+            license_config_list.extend(license_entries_to_add)
     print_licenses(
         license_data,
         unlicensed_mods,
@@ -280,6 +389,8 @@ def report_command(args: argparse.Namespace) -> None:
         write_license_json(license_data, write_json)
     if verify and not compare_licenses(license_data.license_expression, verify):
         sys.exit("Failed to verify license. Expected ^")
+    if write_config:
+        tomlkit_dump(loaded, cast(Path, config_path))
     sys.exit(
         bool(
             (license_data.undetected_licenses and not ignore_undetected)
@@ -344,18 +455,10 @@ def replace_entry(
 
 
 def explicit_command(args: argparse.Namespace) -> None:
-    try:
-        import tomlkit
-    except ImportError:
-        sys.exit("tomlkit is required for the 'explicit' subcommand")
     if not args.config_path:
         sys.exit("--config must be specified!")
+    loaded = load_tomlkit_if_exists(args.config_path)
 
-    if args.config_path.is_file():
-        with args.config_path.open("r", encoding="utf-8") as fp:
-            loaded = tomlkit.load(fp)
-    else:
-        loaded = tomlkit.document()
     if "licensing" not in loaded:
         loaded.add("licensing", tomlkit.table())
     data = loaded["licensing"]
@@ -374,8 +477,7 @@ def explicit_command(args: argparse.Namespace) -> None:
         expression=expression,
     )
     replace_entry(licenses, entry, relpath)
-    with args.config_path.open("w", encoding="utf-8") as fp:
-        tomlkit.dump(loaded, fp)
+    tomlkit_dump(loaded, args.config_path)
 
 
 def generate_buildrequires_command(args: argparse.Namespace) -> None:
