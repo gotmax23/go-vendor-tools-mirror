@@ -44,7 +44,7 @@ def run_command(
 
 
 @dataclasses.dataclass()
-class ArchiveArgs:
+class CreateArchiveArgs:
     path: Path
     output: Path
     use_top_level_dir: bool
@@ -60,7 +60,9 @@ class ArchiveArgs:
     )
 
     @classmethod
-    def construct(cls, **kwargs: Any) -> ArchiveArgs:
+    def construct(cls, **kwargs: Any) -> CreateArchiveArgs:
+        if kwargs.pop("subcommand") != "create":
+            raise AssertionError  # pragma: no cover
         kwargs["config"] = load_config(kwargs["config_path"])
         for opt in cls.CONFIG_OPTS:
             if kwargs[opt] is None:
@@ -71,38 +73,44 @@ class ArchiveArgs:
 
         if not kwargs["path"].exists():
             raise ArchiveError(f"{kwargs['path']} does not exist!")
-        return ArchiveArgs(**kwargs)
+        return CreateArchiveArgs(**kwargs)
 
 
-def parseargs(argv: list[str] | None = None) -> ArchiveArgs:
+def parseargs(argv: list[str] | None = None) -> CreateArchiveArgs:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--version", action="version", version=__version__)
-    parser.add_argument(
+    subparsers = parser.add_subparsers(dest="subcommand")
+    subparsers.required = True
+    create_subparser = subparsers.add_parser("create")
+    create_subparser.add_argument("--version", action="version", version=__version__)
+    create_subparser.add_argument(
         "-O", "--output", type=Path, default="vendor.tar.gz", help="%(default)s"
     )
-    parser.add_argument(
+    create_subparser.add_argument(
         "--top-level-dir",
         default=None,
         dest="use_top_level_dir",
         action=argparse.BooleanOptionalAction,
     )
-    parser.add_argument("--use-module-proxy", action="store_true", default=None)
-    parser.add_argument("-p", action="store_true", dest="use_module_proxy")
-    parser.add_argument("-c", "--config", type=Path, dest="config_path")
-    parser.add_argument(
+    create_subparser.add_argument(
+        "--use-module-proxy", action="store_true", default=None
+    )
+    create_subparser.add_argument("-p", action="store_true", dest="use_module_proxy")
+    create_subparser.add_argument("-c", "--config", type=Path, dest="config_path")
+    create_subparser.add_argument(
         "--tidy",
         help="%(default)s",
         action=argparse.BooleanOptionalAction,
         default=None,
     )
-    parser.add_argument("path", type=Path)
+    create_subparser.add_argument("path", type=Path)
     args = parser.parse_args(argv)
-    return ArchiveArgs.construct(**vars(args))
+    if args.subcommand == "create":
+        return CreateArchiveArgs.construct(**vars(args))
+    else:
+        raise RuntimeError("unreachable")
 
 
-def main(argv: list[str] | None = None) -> None:
-    args = parseargs(argv)
-
+def create_archive(args: CreateArchiveArgs) -> None:
     cwd = args.path
     cm: AbstractContextManager[str] = nullcontext(str(args.path))
     # Treat as an archive if it's not a directory
@@ -127,6 +135,12 @@ def main(argv: list[str] | None = None) -> None:
             add_files_to_archive(
                 tf, Path(cwd), ARCHIVE_FILES, top_level_dir=args.use_top_level_dir
             )
+
+
+def main(argv: list[str] | None = None) -> None:
+    args = parseargs(argv)
+    if isinstance(args, CreateArchiveArgs):
+        create_archive(args)
 
 
 if __name__ == "__main__":
