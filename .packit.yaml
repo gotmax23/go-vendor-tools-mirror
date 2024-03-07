@@ -46,8 +46,11 @@ jobs:
       - go-vendor-tools
       - autorestic
       - fzf
-    targets:
-      - fedora-all-x86_64
+    targets: &targets
+      fedora-all-x86_64:
+        additional_packages:
+          # TODO: Remove this once trivy is packaged in Fedora!
+          - https://github.com/aquasecurity/trivy/releases/download/v0.49.1/trivy_0.49.1_Linux-64bit.rpm
       # - epel-9-x86_64
     trigger: pull_request
 
@@ -56,11 +59,7 @@ jobs:
       - go-vendor-tools
       - autorestic
       - fzf
-    targets:
-      - fedora-39-x86_64
-      - fedora-40-x86_64
-      - fedora-rawhide-x86_64
-      # - epel-9-x86_64
+    targets: *targets
     owner: "@go-sig"
     project: go-vendor-tools-dev
     trigger: commit
