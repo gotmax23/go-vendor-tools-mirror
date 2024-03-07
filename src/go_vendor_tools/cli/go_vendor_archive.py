@@ -83,7 +83,7 @@ def parseargs(argv: list[str] | None = None) -> CreateArchiveArgs:
     create_subparser = subparsers.add_parser("create")
     create_subparser.add_argument("--version", action="version", version=__version__)
     create_subparser.add_argument(
-        "-O", "--output", type=Path, default="vendor.tar.gz", help="%(default)s"
+        "-O", "--output", type=Path, default="vendor.tar.xz", help="%(default)s"
     )
     create_subparser.add_argument(
         "--top-level-dir",
