@@ -13,8 +13,8 @@ from .base import LicenseDetector, LicenseDetectorNotAvailableError
 from .trivy import TrivyLicenseDetector
 
 DETECTORS: dict[str, type[LicenseDetector]] = {
-    "trivy": TrivyLicenseDetector,
-    "askalono": AskalonoeLicenseDetector,
+    TrivyLicenseDetector.NAME: TrivyLicenseDetector,
+    AskalonoLicenseDetector.NAME: AskalonoLicenseDetector,
 }
 
 

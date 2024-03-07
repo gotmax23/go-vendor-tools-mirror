@@ -168,6 +168,7 @@ LicenseDataT = TypeVar("LicenseDataT", bound=LicenseData)
 
 
 class LicenseDetector(Generic[LicenseDataT], metaclass=abc.ABCMeta):
+    NAME: ClassVar[str]
     PACKAGES_NEEDED: ClassVar[tuple[str, ...]] = ()
 
     @abc.abstractmethod

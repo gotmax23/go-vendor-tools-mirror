@@ -59,6 +59,7 @@ class TrivyLicenseData(LicenseData):
 
 
 class TrivyLicenseDetector(LicenseDetector[TrivyLicenseData]):
+    NAME = "trivy"
     PACKAGES_NEEDED = ("trivy",)
 
     def __init__(
