@@ -14,7 +14,7 @@ DEFAULT_USE_TOP_LEVEL_DIR = False
 DEFAULT_USE_MODULE_PROXY = (
     bool(os.environ.get("GO_VENDOR_ARCHIVE_USE_MODULE_PROXY")) or False
 )
-DEFAULT_TIDY = False
+DEFAULT_TIDY = True
 
 
 class ArchiveConfig(TypedDict):
