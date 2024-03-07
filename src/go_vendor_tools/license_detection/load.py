@@ -8,7 +8,7 @@ Load license detectors
 from __future__ import annotations
 
 from ..config.licenses import LicenseConfig
-from .askalono import AskalonoeLicenseDetector
+from .askalono import AskalonoLicenseDetector
 from .base import LicenseDetector, LicenseDetectorNotAvailableError
 from .trivy import TrivyLicenseDetector
 

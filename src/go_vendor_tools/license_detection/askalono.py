@@ -123,7 +123,8 @@ class AskalonoLicenseData(LicenseData):
     askalono_license_data: list[AskalonoLicenseDict]
 
 
-class AskalonoeLicenseDetector(LicenseDetector[AskalonoLicenseData]):
+class AskalonoLicenseDetector(LicenseDetector[AskalonoLicenseData]):
+    NAME = "askalono"
     PACKAGES_NEEDED = ("askalono-cli",)
 
     def __init__(
