@@ -7,6 +7,7 @@ Configuration for the go_vendor_licenses command
 
 from __future__ import annotations
 
+import os
 from typing import Any, TypedDict, cast
 
 
@@ -29,7 +30,7 @@ class LicenseConfig(TypedDict, total=False):
 
 def create_license_config(data: dict[str, Any] | None = None) -> LicenseConfig:
     data = {} if data is None else data.copy()
-    data.setdefault("detector", None)
+    data.setdefault("detector", os.environ.get("GO_VENDOR_LICENSE_DETECTOR"))
     data.setdefault("licenses", [])
     data.setdefault("exclude_globs", [])
     data.setdefault("exclude_directories", [])

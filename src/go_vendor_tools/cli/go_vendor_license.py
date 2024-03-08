@@ -111,7 +111,7 @@ def parseargs(argv: list[str] | None = None) -> argparse.Namespace:
         "-d",
         "--detector",
         choices=DETECTORS,
-        default=os.environ.get("GO_VENDOR_LICENSE_DETECTOR"),
+        default=None,
         help="Choose a license detector. Choices: %(choices)s. Default: autodetect",
         dest="detector_name",
     )
