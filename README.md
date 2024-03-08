@@ -11,8 +11,8 @@ Tools for handling Go library vendoring in Fedora
 
 ## Contributing
 
-See the [issue tracker] and issues marked with `help-needed`, in particular for
-places to start with.
+See the [issue tracker] and issues marked with `help-needed`, in particular,
+for places to start with.
 Tickets marked with `idea` are larger changes that may require refinement or
 additional discussion.
 Feel free to chime in on those issues with any thoughts or if you wish to work
