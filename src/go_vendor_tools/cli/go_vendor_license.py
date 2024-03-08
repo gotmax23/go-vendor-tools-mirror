@@ -35,6 +35,7 @@ except ImportError:
     HAS_TOMLKIT = False
 else:
     HAS_TOMLKIT = True
+    from go_vendor_tools.cli.utils import load_tomlkit_if_exists
 
 COLOR = None
 RED = "\033[31m"  # ]
@@ -276,15 +277,6 @@ def need_tomlkit(action="this action"):
     if not HAS_TOMLKIT:
         message = f"tomlkit is required for {action}. Please install it!"
         sys.exit(message)
-
-
-def load_tomlkit_if_exists(path: Path | None) -> tomlkit.TOMLDocument:
-    if path and path.is_file():
-        with path.open("r", encoding="utf-8") as fp:
-            loaded = tomlkit.load(fp)
-    else:
-        loaded = tomlkit.document()
-    return loaded
 
 
 def tomlkit_dump(obj: Any, path: Path) -> None:

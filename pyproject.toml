@@ -58,6 +58,7 @@ typing = [
     "go-vendor-tools[all]",
     "mypy",
     "pytest",
+    "pytest-mock",
     "typing_extensions",
     # For checking noxfile.py
     "nox",
@@ -65,6 +66,7 @@ typing = [
 test = [
     "go-vendor-tools[all]",
     "pytest",
+    "pytest-mock",
 ]
 dev = [
     "go-vendor-tools[all]",

@@ -15,14 +15,24 @@ import tarfile
 import tempfile
 from collections.abc import Callable, Sequence
 from contextlib import AbstractContextManager, nullcontext
-from functools import partial
+from functools import cache, partial
+from itertools import chain
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, ClassVar
 
 from go_vendor_tools import __version__
 from go_vendor_tools.archive import add_files_to_archive
+from go_vendor_tools.config.archive import get_go_dependency_update_commands
 from go_vendor_tools.config.base import BaseConfig, load_config
 from go_vendor_tools.exceptions import ArchiveError
+
+try:
+    import tomlkit
+except ImportError:
+    HAS_TOMLKIT = False
+else:
+    HAS_TOMLKIT = True
+    from go_vendor_tools.cli.utils import load_tomlkit_if_exists
 
 if TYPE_CHECKING:
     from _typeshed import StrPath
@@ -32,6 +42,13 @@ GO_PROXY_ENV = {
     "GOPROXY": "https://proxy.golang.org,direct",
     "GOSUMDB": "sum.golang.org",
 }
+
+
+@cache
+def need_tomlkit(action="this action"):
+    if not HAS_TOMLKIT:
+        message = f"tomlkit is required for {action}. Please install it!"
+        sys.exit(message)
 
 
 def run_command(
@@ -76,7 +93,20 @@ class CreateArchiveArgs:
         return CreateArchiveArgs(**kwargs)
 
 
-def parseargs(argv: list[str] | None = None) -> CreateArchiveArgs:
+@dataclasses.dataclass()
+class OverrideArgs:
+    config_path: Path
+    import_path: str
+    version: str
+
+    @classmethod
+    def construct(cls, **kwargs: Any) -> OverrideArgs:
+        if kwargs.pop("subcommand") != "override":
+            raise AssertionError  # pragma: no cover
+        return cls(**kwargs)
+
+
+def parseargs(argv: list[str] | None = None) -> CreateArchiveArgs | OverrideArgs:
     parser = argparse.ArgumentParser()
     subparsers = parser.add_subparsers(dest="subcommand")
     subparsers.required = True
@@ -103,9 +133,18 @@ def parseargs(argv: list[str] | None = None) -> CreateArchiveArgs:
         default=None,
     )
     create_subparser.add_argument("path", type=Path)
+    override_subparser = subparsers.add_parser("override")
+    override_subparser.add_argument(
+        "--config", type=Path, dest="config_path", required=True
+    )
+    override_subparser.add_argument("import_path")
+    override_subparser.add_argument("version")
+
     args = parser.parse_args(argv)
     if args.subcommand == "create":
         return CreateArchiveArgs.construct(**vars(args))
+    elif args.subcommand == "override":
+        return OverrideArgs.construct(**vars(args))
     else:
         raise RuntimeError("unreachable")
 
@@ -123,7 +162,13 @@ def create_archive(args: CreateArchiveArgs) -> None:
     with cm:
         env = os.environ | GO_PROXY_ENV if args.use_module_proxy else None
         runner = partial(subprocess.run, cwd=cwd, check=True, env=env)
-        for command in args.config["archive"]["pre_commands"]:
+        pre_commands = chain(
+            args.config["archive"]["pre_commands"],
+            get_go_dependency_update_commands(
+                args.config["archive"]["dependency_overrides"]
+            ),
+        )
+        for command in pre_commands:
             run_command(runner, command)
         if args.tidy:
             run_command(runner, ["go", "mod", "tidy"])
@@ -137,10 +182,21 @@ def create_archive(args: CreateArchiveArgs) -> None:
             )
 
 
+def override_command(args: OverrideArgs) -> None:
+    need_tomlkit()
+    loaded = load_tomlkit_if_exists(args.config_path)
+    overrides = loaded.setdefault("archive", {}).setdefault("dependency_overrides", {})
+    overrides[args.import_path] = args.version
+    with open(args.config_path, "w", encoding="utf-8") as fp:
+        tomlkit.dump(loaded, fp)
+
+
 def main(argv: list[str] | None = None) -> None:
     args = parseargs(argv)
     if isinstance(args, CreateArchiveArgs):
         create_archive(args)
+    elif isinstance(args, OverrideArgs):
+        override_command(args)
 
 
 if __name__ == "__main__":

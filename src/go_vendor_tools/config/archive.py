@@ -8,7 +8,8 @@ Configuration for the go_vendor_archive command
 from __future__ import annotations
 
 import os
-from typing import Any, TypedDict, cast
+from collections.abc import Iterator
+from typing import Any, Mapping, TypedDict, cast
 
 DEFAULT_USE_TOP_LEVEL_DIR = False
 DEFAULT_USE_MODULE_PROXY = (
@@ -25,6 +26,7 @@ class ArchiveConfig(TypedDict):
     # Commands to run after downloading modules
     post_commands: list[list[str]]
     tidy: bool
+    dependency_overrides: dict[str, str]
 
 
 def create_archive_config(config: dict[str, Any] | None = None) -> ArchiveConfig:
@@ -35,4 +37,12 @@ def create_archive_config(config: dict[str, Any] | None = None) -> ArchiveConfig
     config.setdefault("pre_commands", [])
     config.setdefault("post_commands", [])
     config.setdefault("tidy", DEFAULT_TIDY)
+    config.setdefault("dependency_overrides", {})
     return cast(ArchiveConfig, config)
+
+
+def get_go_dependency_update_commands(
+    dependency_overrides: Mapping[str, str]
+) -> Iterator[tuple[str, ...]]:
+    for ipath, version in dependency_overrides.items():
+        yield ("go", "get", f"{ipath}@{version}")
