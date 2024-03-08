@@ -28,10 +28,11 @@ class ArchiveConfig(TypedDict):
 
 
 def create_archive_config(config: dict[str, Any] | None = None) -> ArchiveConfig:
+    # Keep the same order here as in ArchiveConfig definition
     config = {} if config is None else config.copy()
-    config.setdefault("post_commands", [])
-    config.setdefault("pre_commands", [])
-    config.setdefault("tidy", DEFAULT_TIDY)
     config.setdefault("use_module_proxy", DEFAULT_USE_MODULE_PROXY)
     config.setdefault("use_top_level_dir", DEFAULT_USE_TOP_LEVEL_DIR)
+    config.setdefault("pre_commands", [])
+    config.setdefault("post_commands", [])
+    config.setdefault("tidy", DEFAULT_TIDY)
     return cast(ArchiveConfig, config)
