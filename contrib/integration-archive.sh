@@ -12,13 +12,10 @@ GO_VENDOR_ARCHIVE="${GO_VENDOR_ARCHIVE:-${_path:-${_default_path}}}"
 IFS=" " read -r -a command <<< "${GO_VENDOR_ARCHIVE}"
 command+=("create")
 
-
 spectool -g ./*.spec
 ls
-source0="$(spectool ./*.spec | grep Source0 | awk '{print $2}' | xargs -d'\n' basename)"
-source1="$(spectool ./*.spec | grep Source1 | awk '{print $2}')"
 if [ -f "go-vendor-tools.toml" ]; then
     command+=("--config" "$(pwd)/go-vendor-tools.toml")
 fi
-time "${command[@]}" -O "${source1}" "$@" "${source0}"
+time "${command[@]}" "$@" ./*.spec
 sha512sum -c CHECKSUMS

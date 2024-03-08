@@ -25,6 +25,7 @@ from go_vendor_tools.archive import add_files_to_archive
 from go_vendor_tools.config.archive import get_go_dependency_update_commands
 from go_vendor_tools.config.base import BaseConfig, load_config
 from go_vendor_tools.exceptions import ArchiveError
+from go_vendor_tools.specfile_sources import get_specfile_sources_relative
 
 try:
     import tomlkit
@@ -37,6 +38,7 @@ else:
 if TYPE_CHECKING:
     from _typeshed import StrPath
 
+DEFAULT_OUTPUT = "vendor.tar.xz"
 ARCHIVE_FILES = (Path("go.mod"), Path("go.sum"), Path("vendor"))
 GO_PROXY_ENV = {
     "GOPROXY": "https://proxy.golang.org,direct",
@@ -85,7 +87,7 @@ class CreateArchiveArgs:
             if kwargs[opt] is None:
                 kwargs[opt] = kwargs["config"]["archive"][opt]
 
-        if not kwargs["output"].name.endswith((".tar.xz", "txz")):
+        if kwargs["output"] and not kwargs["output"].name.endswith((".tar.xz", "txz")):
             raise ValueError(f"{kwargs['output']} must end with '.tar.xz' or '.txz'")
 
         if not kwargs["path"].exists():
@@ -113,7 +115,7 @@ def parseargs(argv: list[str] | None = None) -> CreateArchiveArgs | OverrideArgs
     create_subparser = subparsers.add_parser("create")
     create_subparser.add_argument("--version", action="version", version=__version__)
     create_subparser.add_argument(
-        "-O", "--output", type=Path, default="vendor.tar.xz", help="%(default)s"
+        "-O", "--output", type=Path, default=None, help=f"Default: {DEFAULT_OUTPUT}"
     )
     create_subparser.add_argument(
         "--top-level-dir",
@@ -149,11 +151,37 @@ def parseargs(argv: list[str] | None = None) -> CreateArchiveArgs | OverrideArgs
         raise RuntimeError("unreachable")
 
 
+def get_path_and_output_from_specfile(spec_path: Path) -> tuple[Path, Path]:
+    sources = get_specfile_sources_relative(spec_path)
+    if not {0, 1} & set(sources):
+        sys.exit(f"Source0 and Source1 must be specified in {spec_path}")
+    directory = spec_path.resolve().parent
+    return directory / sources[0], directory / sources[1]
+
+
+def _create_archive_read_from_specfile(args: CreateArchiveArgs) -> None:
+    if args.output:
+        sys.exit("Cannot pass --output when reading paths from a specfile!")
+    spec_path = args.path
+    args.path, args.output = get_path_and_output_from_specfile(args.path)
+    if not args.path.is_file():
+        sys.exit(
+            f"{args.path} does not exist!"
+            f" Run 'spectool -g {spec_path}' and try again!"
+        )
+
+
 def create_archive(args: CreateArchiveArgs) -> None:
+    _already_checked_is_file = False
     cwd = args.path
     cm: AbstractContextManager[str] = nullcontext(str(args.path))
+    if args.path.suffix == ".spec":
+        _create_archive_read_from_specfile(args)
+        _already_checked_is_file = True
+    else:
+        args.output = Path(DEFAULT_OUTPUT)
     # Treat as an archive if it's not a directory
-    if args.path.is_file():
+    if _already_checked_is_file or args.path.is_file():
         print(f"* Treating {args.path} as an archive. Unpacking...")
         cm = tempfile.TemporaryDirectory()
         shutil.unpack_archive(args.path, cm.name)

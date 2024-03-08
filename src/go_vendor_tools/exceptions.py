@@ -14,6 +14,12 @@ class VendorToolsException(Exception):
     """
 
 
+class MissingDependencyError(Exception):
+    """
+    An optional dependency required by this operation is missing
+    """
+
+
 class LicenseError(VendorToolsException):
     """
     An issue occured while detecting licenses
