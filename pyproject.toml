@@ -10,6 +10,10 @@ name = "go-vendor-tools"
 description = "Tools for handling Go library vendoring in Fedora"
 dynamic = ["version"]
 authors = [{ name = "Maxwell G", email = "maxwell@gtmx.me" }]
+maintainers = [
+    {name = "Maxwell G", email = "maxwell@gtmx.me" },
+    {name = "Fedora Go SIG", email="golang@lists.fedoraproject.org"},
+]
 readme = "README.md"
 license = "MIT AND BSD-3-Clause"
 license-files.globs = ["LICENSES/*.txt"]
