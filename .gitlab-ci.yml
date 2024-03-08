@@ -66,6 +66,8 @@ test:
       test "$SHOULD_RPMBUILD" = "false" || pipx run nox -e integration-test-build
     - >-
       test "$SHOULD_RPMBUILD" = "false" || pipx run nox -e test -- --cov
+    - >-
+      test "$SHOULD_RPMBUILD" = "true" || export COVERAGE_FAIL_UNDER=0
     - pipx run nox -e coverage
   artifacts:
     paths:

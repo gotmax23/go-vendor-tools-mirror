@@ -24,6 +24,7 @@ SPECFILE = "go-vendor-tools.spec"
 LINT_SESSIONS = ("formatters", "codeqa", "typing")
 LINT_FILES = (f"src/{PROJECT}", "tests/pytests", "noxfile.py")
 INTEGRATION_PACKAGES = ("autorestic", "fzf")
+COVERAGE_FAIL_UNDER = os.environ.get("COVERAGE_FAIL_UNDER") or "85"
 
 nox.options.sessions = ("lint", "covtest")
 
@@ -135,7 +136,7 @@ def coverage(session: nox.Session):
     session.run("coverage", "combine", "--keep", *iglob(".nox/*/tmp/.coverage"))
     session.run("coverage", "xml")
     session.run("coverage", "html")
-    session.run("coverage", "report")
+    session.run("coverage", "report", "--fail-under", COVERAGE_FAIL_UNDER)
 
 
 @nox.session()
