@@ -180,8 +180,8 @@ def parseargs(argv: list[str] | None = None) -> argparse.Namespace:
     install_parser.add_argument(
         "--filelist", dest="install_filelist", type=Path, required=True
     )
-    # TODO: Should we support writing JSON from the install command or just reading it?
-    # _add_json_argument(install_parser)
+    # TODO(gotmax23): Should we support writing JSON from the install command
+    # or just reading it? _add_json_argument(install_parser)
     generate_buildrequires_parser = subparsers.add_parser(  # noqa F841
         "generate_buildrequires"
     )

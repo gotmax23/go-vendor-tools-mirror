@@ -100,7 +100,6 @@ class LicenseData:
     license_map: dict[Path, str]
     undetected_licenses: Collection[Path]
     unmatched_extra_licenses: Collection[Path]
-    # TODO: Make these into cached_properties
     license_set: set[str] = dataclasses.field(init=False)
     license_expression: license_expression.LicenseExpression | None = dataclasses.field(
         init=False
@@ -123,7 +122,7 @@ class LicenseData:
             for lic in chain(self.license_map, self.undetected_licenses)
         )
 
-    # TODO: Consider cattrs or pydantic
+    # TODO(gotmax23): Consider cattrs or pydantic
     def to_jsonable(self) -> dict[str, Any]:
         data = dataclasses.asdict(self)
         for key, value in data.items():

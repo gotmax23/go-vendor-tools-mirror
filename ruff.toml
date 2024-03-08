@@ -18,6 +18,7 @@ select = [
     "PL",   # pylint
     "RUF",  # Ruff's own rules
     "SIM",  # flake8-simplify
+    "TD002",# missing-todo-author
     "W",    # pycodestyle warnings
 ]
 ignore = [

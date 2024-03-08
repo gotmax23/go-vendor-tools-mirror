@@ -76,7 +76,8 @@ class TrivyLicenseDetector(LicenseDetector[TrivyLicenseData]):
         self.path: str = path
         self.license_config = license_config
 
-    # TODO: Consider splitting into separate functions
+    # TODO(anyone): Consider splitting into separate functions
+    # https://gitlab.com/gotmax23/go-vendor-tools/-/issues/23
     def detect(self, directory: StrPath) -> TrivyLicenseData:
         # fmt: off
         cmd = [

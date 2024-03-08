@@ -31,7 +31,8 @@ CONFIG1_BROKEN = load_config(TEST_DATA / "case1" / "config-broken.toml")
 
 
 def get_available_detectors() -> list[type[LicenseDetector]]:
-    # TODO: Allow enforcing "strict mode" if any detectors are missing
+    # TODO(anyone): Allow enforcing "strict mode" if any detectors are missing
+    # This can be a env var and then enabled in the noxfile.
     available, missing = get_detctors({}, CONFIG1["licensing"])
     # HACK: We initialize the classes using a test config to check if they are
     # available and then return the base class so that it can be reinitialized
