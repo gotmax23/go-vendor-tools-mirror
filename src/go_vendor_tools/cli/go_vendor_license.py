@@ -295,8 +295,8 @@ def tomlkit_dump(obj: Any, path: Path) -> None:
 
 def prompt_missing_licenses(
     data: LicenseData,
-) -> tuple[LicenseData, list[LicenseEntry]]:
-    entries: list[LicenseEntry] = []
+    entries: MutableSequence[LicenseEntry],
+) -> tuple[LicenseData, MutableSequence[LicenseEntry]]:
     if not data.undetected_licenses:
         return data, entries
     print("Undetected licenses found! Please enter them manually.")
@@ -304,19 +304,23 @@ def prompt_missing_licenses(
     license_map: dict[Path, str] = dict(data.license_map)
     for undetected in sorted(data.undetected_licenses):
         print(f"* Undetected license: {undetected}")
-        expression_str = input("Enter SPDX expression: ")
+        expression_str = input("Enter SPDX expression (or IGNORE): ")
+        if expression_str == "IGNORE":
+            undetected_licenses.remove(undetected)
+            print("Ignoring...")
+            continue
         expression: str = (
             str(simplify_license(expression_str)) if expression_str else ""
         )
         print(f"Expression simplified to {expression!r}")
-        license_map[undetected] = expression
-        entries.append(
-            LicenseEntry(
-                path=str(undetected),
-                sha256sum=get_hash(data.directory / undetected),
-                expression=expression,
-            )
+        relpath = undetected.relative_to(data.directory)
+        license_map[relpath] = expression
+        entry_dict = LicenseEntry(
+            path=str(relpath),
+            sha256sum=get_hash(data.directory / undetected),
+            expression=expression,
         )
+        replace_entry(entries, entry_dict, relpath)
         undetected_licenses.remove(undetected)
     assert not undetected_licenses
     return (
@@ -342,6 +346,31 @@ def _write_config_verify_path(config_path: Path | None) -> Path:
     return config_path or default
 
 
+def get_report_write_config_data(
+    config_path: Path | None, detector: LicenseDetector
+) -> tuple[Path, tomlkit.TOMLDocument]:
+    need_tomlkit("--write-config")
+    new_config_path = _write_config_verify_path(config_path)
+    loaded = load_tomlkit_if_exists(config_path)
+    write_config_data = loaded.setdefault("licensing", {})
+    write_config_data |= {"detector": detector.NAME}
+    return new_config_path, loaded
+
+
+def write_and_prompt_report_licenses(
+    license_data: LicenseData, write_config_data: tomlkit.TOMLDocument
+) -> LicenseData:
+    # fmt: off
+    license_config_list = (
+        write_config_data
+        .setdefault("licensing", {})
+        .setdefault("licenses", tomlkit.aot() if HAS_TOMLKIT else [])
+    )
+    # fmt: on
+    license_data, _ = prompt_missing_licenses(license_data, license_config_list)
+    return license_data
+
+
 def report_command(args: argparse.Namespace) -> None:
     detector: LicenseDetector = args.detector
     directory: Path = args.directory
@@ -356,10 +385,7 @@ def report_command(args: argparse.Namespace) -> None:
     del args
 
     if write_config:
-        config_path = _write_config_verify_path(config_path)
-        loaded = load_tomlkit_if_exists(config_path)
-        write_config_data = loaded.setdefault("licensing", {})
-        write_config_data |= {"detector": detector.NAME}
+        config_path, loaded = get_report_write_config_data(config_path, detector)
 
     license_data: LicenseData = detector.detect(directory)
     unlicensed_mods = (
@@ -368,15 +394,7 @@ def report_command(args: argparse.Namespace) -> None:
         else get_unlicensed_mods(directory, license_data.license_file_paths)
     )
     if prompt:
-        license_data, license_entries_to_add = prompt_missing_licenses(license_data)
-        if license_entries_to_add:
-            license_config_list: MutableSequence
-            # fmt: on
-            license_config_list = write_config_data.setdefault(
-                "licensing", {}
-            ).setdefault("licenses", tomlkit.aot() if HAS_TOMLKIT else [])
-            # fmt: off
-            license_config_list.extend(license_entries_to_add)
+        license_data = write_and_prompt_report_licenses(license_data, loaded)
     print_licenses(
         license_data,
         unlicensed_mods,
@@ -444,9 +462,11 @@ def get_relpath(base_directory: Path, path: Path) -> Path:
 
 
 def replace_entry(
-    data: list[LicenseEntry], new_entry: LicenseEntry, relpath: Path
+    data: MutableSequence[LicenseEntry], new_entry: LicenseEntry, relpath: Path
 ) -> None:
     for entry in data:
+        if entry == new_entry:
+            return
         if Path(entry["path"]) == relpath:
             cast(dict, entry).clear()
             entry.update(new_entry)
