@@ -12,3 +12,11 @@ expression = "BSD-3-Clause"
 path = "vendor/gopkg.in/yaml.v2/LICENSE.libyaml"
 sha256sum = "a94710b55e03b5285f77d048c5ba61bb9d6ee04a06c0eb90e68821e11b0c707a"
 expression = "MIT"
+[[licensing.licenses]]
+path = "vendor/github.com/spf13/afero/LICENSE.txt"
+sha256sum = "5e3400b93bbb099e83e52bab885e7441750673c21f97988ca3f1240639b63283"
+expression = "Apache-2.0"
+[[licensing.licenses]]
+path = "vendor/github.com/spf13/cobra/LICENSE.txt"
+sha256sum = "5e3400b93bbb099e83e52bab885e7441750673c21f97988ca3f1240639b63283"
+expression = "Apache-2.0"
