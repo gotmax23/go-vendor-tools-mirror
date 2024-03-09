@@ -77,8 +77,14 @@ def _get_askalono_data(directory: StrPath) -> list[AskalonoLicenseDict]:
     return licenses
 
 
+def _get_relative(base_dir: Path, file: str | Path) -> Path:
+    file = Path(file)
+    return file.relative_to(base_dir) if file.is_absolute() else file
+
+
 def _filter_license_data(
     data: list[AskalonoLicenseDict],
+    directory: Path,
 ) -> tuple[list[AskalonoLicenseDict], set[Path]]:
 
     undetected_licenses: set[Path] = set()
@@ -89,7 +95,7 @@ def _filter_license_data(
             try:
                 licensed["result"]["license"]["name"]
             except KeyError:
-                undetected_licenses.add(Path(licensed["path"]))
+                undetected_licenses.add(_get_relative(directory, licensed["path"]))
             else:
                 results.append(licensed)
     return results, undetected_licenses
@@ -107,13 +113,7 @@ def _get_simplified_license_map(
     results: dict[Path, str] = {}
     for licensed in filtered_license_data:
         license_name = licensed["result"]["license"]["name"]
-        license_path = Path(licensed["path"])
-        license_path = (
-            license_path.relative_to(directory)
-            if license_path.is_absolute()
-            else license_path
-        )
-        results[license_path] = license_name
+        results[_get_relative(directory, licensed["path"])] = license_name
     results.update(extra_license_mapping or {})
     return dict(sorted(results.items(), key=lambda item: item[0]))
 
@@ -145,7 +145,9 @@ class AskalonoLicenseDetector(LicenseDetector[AskalonoLicenseData]):
         gitignore = Path(directory, ".gitignore")
         if gitignore.is_file():
             _remove_line(gitignore, lambda line: line.startswith("vendor"))
-        results, undetected = _filter_license_data(_get_askalono_data(directory))
+        results, undetected = _filter_license_data(
+            _get_askalono_data(directory), Path(directory)
+        )
         extra_licenses, unmatched = get_extra_licenses(
             self.license_config["licenses"], directory
         )

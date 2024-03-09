@@ -32,16 +32,17 @@ def get_extra_licenses(
     not_matched: list[Path] = []
     seen: set[Path] = set()
     for lic in licenses:
-        path = Path(directory, lic["path"])
+        relpath = Path(lic["path"])
+        path = directory / relpath
         if path in results:
             raise LicenseError(
                 f"{path} was specified multiple times in the configuration!"
             )
         seen.add(path)
         if verify_hash(path, lic["sha256sum"]):
-            results[path] = lic["expression"]
+            results[relpath] = lic["expression"]
         else:
-            not_matched.append(path)
+            not_matched.append(relpath)
     return results, not_matched
 
 

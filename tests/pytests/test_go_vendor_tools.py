@@ -69,12 +69,10 @@ def test_get_extra_licenses(test_data: Path) -> None:
     case_dir = test_data / "case1"
     licenses_dir = case_dir / "licenses"
     config = load_config(case_dir / "config.toml")
-    matched, missing = get_extra_licenses(
-        config["licensing"]["licenses"], case_dir / "licenses"
-    )
+    matched, missing = get_extra_licenses(config["licensing"]["licenses"], licenses_dir)
     expected_map = {
-        licenses_dir / "LICENSE.BSD3": "BSD-3-Clause",
-        licenses_dir / "LICENSE.MIT": "MIT",
+        Path("LICENSE.BSD3"): "BSD-3-Clause",
+        Path("LICENSE.MIT"): "MIT",
     }
     assert matched == expected_map
     assert not missing
@@ -84,11 +82,11 @@ def test_get_extra_licenses_error(test_data: Path) -> None:
     case_dir = test_data / "case1"
     licenses_dir = case_dir / "licenses"
     matched, missing = get_extra_licenses(
-        CONFIG1_BROKEN["licensing"]["licenses"], case_dir / "licenses"
+        CONFIG1_BROKEN["licensing"]["licenses"], licenses_dir
     )
-    expected_map = {licenses_dir / "LICENSE.BSD3": "BSD-3-Clause"}
+    expected_map = {Path("LICENSE.BSD3"): "BSD-3-Clause"}
     assert matched == expected_map
-    assert missing == [licenses_dir / "LICENSE.MIT"]
+    assert missing == [Path("LICENSE.MIT")]
 
 
 def test_load_dump_license_data(
