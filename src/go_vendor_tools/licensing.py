@@ -19,6 +19,9 @@ def combine_licenses(*expressions: str | None) -> license_expression.LicenseExpr
     # Set a file's license to an empty string or None to exclude it from the
     # calculation.
     filtered = [expression for expression in expressions if expression]
+    # TODO(anyone): Also validate the combined license expression.
+    # We pass validate=True and strict=True to the licensing.parse constructor
+    # in the next function and should figure out how to do the same here.
     return license_expression.combine_expressions(
         filtered, licensing=licensing
     ).simplify()
