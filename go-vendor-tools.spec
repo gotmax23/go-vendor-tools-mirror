@@ -54,6 +54,7 @@ install -Dpm 0644 rpm/macros.go_vendor_tools -t %{buildroot}%{_rpmmacrodir}
 
 %files -f %{pyproject_files}
 %doc README.md
+%doc NEWS.md
 %license LICENSES/*
 %{_bindir}/go_vendor*
 %{_rpmmacrodir}/macros.go_vendor_tools
