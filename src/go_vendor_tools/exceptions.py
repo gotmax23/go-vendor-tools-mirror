@@ -8,31 +8,31 @@ Exceptions used throughout the codebase
 from __future__ import annotations
 
 
-class VendorToolsException(Exception):
+class VendorToolsError(Exception):
     """
     Base Exception class
     """
 
 
-class MissingDependencyError(Exception):
+class MissingDependencyError(VendorToolsError):
     """
     An optional dependency required by this operation is missing
     """
 
 
-class LicenseError(VendorToolsException):
+class LicenseError(VendorToolsError):
     """
     An issue occured while detecting licenses
     """
 
 
-class ConfigError(VendorToolsException):
+class ConfigError(VendorToolsError):
     """
     Failed to load config
     """
 
 
-class ArchiveError(VendorToolsException):
+class ArchiveError(VendorToolsError):
     """
     An issue occured while creating an archive
     """
