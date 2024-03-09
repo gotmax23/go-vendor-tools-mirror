@@ -28,6 +28,8 @@ test:
         sudo dnf install -y epel-release /usr/bin/unzip wget
         crb enable
         sudo dnf install --setopt=install_weak_deps=0 -y epel-rpm-macros
+        sudo dnf install -y koji-tool
+        koji-tool install -y go-rpm-macros-epel --all
         wget https://github.com/jpeddicord/askalono/releases/download/0.4.6/askalono-Linux.zip
         unzip askalono-Linux.zip
         chmod a+x askalono
