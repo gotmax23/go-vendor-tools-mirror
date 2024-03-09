@@ -129,3 +129,27 @@ install -m 0755 -vp %{gobuilddir}/bin/* %{buildroot}%{_bindir}/
 %changelog
 %autochangelog
 ```
+
+## Scenarios
+
+This sections contains some common scenarios that may arise when managing Go
+projects.
+
+### Security updates
+
+Example case: CVE-2024-24786 was released in `google.golang.org/protobuf` and
+fixed in `v1.33.0`. We want to update package `foo.spec` to use the new
+version. The go-vendor-tools configuration is stored in `go-vendor-tools.toml`.
+
+1. Use the `go_vendor_archive override` command to set the dependency override
+   in the configuration file.
+
+    ``` bash
+    go_vendor_archive override --config go-vendor-tools.toml google.golang.org/protobuf
+    ```
+
+2. Use the `go_vendor_archive create` command to re-generate the configuration file.
+
+    ``` bash
+    go_vendor_archive create --config go-vendor-tools.toml foo.spec
+    ```
