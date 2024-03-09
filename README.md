@@ -88,13 +88,16 @@ BuildRequires:  go-vendor-tools
 # NOTE: %%gopkg and %%gopkgfiles are not used here!
 
 %prep
-# NOTE: %%{forgesetupargs} is set by %%gometa. It contains the correct -n flag
-# NOTE: to unpack the primary archive.
-# NOTE: -a1 extracts Source1 (the vendor archive) into the build directory.
-%autosetup -p1 %{forgesetupargs} -a1
-# NOTE: -k prevents %%goprep from deleting the vendor/ directory
-# NOTE: -e disables automatic extraction. %%autosetup already does this.
-%goprep -k -e
+# NOTE: Unpacks primary source archive and removes any existing vendor directory
+# NOTE: in the source archive so the one we generated is used.
+%goprep -A
+# NOTE: Special %%setup invocation to unpack the vendor archive on top of the
+# NOTE: main archive.
+# NOTE: * The 1 in "-a1" selects Source1.
+# NOTE: * %%{forgesetupargs} is set by %%gometa and selects the directory name
+# NOTE:   in which to unpack the secondary vendor archive.
+%setup -T -D -a1 %{forgesetupargs}
+%autopatch -p1
 
 %generate_buildrequires
 # NOTE: go-vendor-tools has its own macro to generate buildrequires needed to

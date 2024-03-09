@@ -30,8 +30,9 @@ BuildRequires:  go-vendor-tools
 %description %{common_description}
 
 %prep
-%autosetup -p1 -b1 %{forgesetupargs}
-%goprep -ke
+%goprep -A
+%setup -q -T -D -b1 %{forgesetupargs}
+%autopatch -p1
 
 %generate_buildrequires
 %go_vendor_license_buildrequires
