@@ -9,14 +9,19 @@ import json
 import os
 import shutil
 import sys
-from collections.abc import Collection, Iterable, Iterator, MutableSequence
+import tarfile
+from collections.abc import Collection, Iterable, Iterator, MutableSequence, Sequence
+from contextlib import contextmanager
 from functools import cache
 from pathlib import Path
+from tempfile import TemporaryDirectory
+from textwrap import dedent
 from typing import IO, Any, cast
 
 import license_expression
 
 from go_vendor_tools import __version__
+from go_vendor_tools.archive import get_toplevel_directory
 from go_vendor_tools.config.base import load_config
 from go_vendor_tools.config.licenses import (
     LicenseConfig,
@@ -28,6 +33,7 @@ from go_vendor_tools.hashing import get_hash
 from go_vendor_tools.license_detection.base import LicenseData, LicenseDetector
 from go_vendor_tools.license_detection.load import DETECTORS, get_detctors
 from go_vendor_tools.licensing import compare_licenses, simplify_license
+from go_vendor_tools.specfile_sources import get_path_and_output_from_specfile
 
 try:
     import tomlkit
@@ -98,11 +104,25 @@ def parseargs(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("-c", "--config", type=Path, dest="config_path")
     parser.add_argument(
         "-C",
+        "--path",
         "--directory",
         type=Path,
-        default=Path(),
-        help="Top-level directory with a go.mod file and vendor directory",
+        dest="directory",
+        action="append",
+        help=dedent(
+            """
+        Can be one of the following:
+
+        1. Top-level directory with a go.mod file and vendor directory
+        2. If --use-archive is specified, treat as a tarball and unpack it. Can
+           be specified multiple times to unpack multiple tarballs on
+           top of one another.
+        3. Path to a specfile.
+           The paths to Source0 and Source1 will be automatically unpacked.
+        """
+        ),
     )
+    parser.add_argument("--use-archive", action="store_true")
     parser.add_argument(
         "--color",
         action=argparse.BooleanOptionalAction,
@@ -188,6 +208,7 @@ def parseargs(argv: list[str] | None = None) -> argparse.Namespace:
     )
 
     args = parser.parse_args(argv)
+    args.directory = list(map(Path, args.directory or (".")))
     if args.subcommand not in ("explicit",):
         loaded = load_config(
             args.config_path, allow_missing=getattr(args, "write_config", False)
@@ -201,14 +222,6 @@ def parseargs(argv: list[str] | None = None) -> argparse.Namespace:
         )
     global COLOR  # noqa: PLW0603
     COLOR = args.color
-    if not args.directory.is_dir():
-        sys.exit(f"{args.directory} must exist and be a directory")
-    if (
-        args.subcommand == "report"
-        and not args.ignore_unlicensed_mods
-        and not (modtxt := args.directory / "vendor/modules.txt").is_file()
-    ):
-        sys.exit(f"{modtxt} does not exist!")
     return args
 
 
@@ -224,6 +237,10 @@ def red_if_true(items: Collection[object], message: str, bullet: str = "- ") -> 
     red("\n".join(bullet_iterator(items, bullet)))
 
 
+def paths_relative_to_list(paths: Collection[Path], directory: Path) -> list[Path]:
+    return [path.relative_to(directory) for path in paths]
+
+
 def print_licenses(
     results: LicenseData,
     unlicensed_mods: Collection[Path],
@@ -237,7 +254,7 @@ def print_licenses(
             license_path,
             license_name,
         ) in results.license_map.items():
-            print(f"{license_path.relative_to(directory)}: {license_name}")
+            print(f"{license_path}: {license_name}")
     if (
         results.undetected_licenses
         or unlicensed_mods
@@ -247,13 +264,14 @@ def print_licenses(
             print()
         if show_undetected:
             red_if_true(
-                results.undetected_licenses,
+                paths_relative_to_list(results.undetected_licenses, directory),
                 "The following license files were found "
                 "but the correct license identifier couldn't be determined:",
             )
         if show_unlicensed:
             red_if_true(
-                unlicensed_mods, "The following modules are missing license files:"
+                paths_relative_to_list(unlicensed_mods, directory),
+                "The following modules are missing license files:",
             )
         red_if_true(
             results.unmatched_extra_licenses,
@@ -363,9 +381,44 @@ def write_and_prompt_report_licenses(
     return license_data
 
 
+@contextmanager
+def handle_alternative_sources(
+    directories: Sequence[Path], is_archive: bool
+) -> Iterator[Path]:
+    directories = list(directories)
+    # The CLI code already checks that the value is greater than zero, so
+    # assert is fine here
+    assert directories
+    if not is_archive and len(directories) > 1:
+        sys.exit("Too many paths were passed!")
+
+    if directories[0].suffix == ".spec":
+        directories[:] = get_path_and_output_from_specfile(directories[0])
+        is_archive = True
+    if is_archive:
+        with TemporaryDirectory() as _tmp:
+            tmp = Path(_tmp)
+            # Extract the first archive
+            with tarfile.open(directories[0]) as tar:
+                first_toplevel = get_toplevel_directory(tar)
+                if not first_toplevel:
+                    sys.exit(f"{directories[0]} does not have a top-level directory!")
+                print(f"Extracting {directories[0]}", file=sys.stderr)
+                tar.extractall(tmp)
+            for directory in directories[1:]:
+                with tarfile.open(directory) as tar:
+                    toplevel = get_toplevel_directory(tar)
+                    print(f"Extracting {directory}", file=sys.stderr)
+                    tar.extractall(tmp if toplevel else tmp / first_toplevel)
+            yield tmp / first_toplevel
+
+    else:
+        yield directories[0]
+
+
 def report_command(args: argparse.Namespace) -> None:
     detector: LicenseDetector = args.detector
-    directory: Path = args.directory
+    paths: Sequence[Path] = args.directory
     ignore_undetected: bool = args.ignore_undetected
     ignore_unlicensed_mods: bool = args.ignore_unlicensed_mods
     mode: str = args.mode
@@ -374,27 +427,29 @@ def report_command(args: argparse.Namespace) -> None:
     write_config: Path | None = args.write_config
     prompt: bool = args.prompt
     config_path: Path | None = args.config_path
+    use_archive: bool = args.use_archive
     del args
 
     if write_config:
         config_path, loaded = get_report_write_config_data(config_path, detector)
 
-    license_data: LicenseData = detector.detect(directory)
-    unlicensed_mods = (
-        set()
-        if ignore_unlicensed_mods
-        else get_unlicensed_mods(directory, license_data.license_file_paths)
-    )
-    if prompt:
-        license_data = write_and_prompt_report_licenses(license_data, loaded)
-    print_licenses(
-        license_data,
-        unlicensed_mods,
-        mode,
-        not ignore_undetected,
-        not ignore_unlicensed_mods,
-        directory,
-    )
+    with handle_alternative_sources(paths, use_archive) as directory:
+        license_data: LicenseData = detector.detect(directory)
+        unlicensed_mods = (
+            set()
+            if ignore_unlicensed_mods
+            else get_unlicensed_mods(directory, license_data.license_file_paths)
+        )
+        if prompt:
+            license_data = write_and_prompt_report_licenses(license_data, loaded)
+        print_licenses(
+            license_data,
+            unlicensed_mods,
+            mode,
+            not ignore_undetected,
+            not ignore_unlicensed_mods,
+            directory,
+        )
     if write_json:
         write_license_json(license_data, write_json)
     if verify and not compare_licenses(license_data.license_expression, verify):
@@ -411,6 +466,7 @@ def report_command(args: argparse.Namespace) -> None:
 
 
 def copy_licenses(
+    base_directory: Path,
     license_paths: Iterable[Path],
     install_destdir: Path,
     install_directory: Path,
@@ -422,16 +478,17 @@ def copy_licenses(
         installdir.mkdir(parents=True, exist_ok=True)
         fp.write(f"%license %dir {install_directory}\n")
         for lic in license_paths:
-            (installdir / lic).parent.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(lic, installdir / lic)
-            fp.write(f"%license {install_directory / lic}\n")
+            relpath = lic.relative_to(base_directory.resolve())
+            (installdir / relpath).parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(lic, installdir / relpath)
+            fp.write(f"%license {install_directory / relpath}\n")
 
 
 def install_command(args: argparse.Namespace) -> None:
     """
     Install license files into the license directory
     """
-    directory: Path = args.directory
+    directory: Path = args.directory[0]
     detector: LicenseDetector = args.detector
     install_destdir: Path = args.install_destdir
     install_directory: Path = args.install_directory
@@ -440,6 +497,7 @@ def install_command(args: argparse.Namespace) -> None:
 
     license_data: LicenseData = detector.detect(directory)
     copy_licenses(
+        directory,
         license_data.license_file_paths,
         install_destdir,
         install_directory,
@@ -476,7 +534,7 @@ def explicit_command(args: argparse.Namespace) -> None:
     data = loaded["licensing"]
 
     licenses = cast(dict, data).setdefault("licenses", tomlkit.aot())
-    relpath = get_relpath(args.directory, args.license_file)
+    relpath = get_relpath(args.directory[0], args.license_file)
     try:
         expression = (
             simplify_license(args.license_expression) if args.license_expression else ""

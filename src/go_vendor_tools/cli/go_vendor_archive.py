@@ -25,7 +25,7 @@ from go_vendor_tools.archive import add_files_to_archive
 from go_vendor_tools.config.archive import get_go_dependency_update_commands
 from go_vendor_tools.config.base import BaseConfig, load_config
 from go_vendor_tools.exceptions import ArchiveError
-from go_vendor_tools.specfile_sources import get_specfile_sources_relative
+from go_vendor_tools.specfile_sources import get_path_and_output_from_specfile
 
 try:
     import tomlkit
@@ -149,14 +149,6 @@ def parseargs(argv: list[str] | None = None) -> CreateArchiveArgs | OverrideArgs
         return OverrideArgs.construct(**vars(args))
     else:
         raise RuntimeError("unreachable")
-
-
-def get_path_and_output_from_specfile(spec_path: Path) -> tuple[Path, Path]:
-    sources = get_specfile_sources_relative(spec_path)
-    if not {0, 1} & set(sources):
-        sys.exit(f"Source0 and Source1 must be specified in {spec_path}")
-    directory = spec_path.resolve().parent
-    return directory / sources[0], directory / sources[1]
 
 
 def _create_archive_read_from_specfile(args: CreateArchiveArgs) -> None:

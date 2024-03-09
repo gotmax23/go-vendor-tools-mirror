@@ -12,23 +12,8 @@ GO_VENDOR_LICENSE="${GO_VENDOR_LICENSE:-${_path:-${_default_path}}}"
 IFS=" " read -r -a command <<< "${GO_VENDOR_LICENSE}"
 
 
-rm -rf .unpack
-mkdir .unpack
 license="$(rpmspec -q --qf "%{LICENSE}\n" ./*.spec | head -n1)"
-rpmbuild \
-    -D '_sourcedir %(pwd)' \
-    -D '_srcrpmdir %(pwd)' \
-    -D '_specdir %(pwd)' \
-    -D '_builddir %(pwd)/.unpack' \
-    --nodeps \
--bp ./*.spec
 if [ -f "go-vendor-tools.toml" ]; then
     command+=("--config" "$(pwd)/go-vendor-tools.toml")
 fi
-rm -rf .unpack/*SPECPARTS
-cd .unpack/*
-rm -rf _build
-if [ -f ".gitignore" ]; then
-    sed -i '/vendor/d' .gitignore
-fi
-"${command[@]}" report all --verify "${license}"
+"${command[@]}" -C ./*.spec report all --verify "${license}"

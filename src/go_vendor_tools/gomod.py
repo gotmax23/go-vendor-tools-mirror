@@ -28,13 +28,18 @@ def get_go_module_dirs(directory: Path) -> list[Path]:
     for ipath in get_go_module_names(directory):
         moddir = directory / "vendor" / ipath
         if moddir.is_dir():
-            results.append(moddir)
+            results.append(moddir.resolve())
     return results
 
 
 def get_unlicensed_mods(directory: Path, license_paths: Collection[Path]) -> set[Path]:
     licensed_dirs = {
-        first.parent if (first := path.parent).name == "LICENSES" else first
+        (
+            first.parent
+            if (first := path.parent).relative_to(directory.resolve()).name
+            == "LICENSES"
+            else first
+        )
         for path in license_paths
     }
     all_dirs = set(get_go_module_dirs(directory))

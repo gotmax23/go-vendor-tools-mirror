@@ -9,6 +9,7 @@ import shlex
 from collections.abc import Iterator
 from glob import iglob
 from pathlib import Path
+from tempfile import TemporaryDirectory
 from types import SimpleNamespace
 
 import nox
@@ -94,7 +95,13 @@ def integration(session: nox.Session) -> None:
     install(session, ".", "coverage[toml]", "fclogr", editable=True)
     packages_env = session.env.get("PACKAGES")
     packages = shlex.split(packages_env) if packages_env else INTEGRATION_PACKAGES
-    with coverage_run(session) as cov_env:
+    with (
+        coverage_run(session) as cov_env,
+        # askalono does not like that the temporary directory is in the
+        # gitignore'd .nox/ directory
+        TemporaryDirectory(dir=os.environ.get("TMPDIR")) as tmp,
+    ):
+        cov_env["TMPDIR"] = str(tmp)
         for package in packages:
             with session.chdir(Path("tests/integration", package)):
                 for script in ("integration-archive", "verify-license"):

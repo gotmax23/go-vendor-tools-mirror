@@ -10,7 +10,7 @@ from __future__ import annotations
 import os
 import tarfile
 from collections.abc import Sequence
-from pathlib import Path
+from pathlib import Path, PurePath
 
 
 ### normalize_file_permissions is derived from flit_core
@@ -53,3 +53,10 @@ def add_files_to_archive(
             raise ValueError(f"{file} is not a relative path!")
         dest = (directory.resolve().name / file) if top_level_dir else file
         tf.add(directory / file, dest, filter=reproducible_filter)
+
+
+def get_toplevel_directory(tar: tarfile.TarFile) -> str | None:
+    first_parent = {PurePath(info.name).parts[0] for info in tar.getmembers()}
+    if len(first_parent) == 1:
+        return next(iter(first_parent))
+    return None

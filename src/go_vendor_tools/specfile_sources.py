@@ -13,7 +13,7 @@ import subprocess
 from collections.abc import Iterator
 from pathlib import Path
 
-from go_vendor_tools.exceptions import MissingDependencyError
+from go_vendor_tools.exceptions import MissingDependencyError, VendorToolsError
 
 SPECTOOL_PATH = shutil.which("spectool")
 
@@ -48,3 +48,12 @@ def get_specfile_sources_relative(spec_path: Path) -> dict[int, str]:
         number: get_basename_heuristic(source)
         for number, source in get_specfile_sources(spec_path)
     }
+
+
+def get_path_and_output_from_specfile(spec_path: Path) -> tuple[Path, Path]:
+    sources = get_specfile_sources_relative(spec_path)
+    if not {0, 1} & set(sources):
+        # TODO(anyone): More specific exception class
+        raise VendorToolsError(f"Source0 and Source1 must be specified in {spec_path}")
+    directory = spec_path.resolve().parent
+    return directory / sources[0], directory / sources[1]

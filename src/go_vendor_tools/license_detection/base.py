@@ -118,7 +118,7 @@ class LicenseData:
             combine_licenses(*self.license_set) if self.license_map else None
         )
         self.license_file_paths = tuple(
-            self.directory / lic
+            (self.directory / lic).resolve()
             for lic in chain(self.license_map, self.undetected_licenses)
         )
 
