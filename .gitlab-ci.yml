@@ -12,13 +12,11 @@ default:
       nox
       python3-devel
 
-formatters:
+lint:
   script:
     - "nox -e formatters -- --check"
-
-codeqa:
-  script:
     - "nox -e codeqa"
+    - "nox -e typing"
 
 test:
   before_script:
