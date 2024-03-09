@@ -220,6 +220,8 @@ def parseargs(argv: list[str] | None = None) -> argparse.Namespace:
         args.detector = choose_license_detector(
             args.detector_name, args.config, args.detector_config
         )
+        # TODO(anyone): Replace the print if/when we implement more granular logging
+        print("Using detector:", args.detector.NAME, file=sys.stderr)
     global COLOR  # noqa: PLW0603
     COLOR = args.color
     return args
