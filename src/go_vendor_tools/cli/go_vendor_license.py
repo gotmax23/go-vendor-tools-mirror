@@ -240,7 +240,7 @@ def red_if_true(items: Collection[object], message: str, bullet: str = "- ") -> 
 
 
 def paths_relative_to_list(paths: Collection[Path], directory: Path) -> list[Path]:
-    return [path.relative_to(directory) for path in paths]
+    return [path.resolve().relative_to(directory.resolve()) for path in paths]
 
 
 def print_licenses(
@@ -315,7 +315,7 @@ def prompt_missing_licenses(
     undetected_licenses = set(data.undetected_licenses)
     license_map: dict[Path, str] = dict(data.license_map)
     for undetected in sorted(data.undetected_licenses):
-        print(f"* Undetected license: {undetected}")
+        print(f"* Undetected license: {data.directory / undetected}")
         expression_str = input("Enter SPDX expression (or IGNORE): ")
         if expression_str == "IGNORE":
             undetected_licenses.remove(undetected)
@@ -325,14 +325,13 @@ def prompt_missing_licenses(
             str(simplify_license(expression_str)) if expression_str else ""
         )
         print(f"Expression simplified to {expression!r}")
-        relpath = undetected.relative_to(data.directory)
-        license_map[relpath] = expression
+        license_map[undetected] = expression
         entry_dict = LicenseEntry(
-            path=str(relpath),
+            path=str(undetected),
             sha256sum=get_hash(data.directory / undetected),
             expression=expression,
         )
-        replace_entry(entries, entry_dict, relpath)
+        replace_entry(entries, entry_dict, undetected)
         undetected_licenses.remove(undetected)
     assert not undetected_licenses
     return (
