@@ -96,7 +96,7 @@ BuildRequires:  go-vendor-tools
 # NOTE: * The 1 in "-a1" selects Source1.
 # NOTE: * %%{forgesetupargs} is set by %%gometa and selects the directory name
 # NOTE:   in which to unpack the secondary vendor archive.
-%setup -T -D -a1 %{forgesetupargs}
+%setup -q -T -D -a1 %{forgesetupargs}
 %autopatch -p1
 
 %generate_buildrequires
