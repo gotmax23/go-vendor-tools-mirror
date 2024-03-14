@@ -108,7 +108,7 @@ add_imports = [
 check_untyped_defs = true
 
 [[tool.mypy.overrides]]
-module = ["license_expression.*"]
+module = ["license_expression.*", "boolean.*"]
 ignore_missing_imports = true
 
 

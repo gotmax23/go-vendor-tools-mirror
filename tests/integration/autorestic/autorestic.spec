@@ -19,7 +19,7 @@ Summary:        Config driven, easy backup cli for restic
 SourceLicense:  Apache-2.0
 %endif
 # Misorder on purpose to make sure the license simplification logic works
-License:        BSD-2-Clause AND BSD-3-Clause AND MIT AND MPL-2.0 AND Apache-2.0
+License:        MPL-2.0 AND Apache-2.0 AND (Apache-2.0 AND MIT) AND BSD-2-Clause AND BSD-3-Clause AND MIT
 URL:            %{gourl}
 Source0:        %{gosource}
 Source1:        autorestic-%{version}-vendor.tar.xz
