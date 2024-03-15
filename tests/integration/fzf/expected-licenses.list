@@ -13,3 +13,4 @@
 %license /usr/share/licenses/not-fzf/vendor/golang.org/x/sys/LICENSE
 %license /usr/share/licenses/not-fzf/vendor/golang.org/x/term/LICENSE
 %license /usr/share/licenses/not-fzf/vendor/golang.org/x/text/LICENSE
+%license /usr/share/licenses/not-fzf/vendor/github.com/gdamore/tcell/v2/AUTHORS

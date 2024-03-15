@@ -474,12 +474,13 @@ def copy_licenses(
     install_filelist: Path,
 ) -> None:
     installdir = install_destdir / install_directory.relative_to("/")
+    base_directory = base_directory.resolve()
 
     with install_filelist.open("w", encoding="utf-8") as fp:
         installdir.mkdir(parents=True, exist_ok=True)
         fp.write(f"%license %dir {install_directory}\n")
         for lic in license_paths:
-            relpath = lic.relative_to(base_directory.resolve())
+            relpath = lic.resolve().relative_to(base_directory)
             (installdir / relpath).parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(lic, installdir / relpath)
             fp.write(f"%license {install_directory / relpath}\n")
@@ -499,7 +500,7 @@ def install_command(args: argparse.Namespace) -> None:
     license_data: LicenseData = detector.detect(directory)
     copy_licenses(
         directory,
-        license_data.license_file_paths,
+        (*license_data.license_file_paths, *license_data.extra_license_files),
         install_destdir,
         install_directory,
         install_filelist,

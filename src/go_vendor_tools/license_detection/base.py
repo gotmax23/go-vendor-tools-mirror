@@ -9,7 +9,9 @@ from __future__ import annotations
 
 import abc
 import dataclasses
-from collections.abc import Collection
+import os
+import re
+from collections.abc import Collection, Iterator
 from itertools import chain
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, ClassVar, Generic, TypeVar
@@ -23,6 +25,8 @@ from go_vendor_tools.licensing import combine_licenses
 
 if TYPE_CHECKING:
     from _typeshed import StrPath
+
+EXTRA_LICENSE_FILE_REGEX = re.compile(r"^(AUTHORS|NOTICE).*$", flags=re.IGNORECASE)
 
 
 def get_extra_licenses(
@@ -76,6 +80,25 @@ def filter_license_map(
     }
 
 
+def find_extra_license_files(
+    directory: StrPath,
+    exclude_directories: Collection[StrPath],
+    exclude_files: Collection[StrPath],
+) -> Iterator[Path]:
+    """
+    Determine extra files (e.g., AUTHORS or NOTICE files) that we should
+    include in the distribution but not run through the license detector
+    """
+    for root, _, files in os.walk(directory):
+        for file in files:
+            path = Path(root, file)
+            relpath = path.relative_to(directory)
+            if is_unwanted_path(relpath, exclude_directories, exclude_files):
+                continue
+            if EXTRA_LICENSE_FILE_REGEX.match(file):
+                yield path
+
+
 @dataclasses.dataclass()
 class LicenseData:
     """
@@ -95,6 +118,11 @@ class LicenseData:
             Set of unique detected license expressions
         license_expression:
             Cumulative `license_expression.LicenseExpression` SPDX expression
+        license_files_paths:
+            Absolute paths to all detected license files
+        extra_license_files:
+            Extra files (e.g., AUTHORS or NOTICE files) that we should include
+            in the distribution but not run through the license detector
     """
 
     directory: Path
@@ -106,10 +134,12 @@ class LicenseData:
         init=False
     )
     license_file_paths: Collection[Path] = dataclasses.field(init=False)
+    extra_license_files: list[Path]
     _LIST_PATH_FIELDS: ClassVar = (
         "undetected_licenses",
         "unmatched_extra_licenses",
         "license_file_paths",
+        "extra_license_files",
     )
     replace = dataclasses.replace
 
@@ -131,11 +161,7 @@ class LicenseData:
                 data[key] = str(value)
             elif key == "license_map":
                 data[key] = {str(key1): value1 for key1, value1 in value.items()}
-            elif key in (
-                "undetected_licenses",
-                "unmatched_extra_licenses",
-                "license_file_paths",
-            ):
+            elif key in self._LIST_PATH_FIELDS:
                 data[key] = list(map(str, value))
             elif key == "license_set":
                 data[key] = list(value)

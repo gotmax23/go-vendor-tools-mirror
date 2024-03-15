@@ -23,6 +23,7 @@ from .base import (
     LicenseDetector,
     LicenseDetectorNotAvailableError,
     filter_license_map,
+    find_extra_license_files,
     get_extra_licenses,
 )
 
@@ -120,6 +121,13 @@ class TrivyLicenseDetector(LicenseDetector[TrivyLicenseData]):
             sorted(filtered_license_map.items(), key=lambda item: item[0])
         )
 
+        extra_license_files = list(
+            find_extra_license_files(
+                directory,
+                self.license_config["exclude_directories"],
+                self.license_config["exclude_files"],
+            )
+        )
         return TrivyLicenseData(
             directory=Path(directory),
             license_map=filtered_license_map,
@@ -127,4 +135,5 @@ class TrivyLicenseDetector(LicenseDetector[TrivyLicenseData]):
             undetected_licenses=[],
             unmatched_extra_licenses=unmatched,
             trivy_license_data=licenses,
+            extra_license_files=extra_license_files,
         )
