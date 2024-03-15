@@ -42,5 +42,5 @@ def get_unlicensed_mods(directory: Path, license_paths: Collection[Path]) -> set
         )
         for path in license_paths
     }
-    all_dirs = set(get_go_module_dirs(directory))
+    all_dirs = {*get_go_module_dirs(directory), directory.resolve()}
     return all_dirs - licensed_dirs
