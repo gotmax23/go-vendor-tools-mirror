@@ -116,6 +116,12 @@ ignore_missing_imports = true
 enabled = false
 [tool.pymarkdown.plugins.no-inline-html]
 enabled = false
+[tool.pymarkdown.plugins.line-length]
+# Code blocks can be a little longer than regular text
+code_block_line_length = 100
+[tool.pymarkdown.plugins.no-duplicate-heading]
+# NEWS.md deliberately has duplicate headings
+enabled = false
 
 
 [tool.coverage.run]
