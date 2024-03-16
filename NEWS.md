@@ -5,6 +5,26 @@ SPDX-License-Identifier: MIT
 
 # NEWS
 
+## 0.2.0 - 2024-03-16 <a id='0.2.0'></a>
+
+### Added
+
+- `doc`: use unicode em dashes
+- `license_detection`: add `extra_license_files` field
+- `packaging`: add `NEWS.md` to `%doc`
+
+### Changed
+
+- `gomod`: require that the parent module has a license file
+
+### Fixed
+
+- `all`: remove unnecessary shebangs on non-executable files
+- `doc` `Scenarios`: fix security update example command
+- `doc`: add missing `%setup` `-q` flag to example specfile
+- `go_vendor_license --prompt`: fix path handling
+- `licensing`: fix SPDX expression simplification code
+
 ## 0.1.0 - 2024-03-09 <a id='0.1.0'></a>
 
 ### Added
