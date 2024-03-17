@@ -138,6 +138,33 @@ install -m 0755 -vp %{gobuilddir}/bin/* %{buildroot}%{_bindir}/
 This section contains some common scenarios that may arise when managing
 vendored Go packages.
 
+### Generate specfile with go2rpm
+
+Example case: You wish to package `github.com/opencontainers/runc` using
+vendored dependencies.
+
+Once support for go-vendor-tools is merged into go2rpm, you will be able to
+generate a specfile with the vendor profile with the following command
+
+1. Generate the base specfile
+
+    ``` bash
+    go2rpm --profile vendor -d --no-clean github.com/opencontainers/runc --name runc
+    ```
+
+    This command will create a `runc` directory with the specfile, the
+    downloaded upstream source archive, and the vendor tarball generated with
+    `go_vendor_archive`.
+    `go2rpm` will also output a license report and a cummulative SPDX expression
+    generated with `go_vendor_license`.
+    It is the packager's responsibility to perform a basic check of the output
+    and manually determine the SPDX expression for packages listed as
+    incompatible.
+
+2. Open up the specfile in an editor and replace the `License` field with the
+   expression that `go2rpm` outputs.
+
+
 ### Security updates
 
 Example case: CVE-2024-24786 was released in `google.golang.org/protobuf` and
