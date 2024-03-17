@@ -2,6 +2,7 @@
 %license /usr/share/licenses/not-fzf/LICENSE
 %license /usr/share/licenses/not-fzf/src/LICENSE
 %license /usr/share/licenses/not-fzf/vendor/github.com/gdamore/encoding/LICENSE
+%license /usr/share/licenses/not-fzf/vendor/github.com/gdamore/tcell/v2/AUTHORS
 %license /usr/share/licenses/not-fzf/vendor/github.com/gdamore/tcell/v2/LICENSE
 %license /usr/share/licenses/not-fzf/vendor/github.com/lucasb-eyer/go-colorful/LICENSE
 %license /usr/share/licenses/not-fzf/vendor/github.com/mattn/go-isatty/LICENSE
@@ -13,4 +14,3 @@
 %license /usr/share/licenses/not-fzf/vendor/golang.org/x/sys/LICENSE
 %license /usr/share/licenses/not-fzf/vendor/golang.org/x/term/LICENSE
 %license /usr/share/licenses/not-fzf/vendor/golang.org/x/text/LICENSE
-%license /usr/share/licenses/not-fzf/vendor/github.com/gdamore/tcell/v2/AUTHORS

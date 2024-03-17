@@ -119,7 +119,7 @@ class LicenseData:
         license_expression:
             Cumulative `license_expression.LicenseExpression` SPDX expression
         license_files_paths:
-            Absolute paths to all detected license files
+            Full paths to all detected license files
         extra_license_files:
             Extra files (e.g., AUTHORS or NOTICE files) that we should include
             in the distribution but not run through the license detector
@@ -149,7 +149,7 @@ class LicenseData:
             combine_licenses(*self.license_set) if self.license_map else None
         )
         self.license_file_paths = tuple(
-            (self.directory / lic).resolve()
+            self.directory / lic
             for lic in chain(self.license_map, self.undetected_licenses)
         )
 

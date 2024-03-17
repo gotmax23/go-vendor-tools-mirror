@@ -3,6 +3,7 @@
 %license /usr/share/licenses/test-autorestic/vendor/github.com/blang/semver/v4/LICENSE
 %license /usr/share/licenses/test-autorestic/vendor/github.com/buger/goterm/LICENSE
 %license /usr/share/licenses/test-autorestic/vendor/github.com/fatih/color/LICENSE.md
+%license /usr/share/licenses/test-autorestic/vendor/github.com/fsnotify/fsnotify/AUTHORS
 %license /usr/share/licenses/test-autorestic/vendor/github.com/fsnotify/fsnotify/LICENSE
 %license /usr/share/licenses/test-autorestic/vendor/github.com/hashicorp/hcl/LICENSE
 %license /usr/share/licenses/test-autorestic/vendor/github.com/inconshreveable/mousetrap/LICENSE
@@ -27,7 +28,6 @@
 %license /usr/share/licenses/test-autorestic/vendor/gopkg.in/ini.v1/LICENSE
 %license /usr/share/licenses/test-autorestic/vendor/gopkg.in/yaml.v2/LICENSE
 %license /usr/share/licenses/test-autorestic/vendor/gopkg.in/yaml.v2/LICENSE.libyaml
-%license /usr/share/licenses/test-autorestic/vendor/gopkg.in/yaml.v3/LICENSE
-%license /usr/share/licenses/test-autorestic/vendor/github.com/fsnotify/fsnotify/AUTHORS
 %license /usr/share/licenses/test-autorestic/vendor/gopkg.in/yaml.v2/NOTICE
+%license /usr/share/licenses/test-autorestic/vendor/gopkg.in/yaml.v3/LICENSE
 %license /usr/share/licenses/test-autorestic/vendor/gopkg.in/yaml.v3/NOTICE

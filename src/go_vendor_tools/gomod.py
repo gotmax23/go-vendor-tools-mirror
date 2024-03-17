@@ -33,14 +33,14 @@ def get_go_module_dirs(directory: Path) -> list[Path]:
 
 
 def get_unlicensed_mods(directory: Path, license_paths: Collection[Path]) -> set[Path]:
+    resolved_dir = directory.resolve()
     licensed_dirs = {
         (
             first.parent
-            if (first := path.parent).relative_to(directory.resolve()).name
-            == "LICENSES"
+            if (first := path.parent).relative_to(resolved_dir).name == "LICENSES"
             else first
         )
-        for path in license_paths
+        for path in (p.resolve() for p in license_paths)
     }
     all_dirs = {*get_go_module_dirs(directory), directory.resolve()}
     return all_dirs - licensed_dirs
