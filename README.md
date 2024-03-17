@@ -135,8 +135,8 @@ install -m 0755 -vp %{gobuilddir}/bin/* %{buildroot}%{_bindir}/
 
 ## Scenarios
 
-This sections contains some common scenarios that may arise when managing Go
-projects.
+This section contains some common scenarios that may arise when managing
+vendored Go packages.
 
 ### Security updates
 
