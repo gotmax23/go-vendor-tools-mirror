@@ -118,7 +118,7 @@ enabled = false
 enabled = false
 [tool.pymarkdown.plugins.line-length]
 # Code blocks can be a little longer than regular text
-code_block_line_length = 100
+code_block_line_length = 120
 [tool.pymarkdown.plugins.no-duplicate-heading]
 # NEWS.md deliberately has duplicate headings
 enabled = false
