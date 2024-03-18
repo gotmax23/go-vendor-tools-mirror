@@ -267,6 +267,7 @@ def mockbuild(session: nox.Session):
     session.run(*margs, external=True)
 
 
+@nox.session
 def releaserr(session: nox.Session):
     session.install("releaserr")
     session.run("releaserr", *session.posargs)
