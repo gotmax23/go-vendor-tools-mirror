@@ -177,7 +177,9 @@ def codeqa(session: nox.Session):
     install(session, ".[codeqa]")
     session.run("ruff", "check", *session.posargs, *LINT_FILES)
     session.run("shellcheck", *iglob("contrib/*.sh"))
-    session.run("pymarkdownlnt", "scan", *iglob("*.md"))
+    session.run(
+        "pymarkdownlnt", "scan", *iglob("*.md"), *iglob("docs/**/*.md", recursive=True)
+    )
     session.run("reuse", "lint")
 
 
@@ -271,3 +273,9 @@ def mockbuild(session: nox.Session):
 def releaserr(session: nox.Session):
     session.install("releaserr")
     session.run("releaserr", *session.posargs)
+
+
+@nox.session
+def mkdocs(session: nox.Session) -> None:
+    install(session, "-r", "docs-requirements.txt")
+    session.run("mkdocs", *(session.posargs if session.posargs else ["build"]))

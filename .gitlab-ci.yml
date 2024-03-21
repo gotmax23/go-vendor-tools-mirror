@@ -94,3 +94,12 @@ test:
         - IMAGE: "quay.io/centos/centos:stream9"
           PACKAGES: "fzf"
           SHOULD_RPMBUILD: "false"
+
+pages:
+  script:
+    - nox -e mkdocs -- build -d public
+  artifacts:
+    paths:
+      - public
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"

@@ -1,0 +1,31 @@
+---
+# Copyright (C) 2024 Maxwell G <maxwell@gtmx.me>
+# SPDX-License-Identifier: MIT
+site_name: Go Vendor Tools
+docs_dir: doc
+site_url: https://gotmax23.gitlab.io/go-vendor-tools
+repo_url: https://gitlab.com/gotmax23/go-vendor-tools
+theme:
+  name: material
+  features:
+    - content.code.copy
+    - navigation.footer
+# REUSE-IgnoreStart
+copyright: >
+  Copyright (C) 2024 Maxwell G and contributors |
+  SPDX-License-Identifier: <a style="text-decoration: underline;" href="https://gitlab.com/gotmax23/go-vendor-tools/-/blob/main/LICENSES/MIT.txt?ref_type=heads">MIT</a>
+# REUSE-IgnoreEnd
+markdown_extensions:
+  # Builtin
+  - admonition
+  - toc:
+      permalink: true
+  # pymdownx
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.superfences
+nav:
+  - README.md
+  - scenarios.md
+  - architecture.md
+  - example-specfile.md
