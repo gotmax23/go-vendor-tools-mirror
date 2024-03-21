@@ -65,7 +65,7 @@ in `go-vendor-tools.toml`.
 
 2. Identify the module's license file and determine its SPDX identifier
 
-    -
+    - 
         ``` bash
         ls vendor/github.com/google/shlex
         [...]
@@ -73,6 +73,7 @@ in `go-vendor-tools.toml`.
         [...]
         ```
     - The SPDX identifier was determined to be `Apache-2.0`.
+
 3. Use the `go_vendor_license explicit` command to add the license entry to the
    configuration file.
 
