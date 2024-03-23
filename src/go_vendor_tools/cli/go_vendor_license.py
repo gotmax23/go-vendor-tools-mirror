@@ -500,7 +500,7 @@ def install_command(args: argparse.Namespace) -> None:
     license_data: LicenseData = detector.detect(directory)
     copy_licenses(
         directory,
-        sorted((*license_data.license_file_paths, *license_data.extra_license_files)),
+        sorted({*license_data.license_file_paths, *license_data.extra_license_files}),
         install_destdir,
         install_directory,
         install_filelist,
