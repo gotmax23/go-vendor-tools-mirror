@@ -104,7 +104,15 @@ class TrivyLicenseDetector(LicenseDetector[TrivyLicenseData]):
             name = result["Name"]
             # License files can have multiple matches in trivy
             if path in license_map:
-                license_map[path] = str(combine_licenses(license_map[path], name))
+                license_map[path] = str(
+                    combine_licenses(
+                        # No need to validate. We do that later.
+                        license_map[path],
+                        name,
+                        validate=False,
+                        strict=False,
+                    )
+                )
             else:
                 license_map[path] = name
 

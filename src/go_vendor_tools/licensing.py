@@ -15,6 +15,8 @@ licensing = license_expression.get_spdx_licensing()
 
 def combine_licenses(
     *expressions: str | license_expression.LicenseExpression | None,
+    validate=True,
+    strict=True,
 ) -> license_expression.LicenseExpression:
     """
     Combine SPDX license expressions with AND
@@ -24,7 +26,9 @@ def combine_licenses(
     filtered = [str(expression) for expression in expressions if expression]
     filtered.sort()
     return simplify_license(
-        str(license_expression.combine_expressions(filtered, licensing=licensing))
+        str(license_expression.combine_expressions(filtered, licensing=licensing)),
+        validate=validate,
+        strict=strict,
     )
 
 
