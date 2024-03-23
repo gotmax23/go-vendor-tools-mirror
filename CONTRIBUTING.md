@@ -2,6 +2,7 @@
 Copyright (C) 2024 Maxwell G <maxwell@gtmx.me>
 SPDX-License-Identifier: MIT
 -->
+
 # Contributing
 
 See the [issue tracker] and issues marked with `help-wanted`, in particular,
