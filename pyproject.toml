@@ -78,10 +78,10 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://sr.ht/~gotmax23/go-vendor-tools"
-Source = "https://git.sr.ht/~gotmax23/go-vendor-tools"
-"Mailing List" = "https://lists.sr.ht/~gotmax23/go-vendor-tools"
-Changelog = "https://git.sr.ht/~gotmax23/go-vendor-tools/tree/main/item/NEWS.md"
+Homepage = "https://fedora.gitlab.io/sigs/go/go-vendor-tools/"
+Source = "https://gitlab.com/fedora/sigs/go/go-vendor-tools"
+"Issue Tracker" = "https://gitlab.com/fedora/sigs/go/go-vendor-tools/-/issues"
+Changelog = "https://fedora.gitlab.io/sigs/go/go-vendor-tools/news/"
 
 
 [tool.hatch.version]
