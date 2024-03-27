@@ -50,7 +50,7 @@ version. The go-vendor-tools configuration is stored in `go-vendor-tools.toml`.
     go_vendor_archive create --config go-vendor-tools.toml foo.spec
     ```
 
-## Manually detecting licenses
+## Manually detecting licenses {: #manually-detecting-licenses}
 
 Example case: `go_vendor_license report` fails to detect a license
 `vendor/github.com/google/shlex`. You will have to manually specify the license
