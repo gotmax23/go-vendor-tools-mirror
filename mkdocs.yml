@@ -18,6 +18,7 @@ copyright: >
 markdown_extensions:
   # Builtin
   - admonition
+  - footnotes
   - toc:
       permalink: true
   # pymdownx
@@ -29,5 +30,6 @@ nav:
   - news.md
   - contributing.md
   - scenarios.md
+  - config.md
   - architecture.md
   - example-specfile.md
