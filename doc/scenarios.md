@@ -61,6 +61,7 @@ in `go-vendor-tools.toml`.
     ``` bash
     fedpkg prep
     cd <UNPACKED ARCHIVE>
+    rm -rf _build
     ```
 
 2. Identify the module's license file and determine its SPDX identifier
@@ -89,3 +90,11 @@ in `go-vendor-tools.toml`.
     sha256sum = "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
     expression = "Apache-2.0"
     ```
+5. You can now rerun the `go_vendor_license report` subcommand to determine the
+   license expression.
+
+    ``` bash
+    go_vendor_license --config ../go-vendor-tools.toml report expression
+    ```
+
+    Fill the outputted license expression into the specfile's `License:` field.
