@@ -23,9 +23,18 @@ BuildRequires:  python3-devel
 Recommends:     (askalono-cli or trivy)
 
 
-%description
+%global common_description %{expand:
 go-vendor-tools provides tools and macros for handling Go library vendoring in
-Fedora.
+Fedora.}
+
+%description %common_description
+
+
+%package doc
+Summary:        Documentation for go-vendor-tools
+Enhances:       go-vendor-tools
+
+%description doc %common_description
 
 
 %prep
@@ -45,7 +54,12 @@ Fedora.
 # TODO(anyone): Use -l flag once supported by EL 9.
 %pyproject_save_files go_vendor_tools
 
+# Install RPM macros
 install -Dpm 0644 rpm/macros.go_vendor_tools -t %{buildroot}%{_rpmmacrodir}
+
+# Install documentation
+mkdir -p %{buildroot}%{_docdir}/go-vendor-tools-doc
+cp -rL doc/* %{buildroot}%{_docdir}/go-vendor-tools-doc
 
 
 %check
@@ -53,11 +67,14 @@ install -Dpm 0644 rpm/macros.go_vendor_tools -t %{buildroot}%{_rpmmacrodir}
 
 
 %files -f %{pyproject_files}
-%doc README.md
-%doc NEWS.md
+# Install top-level markdown files
+%doc *.md
 %license LICENSES/*
 %{_bindir}/go_vendor*
 %{_rpmmacrodir}/macros.go_vendor_tools
+
+%files doc
+%doc %{_docdir}/go-vendor-tools-doc/
 
 %pyproject_extras_subpkg -n go-vendor-tools all
 
