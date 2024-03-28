@@ -5,6 +5,38 @@ SPDX-License-Identifier: MIT
 
 # NEWS
 
+## 0.3.0 - 2024-03-28 <a id='0.3.0'></a>
+
+### Added
+
+- `LICENSES`: add Copyright
+- `doc`: add documentation site at
+  <https://fedora.gitlab.io/sigs/go/go-vendor-tools>
+- `go_vendor_license`: sort license installation filelist
+
+### Changed
+
+- `config archive`: make `use_module_proxy` the default
+  (https://gitlab.com/fedora/sigs/go/go-vendor-tools/-/issues/25)
+
+### Fixed
+
+- `license_detection`: avoid double license validation
+- `packaging`: fix project URLs in Python metadata
+
+### Miscellaneous documentation changes
+
+- `doc README`: add Copr status badge
+- `doc Scenarios`: add Manually detecting licenses
+- `doc Scenarios`: document generating specfiles with go2rpm
+- `doc Scenarios`: flesh out manual license detection section
+- `doc`: add CONTRIBUTING.md
+- `doc`: add Configuration page
+- `doc`: add news to mkdocs site
+- `doc`: fix more em dashes to use proper unicode ligatures
+- `doc`: fix sentence syntax in Scenarios section
+- `docs scenarios`: add explicit section id #manually-detecting-licenses
+
 ## 0.2.0 - 2024-03-16 <a id='0.2.0'></a>
 
 ### Added
