@@ -203,7 +203,7 @@ def typing(session: nox.Session):
 def bump(session: nox.Session):
     version = session.posargs[0]
 
-    install(session, "build", "releaserr", "fclogr")
+    install(session, "build", "releaserr >= 0.1.dev123", "fclogr")
     session.run("releaserr", "--version")
 
     session.run("releaserr", "check-tag", version)
@@ -225,7 +225,11 @@ def bump(session: nox.Session):
     # Bump changelog, commit, and tag
     git(session, "add", SPECFILE, f"src/{PROJECT}/__init__.py")
     session.run("releaserr", "clog", version, "--tag")
-    session.run("releaserr", "build", "--backend", "generic", "--isolated")
+    # FIXME(anyone): Temporarily disable twine check.
+    # It doesn't understand hatch 2.3 metadata.
+    session.run(
+        "releaserr", "build", "--backend", "generic", "--isolated", "--no-twine-check"
+    )
 
 
 @nox.session
