@@ -124,7 +124,7 @@ def parseargs(argv: list[str] | None = None) -> CreateArchiveArgs | OverrideArgs
         action=argparse.BooleanOptionalAction,
     )
     create_subparser.add_argument(
-        "--use-module-proxy", action="store_true", default=None
+        "--use-module-proxy", action=argparse.BooleanOptionalAction, default=None
     )
     create_subparser.add_argument("-p", action="store_true", dest="use_module_proxy")
     create_subparser.add_argument("-c", "--config", type=Path, dest="config_path")
