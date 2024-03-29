@@ -26,6 +26,13 @@ markdown_extensions:
   - pymdownx.highlight:
       anchor_linenums: true
   - pymdownx.superfences
+plugins:
+  - exclude:
+      glob:
+        # TODO(gotmax23): Include generated manpages in docsite
+        - "man/**"
+        - ".gitignore"
+
 nav:
   - README.md
   - news.md
