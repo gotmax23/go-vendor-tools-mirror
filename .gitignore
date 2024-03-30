@@ -13,3 +13,5 @@ venv/
 outgoing/
 .coverage*
 coverage.xml
+# For mkdocs
+site/
