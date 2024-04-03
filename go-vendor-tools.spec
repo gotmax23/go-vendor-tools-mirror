@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: MIT
 # License text: https://spdx.org/licenses/MIT
 
-%global forgeurl https://gitlab.com/gotmax23/go-vendor-tools
+%global forgeurl https://gitlab.com/fedora/sigs/go/go-vendor-tools
 %define tag v%{version}
 
 Name:           go-vendor-tools
