@@ -466,6 +466,16 @@ def report_command(args: argparse.Namespace) -> None:
     )
 
 
+def _get_intermediate_directories(
+    directory_parts: Collection[Sequence[str]],
+) -> set[Path]:
+    inter_parts = set()
+    for parts in directory_parts:
+        for i in range(len(parts)):
+            inter_parts.add(Path(*parts[: i + 1]))
+    return inter_parts
+
+
 def copy_licenses(
     base_directory: Path,
     license_paths: Iterable[Path],
@@ -489,7 +499,8 @@ def copy_licenses(
         shutil.copy2(lic, installdir / relpath)
         entries.append(f"%license {install_directory / relpath}")
     entries.extend(
-        f"%license %dir {install_directory / Path(*parts)}" for parts in directory_parts
+        f"%license %dir {install_directory / path}"
+        for path in _get_intermediate_directories(directory_parts)
     )
     entries.sort()
     install_filelist.write_text("\n".join(entries) + "\n")
