@@ -1,4 +1,31 @@
 %license %dir /usr/share/licenses/test-autorestic
+%license %dir /usr/share/licenses/test-autorestic/vendor/github.com/blang/semver/v4
+%license %dir /usr/share/licenses/test-autorestic/vendor/github.com/buger/goterm
+%license %dir /usr/share/licenses/test-autorestic/vendor/github.com/fatih/color
+%license %dir /usr/share/licenses/test-autorestic/vendor/github.com/fsnotify/fsnotify
+%license %dir /usr/share/licenses/test-autorestic/vendor/github.com/hashicorp/hcl
+%license %dir /usr/share/licenses/test-autorestic/vendor/github.com/inconshreveable/mousetrap
+%license %dir /usr/share/licenses/test-autorestic/vendor/github.com/joho/godotenv
+%license %dir /usr/share/licenses/test-autorestic/vendor/github.com/magiconair/properties
+%license %dir /usr/share/licenses/test-autorestic/vendor/github.com/mattn/go-colorable
+%license %dir /usr/share/licenses/test-autorestic/vendor/github.com/mattn/go-isatty
+%license %dir /usr/share/licenses/test-autorestic/vendor/github.com/mitchellh/go-homedir
+%license %dir /usr/share/licenses/test-autorestic/vendor/github.com/mitchellh/mapstructure
+%license %dir /usr/share/licenses/test-autorestic/vendor/github.com/pelletier/go-toml
+%license %dir /usr/share/licenses/test-autorestic/vendor/github.com/pelletier/go-toml/v2
+%license %dir /usr/share/licenses/test-autorestic/vendor/github.com/robfig/cron
+%license %dir /usr/share/licenses/test-autorestic/vendor/github.com/spf13/afero
+%license %dir /usr/share/licenses/test-autorestic/vendor/github.com/spf13/cast
+%license %dir /usr/share/licenses/test-autorestic/vendor/github.com/spf13/cobra
+%license %dir /usr/share/licenses/test-autorestic/vendor/github.com/spf13/jwalterweatherman
+%license %dir /usr/share/licenses/test-autorestic/vendor/github.com/spf13/pflag
+%license %dir /usr/share/licenses/test-autorestic/vendor/github.com/spf13/viper
+%license %dir /usr/share/licenses/test-autorestic/vendor/github.com/subosito/gotenv
+%license %dir /usr/share/licenses/test-autorestic/vendor/golang.org/x/sys
+%license %dir /usr/share/licenses/test-autorestic/vendor/golang.org/x/text
+%license %dir /usr/share/licenses/test-autorestic/vendor/gopkg.in/ini.v1
+%license %dir /usr/share/licenses/test-autorestic/vendor/gopkg.in/yaml.v2
+%license %dir /usr/share/licenses/test-autorestic/vendor/gopkg.in/yaml.v3
 %license /usr/share/licenses/test-autorestic/LICENSE
 %license /usr/share/licenses/test-autorestic/vendor/github.com/blang/semver/v4/LICENSE
 %license /usr/share/licenses/test-autorestic/vendor/github.com/buger/goterm/LICENSE

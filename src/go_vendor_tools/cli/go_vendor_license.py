@@ -476,14 +476,23 @@ def copy_licenses(
     installdir = install_destdir / install_directory.relative_to("/")
     base_directory = base_directory.resolve()
 
-    with install_filelist.open("w", encoding="utf-8") as fp:
-        installdir.mkdir(parents=True, exist_ok=True)
-        fp.write(f"%license %dir {install_directory}\n")
-        for lic in license_paths:
-            relpath = lic.resolve().relative_to(base_directory)
-            (installdir / relpath).parent.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(lic, installdir / relpath)
-            fp.write(f"%license {install_directory / relpath}\n")
+    entries: list[str] = []
+    directory_parts: set[Sequence[str]] = set()
+    installdir.mkdir(parents=True, exist_ok=True)
+    entries.append(f"%license %dir {install_directory}")
+    for lic in license_paths:
+        resolvedpath = lic.resolve()
+        relpath = resolvedpath.relative_to(base_directory)
+        if len(relpath.parts) > 1:
+            directory_parts.add(relpath.parts[:-1])
+        (installdir / relpath).parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(lic, installdir / relpath)
+        entries.append(f"%license {install_directory / relpath}")
+    entries.extend(
+        f"%license %dir {install_directory / Path(*parts)}" for parts in directory_parts
+    )
+    entries.sort()
+    install_filelist.write_text("\n".join(entries) + "\n")
 
 
 def install_command(args: argparse.Namespace) -> None:

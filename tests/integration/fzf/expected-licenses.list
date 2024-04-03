@@ -1,4 +1,17 @@
 %license %dir /usr/share/licenses/not-fzf
+%license %dir /usr/share/licenses/not-fzf/src
+%license %dir /usr/share/licenses/not-fzf/vendor/github.com/gdamore/encoding
+%license %dir /usr/share/licenses/not-fzf/vendor/github.com/gdamore/tcell/v2
+%license %dir /usr/share/licenses/not-fzf/vendor/github.com/lucasb-eyer/go-colorful
+%license %dir /usr/share/licenses/not-fzf/vendor/github.com/mattn/go-isatty
+%license %dir /usr/share/licenses/not-fzf/vendor/github.com/mattn/go-runewidth
+%license %dir /usr/share/licenses/not-fzf/vendor/github.com/mattn/go-shellwords
+%license %dir /usr/share/licenses/not-fzf/vendor/github.com/rivo/uniseg
+%license %dir /usr/share/licenses/not-fzf/vendor/github.com/saracen/walker
+%license %dir /usr/share/licenses/not-fzf/vendor/golang.org/x/sync
+%license %dir /usr/share/licenses/not-fzf/vendor/golang.org/x/sys
+%license %dir /usr/share/licenses/not-fzf/vendor/golang.org/x/term
+%license %dir /usr/share/licenses/not-fzf/vendor/golang.org/x/text
 %license /usr/share/licenses/not-fzf/LICENSE
 %license /usr/share/licenses/not-fzf/src/LICENSE
 %license /usr/share/licenses/not-fzf/vendor/github.com/gdamore/encoding/LICENSE
