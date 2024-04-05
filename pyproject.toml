@@ -42,6 +42,7 @@ go_vendor_license = "go_vendor_tools.cli.go_vendor_license:main"
 [project.optional-dependencies]
 # User-facing
 all = [
+    "argcomplete",
     "tomlkit",
 ]
 # Dev

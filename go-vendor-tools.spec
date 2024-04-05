@@ -26,6 +26,7 @@ BuildRequires:  scdoc
 %endif
 
 Recommends:     (askalono-cli or trivy)
+Recommends:     go-vendor-tools+all
 
 
 %global common_description %{expand:
@@ -47,7 +48,7 @@ Enhances:       go-vendor-tools
 
 
 %generate_buildrequires
-%pyproject_buildrequires -x test
+%pyproject_buildrequires -x all,test
 
 
 %build
@@ -55,6 +56,18 @@ Enhances:       go-vendor-tools
 %if %{with manpages}
 ./doc/man/mkman.sh
 %endif
+
+mkdir -p bash_completions fish_completions zsh_completions
+for bin in go_vendor_archive go_vendor_license; do
+    register-python-argcomplete --shell bash "${bin}" > "bash_completions/${bin}"
+    register-python-argcomplete --shell fish "${bin}" > "fish_completions/${bin}.fish"
+    # Compatibility with old argcomplete versions
+    if ! (register-python-argcomplete --shell zsh "${bin}" > "zsh_completions/_${bin}"); then
+        echo "#compdef ${bin}" > "zsh_completions/_${bin}"
+        echo -e "autoload -Uz bashcompinit\nbashcompinit" > "zsh_completions/_${bin}"
+        cat "bash_completions/${bin}" >> "zsh_completions/_${bin}"
+    fi
+done
 
 
 %install
@@ -74,6 +87,11 @@ cp -rL doc/* %{buildroot}%{_docdir}/go-vendor-tools-doc
 install -Dpm 0644 doc/man/*.1 -t %{buildroot}%{_mandir}/man1/
 %endif
 
+# Install completions
+install -Dpm 0644 bash_completions/* -t %{buildroot}%{bash_completions_dir}/
+install -Dpm 0644 fish_completions/* -t %{buildroot}%{fish_completions_dir}/
+install -Dpm 0644 zsh_completions/* -t %{buildroot}%{zsh_completions_dir}/
+
 
 %check
 %pytest
@@ -84,6 +102,9 @@ install -Dpm 0644 doc/man/*.1 -t %{buildroot}%{_mandir}/man1/
 %doc *.md
 %license LICENSES/*
 %{_bindir}/go_vendor*
+%{bash_completions_dir}/go_vendor_*
+%{fish_completions_dir}/go_vendor_*.fish
+%{zsh_completions_dir}/_go_vendor_*
 %{_rpmmacrodir}/macros.go_vendor_tools
 %if %{with manpages}
 %{_mandir}/man1/go*.1*

@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# PYTHON_ARGCOMPLETE_OK
 # Copyright (C) 2024 Maxwell G <maxwell@gtmx.me>
 # SPDX-License-Identifier: MIT
 
@@ -36,6 +37,13 @@ except ImportError:
 else:
     HAS_TOMLKIT = True
     from go_vendor_tools.cli.utils import load_tomlkit_if_exists
+
+try:
+    import argcomplete
+except ImportError:
+    HAS_ARGCOMPLETE = False
+else:
+    HAS_ARGCOMPLETE = True
 
 if TYPE_CHECKING:
     from _typeshed import StrPath
@@ -183,6 +191,8 @@ def parseargs(argv: list[str] | None = None) -> CreateArchiveArgs | OverrideArgs
     override_subparser.add_argument("import_path")
     override_subparser.add_argument("version")
 
+    if HAS_ARGCOMPLETE:
+        argcomplete.autocomplete(parser)
     args = parser.parse_args(argv)
     if args.subcommand == "create":
         return CreateArchiveArgs.construct(**vars(args))
