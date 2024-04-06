@@ -51,10 +51,7 @@ jobs:
         additional_packages:
           # TODO: Remove this once trivy is packaged in Fedora!
           - https://github.com/aquasecurity/trivy/releases/download/v0.49.1/trivy_0.49.1_Linux-64bit.rpm
-    owner: "@go-sig"
-    project: go-vendor-tools-dev
-    trigger: commit
-    branch: main
+    trigger: pull_request
 
   - job: copr_build
     packages:
@@ -64,4 +61,7 @@ jobs:
     targets:
       <<: *targets
       fedora-all-aarch64: *target_cfg
-    trigger: pull_request
+    owner: "@go-sig"
+    project: go-vendor-tools-dev
+    trigger: commit
+    branch: main
