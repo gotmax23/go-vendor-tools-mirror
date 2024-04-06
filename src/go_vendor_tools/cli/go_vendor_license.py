@@ -43,7 +43,7 @@ else:
     HAS_TOMLKIT = True
     from go_vendor_tools.cli.utils import load_tomlkit_if_exists
 
-COLOR = None
+COLOR: bool | None = None
 RED = "\033[31m"  # ]
 CLEAR = "\033[0m"  # ]
 
