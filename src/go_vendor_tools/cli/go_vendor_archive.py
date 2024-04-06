@@ -69,6 +69,7 @@ class CreateArchiveArgs:
     use_top_level_dir: bool
     use_module_proxy: bool
     tidy: bool
+    idempotent: bool
     config_path: Path
     config: BaseConfig
 
@@ -134,6 +135,12 @@ def parseargs(argv: list[str] | None = None) -> CreateArchiveArgs | OverrideArgs
         action=argparse.BooleanOptionalAction,
         default=None,
     )
+    create_subparser.add_argument(
+        "-I",
+        "--idempotent",
+        action="store_true",
+        help="Only generate archive if OUTPUT does not already exist",
+    )
     create_subparser.add_argument("path", type=Path)
     override_subparser = subparsers.add_parser("override")
     override_subparser.add_argument(
@@ -172,6 +179,9 @@ def create_archive(args: CreateArchiveArgs) -> None:
         _already_checked_is_file = True
     else:
         args.output = Path(DEFAULT_OUTPUT)
+    if args.idempotent and args.output.exists():
+        print(f"{args.output} already exists")
+        sys.exit()
     # Treat as an archive if it's not a directory
     if _already_checked_is_file or args.path.is_file():
         print(f"* Treating {args.path} as an archive. Unpacking...")

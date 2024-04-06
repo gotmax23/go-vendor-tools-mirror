@@ -38,6 +38,7 @@ def test_vendor_archive_base(mocker: MockerFixture, tmp_path: Path) -> None:
         use_top_level_dir=False,
         use_module_proxy=False,
         tidy=True,
+        idempotent=False,
         config_path=tmp_path / "go-vendor-tools.toml",
         config=config,
     )

@@ -28,6 +28,8 @@ _PATH_
 *-p* / *--use-module-proxy*, *--no-use-module-proxy*
 	Whether to use the Google Go module proxy.
 	Defaults to *true* or whatever is set in *go-vendor-tools.toml*.
+*-I*, *--idempotent*
+	Only generate archive if _OUTPUT_ does not already exist
 
 # AUTHOR
 
