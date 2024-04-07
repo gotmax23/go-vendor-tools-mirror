@@ -62,7 +62,7 @@ List of directories to ignore when scanning for license files
 
 ### `archive`
 
-The configuration for `go_vendor_archive` is stored under the `archive` table`.
+The configuration for `go_vendor_archive` is stored under the `archive` table.
 
 #### `use_module_proxy` (boolean)
 
