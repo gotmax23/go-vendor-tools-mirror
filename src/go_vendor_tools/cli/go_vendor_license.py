@@ -9,7 +9,6 @@ import json
 import os
 import shutil
 import sys
-import tarfile
 from collections.abc import Collection, Iterable, Iterator, MutableSequence, Sequence
 from contextlib import contextmanager
 from functools import cache
@@ -19,6 +18,7 @@ from textwrap import dedent
 from typing import IO, Any, cast
 
 import license_expression
+from zstarfile import ZSTarfile
 
 from go_vendor_tools import __version__
 from go_vendor_tools.archive import get_toplevel_directory
@@ -400,14 +400,14 @@ def handle_alternative_sources(
         with TemporaryDirectory() as _tmp:
             tmp = Path(_tmp)
             # Extract the first archive
-            with tarfile.open(directories[0]) as tar:
+            with ZSTarfile.open(directories[0]) as tar:
                 first_toplevel = get_toplevel_directory(tar)
                 if not first_toplevel:
                     sys.exit(f"{directories[0]} does not have a top-level directory!")
                 print(f"Extracting {directories[0]}", file=sys.stderr)
                 tar.extractall(tmp)
             for directory in directories[1:]:
-                with tarfile.open(directory) as tar:
+                with ZSTarfile.open(directory) as tar:
                     toplevel = get_toplevel_directory(tar)
                     print(f"Extracting {directory}", file=sys.stderr)
                     tar.extractall(tmp if toplevel else tmp / first_toplevel)

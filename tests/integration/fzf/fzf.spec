@@ -22,7 +22,7 @@ SourceLicense:  MIT
 License:        Apache-2.0 AND BSD-3-Clause AND MIT
 URL:            %{gourl}
 Source0:        %{gosource}
-Source1:        fzf-%{version}-vendor.tar.xz
+Source1:        fzf-%{version}-vendor.tar.bz2
 Source2:        expected-licenses.list
 
 BuildRequires:  go-vendor-tools

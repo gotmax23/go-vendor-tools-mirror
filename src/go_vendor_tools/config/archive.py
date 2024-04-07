@@ -7,6 +7,7 @@ Configuration for the go_vendor_archive command
 
 from __future__ import annotations
 
+import os
 from collections.abc import Iterator
 from typing import Any, Mapping, TypedDict, cast
 
@@ -17,6 +18,7 @@ DEFAULT_USE_MODULE_PROXY = get_envvar_boolean(
     "GO_VENDOR_ARCHIVE_USE_MODULE_PROXY", True
 )
 DEFAULT_TIDY = True
+DEFAULT_COMPRESSLEVEL_STR = os.environ.get("GO_VENDOR_ARCHIVE_COMPRESSLEVEL")
 
 
 class ArchiveConfig(TypedDict):
@@ -28,6 +30,8 @@ class ArchiveConfig(TypedDict):
     post_commands: list[list[str]]
     tidy: bool
     dependency_overrides: dict[str, str]
+    compresslevel: int | None
+    compression_type: str | None
 
 
 def create_archive_config(config: dict[str, Any] | None = None) -> ArchiveConfig:
@@ -39,6 +43,13 @@ def create_archive_config(config: dict[str, Any] | None = None) -> ArchiveConfig
     config.setdefault("post_commands", [])
     config.setdefault("tidy", DEFAULT_TIDY)
     config.setdefault("dependency_overrides", {})
+    config.setdefault(
+        "compresslevel",
+        DEFAULT_COMPRESSLEVEL_STR if DEFAULT_COMPRESSLEVEL_STR else None,
+    )
+    if config["compresslevel"] is not None:
+        config["compresslevel"] = int(config["compresslevel"])
+    config.setdefault("compression_type", None)
     return cast(ArchiveConfig, config)
 
 

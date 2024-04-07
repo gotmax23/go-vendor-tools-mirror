@@ -89,6 +89,23 @@ You should leave this enabled.
 
 See [*Security updates*](./scenarios.md#security-updates).
 
+#### `compression_type` (string)
+
+> **CLI flag**: `--compression`
+
+Compression type, such as `tar` (uncompressed), `gz`, `bz2`, or `zstd`.
+By default, the compression type is detected based on the extension of
+`--output` passed on the CLI.
+
+#### compresslevel (int)
+
+> **Environment variable**: `GO_VENDOR_ARCHIVE_COMPRESSLEVEL`
+>
+> **CLI flag**: `--compresslevel`
+
+Compression level as an integer for compression algorithms that support the
+setting
+
 [^1]: This is done for security reasons. `pre_commands` and `post_commands` can
     run arbitrary code, so we do not want to blindly load configuration from
     the current working directory.

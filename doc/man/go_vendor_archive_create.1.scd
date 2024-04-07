@@ -20,6 +20,9 @@ _PATH_
 	. Path to a specfile. *SOURCE0* will automatically be unpacked.
 *--config* _PATH_
 	Path to config file
+*--write-config*
+	After creating the archive, write out a config file based on the CLI
+	options
 *-O* _OUTPUT_, *--output* _OUTPUT_
 	Output path for the vendored tarball.
 	When _PATH_ is a specfile, the name of *SOURCE1* will be used as the
@@ -30,6 +33,13 @@ _PATH_
 	Defaults to *true* or whatever is set in *go-vendor-tools.toml*.
 *-I*, *--idempotent*
 	Only generate archive if _OUTPUT_ does not already exist
+*--compression* _COMPRESSION TYPE_
+	Compression type, such as _tar_ (uncompressed), _gz_, _bz2_, or _zstd_.
+	By default, the compression type is detected based on _OUTPUT_'s
+	extension.
+*--compresslevel* _COMPRESSLEVEL_ (int)
+	Compression level as an integer for compression algorithms that support
+	the setting
 
 # AUTHOR
 

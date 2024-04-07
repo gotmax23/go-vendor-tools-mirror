@@ -11,14 +11,16 @@ import shlex
 import shutil
 import subprocess
 import sys
-import tarfile
 import tempfile
 from collections.abc import Callable, Sequence
-from contextlib import AbstractContextManager, nullcontext
-from functools import cache, partial
+from contextlib import ExitStack
+from functools import partial
 from itertools import chain
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, ClassVar
+
+from zstarfile import ZSTarfile
+from zstarfile.extra import open_write_compressed
 
 from go_vendor_tools import __version__
 from go_vendor_tools.archive import add_files_to_archive
@@ -46,7 +48,6 @@ GO_PROXY_ENV = {
 }
 
 
-@cache
 def need_tomlkit(action="this action"):
     if not HAS_TOMLKIT:
         message = f"tomlkit is required for {action}. Please install it!"
@@ -70,30 +71,48 @@ class CreateArchiveArgs:
     use_module_proxy: bool
     tidy: bool
     idempotent: bool
+    compresslevel: int | None
+    compression_type: str | None
     config_path: Path
     config: BaseConfig
+    write_config: bool
+    _explicitly_passed: list[str] = dataclasses.field(default_factory=list, repr=False)
 
     CONFIG_OPTS: ClassVar[tuple[str, ...]] = (
         "use_module_proxy",
         "use_top_level_dir",
         "tidy",
+        "compresslevel",
+        "compression_type",
     )
 
     @classmethod
     def construct(cls, **kwargs: Any) -> CreateArchiveArgs:
         if kwargs.pop("subcommand") != "create":
             raise AssertionError  # pragma: no cover
-        kwargs["config"] = load_config(kwargs["config_path"])
+        _explicitly_passed = list(kwargs)
+        kwargs["config"] = load_config(kwargs["config_path"], kwargs["write_config"])
         for opt in cls.CONFIG_OPTS:
-            if kwargs[opt] is None:
+            if kwargs.get(opt) is None:
                 kwargs[opt] = kwargs["config"]["archive"][opt]
-
-        if kwargs["output"] and not kwargs["output"].name.endswith((".tar.xz", "txz")):
-            raise ValueError(f"{kwargs['output']} must end with '.tar.xz' or '.txz'")
-
         if not kwargs["path"].exists():
             raise ArchiveError(f"{kwargs['path']} does not exist!")
-        return CreateArchiveArgs(**kwargs)
+        if kwargs["write_config"]:
+            need_tomlkit("--write-config")
+            if not kwargs["config_path"]:
+                raise ArchiveError("--write-config requires --config to be set")
+        return CreateArchiveArgs(**kwargs, _explicitly_passed=_explicitly_passed)
+
+    def write_config_opts(self) -> None:
+        need_tomlkit("write_config_opts")
+        loaded = load_tomlkit_if_exists(self.config_path)
+        config = loaded.setdefault("archive", {})
+        for opt in self._explicitly_passed:
+            if opt not in self.CONFIG_OPTS:
+                continue
+            config[opt] = getattr(self, opt)
+        with open(self.config_path, "w", encoding="utf-8") as fp:
+            tomlkit.dump(loaded, fp)
 
 
 @dataclasses.dataclass()
@@ -120,20 +139,24 @@ def parseargs(argv: list[str] | None = None) -> CreateArchiveArgs | OverrideArgs
     )
     create_subparser.add_argument(
         "--top-level-dir",
-        default=None,
         dest="use_top_level_dir",
         action=argparse.BooleanOptionalAction,
+        default=argparse.SUPPRESS,
     )
     create_subparser.add_argument(
-        "--use-module-proxy", action=argparse.BooleanOptionalAction, default=None
+        "--use-module-proxy",
+        action=argparse.BooleanOptionalAction,
+        default=argparse.SUPPRESS,
     )
-    create_subparser.add_argument("-p", action="store_true", dest="use_module_proxy")
+    create_subparser.add_argument(
+        "-p", action="store_true", dest="use_module_proxy", default=argparse.SUPPRESS
+    )
     create_subparser.add_argument("-c", "--config", type=Path, dest="config_path")
     create_subparser.add_argument(
         "--tidy",
         help="%(default)s",
         action=argparse.BooleanOptionalAction,
-        default=None,
+        default=argparse.SUPPRESS,
     )
     create_subparser.add_argument(
         "-I",
@@ -141,6 +164,17 @@ def parseargs(argv: list[str] | None = None) -> CreateArchiveArgs | OverrideArgs
         action="store_true",
         help="Only generate archive if OUTPUT does not already exist",
     )
+    create_subparser.add_argument(
+        "--compresslevel", type=int, default=argparse.SUPPRESS
+    )
+    create_subparser.add_argument(
+        "--compression",
+        dest="compression_type",
+        metavar="COMPRESSION_TYPE",
+        help=f"Choices: {list(ZSTarfile.OPEN_METH)}",
+        default=argparse.SUPPRESS,
+    )
+    create_subparser.add_argument("--write-config", action="store_true")
     create_subparser.add_argument("path", type=Path)
     override_subparser = subparsers.add_parser("override")
     override_subparser.add_argument(
@@ -173,7 +207,6 @@ def _create_archive_read_from_specfile(args: CreateArchiveArgs) -> None:
 def create_archive(args: CreateArchiveArgs) -> None:
     _already_checked_is_file = False
     cwd = args.path
-    cm: AbstractContextManager[str] = nullcontext(str(args.path))
     if args.path.suffix == ".spec":
         _create_archive_read_from_specfile(args)
         _already_checked_is_file = True
@@ -182,14 +215,23 @@ def create_archive(args: CreateArchiveArgs) -> None:
     if args.idempotent and args.output.exists():
         print(f"{args.output} already exists")
         sys.exit()
-    # Treat as an archive if it's not a directory
-    if _already_checked_is_file or args.path.is_file():
-        print(f"* Treating {args.path} as an archive. Unpacking...")
-        cm = tempfile.TemporaryDirectory()
-        shutil.unpack_archive(args.path, cm.name)
-        cwd = Path(cm.name)
-        cwd /= next(cwd.iterdir())
-    with cm:
+    with ExitStack() as stack:
+        try:
+            tf = stack.enter_context(
+                open_write_compressed(
+                    args.output,
+                    compression_type=args.compression_type,
+                    compresslevel=args.compresslevel,
+                )
+            )
+        except ValueError as exc:
+            sys.exit(f"Invalid --output value: {exc}")
+        # Treat as an archive if it's not a directory
+        if _already_checked_is_file or args.path.is_file():
+            print(f"* Treating {args.path} as an archive. Unpacking...")
+            cwd = Path(stack.enter_context(tempfile.TemporaryDirectory()))
+            shutil.unpack_archive(args.path, cwd)
+            cwd /= next(cwd.iterdir())
         env = os.environ | GO_PROXY_ENV if args.use_module_proxy else None
         runner = partial(subprocess.run, cwd=cwd, check=True, env=env)
         pre_commands = chain(
@@ -206,10 +248,11 @@ def create_archive(args: CreateArchiveArgs) -> None:
         for command in args.config["archive"]["post_commands"]:
             run_command(runner, command)
         print("Creating archive...")
-        with tarfile.open(args.output, "w:xz") as tf:
-            add_files_to_archive(
-                tf, Path(cwd), ARCHIVE_FILES, top_level_dir=args.use_top_level_dir
-            )
+        add_files_to_archive(
+            tf, Path(cwd), ARCHIVE_FILES, top_level_dir=args.use_top_level_dir
+        )
+        if args.write_config:
+            args.write_config_opts()
 
 
 def override_command(args: OverrideArgs) -> None:

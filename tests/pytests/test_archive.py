@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import sys
 from pathlib import Path
 
 from pytest_mock import MockerFixture
@@ -14,6 +15,11 @@ from go_vendor_tools.cli.go_vendor_archive import (
     override_command,
 )
 from go_vendor_tools.config.base import create_base_config, load_config
+
+if sys.version_info >= (3, 11):
+    import tomllib
+else:
+    import tomlkit as tomllib
 
 
 def test_vendor_archive_base(mocker: MockerFixture, tmp_path: Path) -> None:
@@ -39,8 +45,11 @@ def test_vendor_archive_base(mocker: MockerFixture, tmp_path: Path) -> None:
         use_module_proxy=False,
         tidy=True,
         idempotent=False,
+        compression_type=None,
+        compresslevel=None,
         config_path=tmp_path / "go-vendor-tools.toml",
         config=config,
+        write_config=False,
     )
     create_archive(args)
     expected_calls = [
@@ -51,6 +60,23 @@ def test_vendor_archive_base(mocker: MockerFixture, tmp_path: Path) -> None:
     ]
     calls = [list(c.args[1]) for c in patched_run_command.call_args_list]
     assert expected_calls == calls
+
+
+def test_vendor_archive_write_config(tmp_path: Path) -> None:
+    args = CreateArchiveArgs.construct(
+        subcommand="create",
+        path=tmp_path,
+        output=Path("vendor.tar.bz2"),
+        idempotent=False,
+        compression_type="bz2",
+        compresslevel=9,
+        config_path=tmp_path / "go-vendor-tools.toml",
+        write_config=True,
+    )
+    args.write_config_opts()
+    with open(args.config_path, "rb") as fp:
+        data = tomllib.load(fp)
+    assert data == {"archive": {"compression_type": "bz2", "compresslevel": 9}}
 
 
 def test_vendor_archive_override(tmp_path: Path) -> None:
