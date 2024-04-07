@@ -27,7 +27,7 @@ _PATH_
 	Output path for the vendored tarball.
 	When _PATH_ is a specfile, the name of *SOURCE1* will be used as the
 	output if one is not explicitly specified.
-	Otherwise, *./vendor.tar.gz* is the default.
+	Otherwise, *./vendor.tar.bz2* is the default.
 *-p* / *--use-module-proxy*, *--no-use-module-proxy*
 	Whether to use the Google Go module proxy.
 	Defaults to *true* or whatever is set in *go-vendor-tools.toml*.

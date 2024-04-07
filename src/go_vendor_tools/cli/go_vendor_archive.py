@@ -40,7 +40,7 @@ else:
 if TYPE_CHECKING:
     from _typeshed import StrPath
 
-DEFAULT_OUTPUT = "vendor.tar.xz"
+DEFAULT_OUTPUT = "vendor.tar.bz2"
 ARCHIVE_FILES = (Path("go.mod"), Path("go.sum"), Path("vendor"))
 GO_PROXY_ENV = {
     "GOPROXY": "https://proxy.golang.org,direct",
