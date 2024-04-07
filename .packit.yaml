@@ -46,11 +46,11 @@ jobs:
       - go-vendor-tools
       - autorestic
       - fzf
-    targets: &targets
+    targets:
       fedora-all-x86_64:
-        additional_packages:
-          # TODO: Remove this once trivy is packaged in Fedora!
-          - https://github.com/aquasecurity/trivy/releases/download/v0.50.0/trivy_0.50.0_Linux-64bit.rpm
+        # Extra dependencies (trivy, python-zstarfile) not packaged in Fedora
+        additional_repos:
+          - "copr://@go-sig/go-vendor-tools-dev"
     trigger: pull_request
 
   - job: copr_build
@@ -59,11 +59,8 @@ jobs:
       - autorestic
       - fzf
     targets:
-      <<: *targets
-      fedora-all-aarch64:
-        additional_packages:
-          # TODO: Remove this once trivy is packaged in Fedora!
-          - https://github.com/aquasecurity/trivy/releases/download/v0.50.0/trivy_0.50.0_Linux-ARM64.rpm
+      - fedora-all-x86_64
+      - fedora-all-aarch64
     owner: "@go-sig"
     project: go-vendor-tools-dev
     trigger: commit
