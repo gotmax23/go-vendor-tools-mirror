@@ -8,6 +8,7 @@ srpm_build_deps:
   - pipx
   - rpmdevtools
   - wait-for-copr
+  - /usr/bin/unshare
 packages:
   # Main package
   go-vendor-tools:

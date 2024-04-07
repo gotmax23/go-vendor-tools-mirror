@@ -47,6 +47,7 @@ test:
       redhat-rpm-config
       rpm-build
       rpmdevtools
+      /usr/bin/unshare
     - >-
       test "$SHOULD_RPMBUILD" = "false" ||
       sudo dnf install
