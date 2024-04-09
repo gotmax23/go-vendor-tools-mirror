@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: MIT
 # License text: https://spdx.org/licenses/MIT
 
+%bcond manpages 1
 %global forgeurl https://gitlab.com/fedora/sigs/go/go-vendor-tools
 %define tag v%{version}
 
@@ -19,6 +20,10 @@ Source0:        %{forgesource}
 BuildArch:      noarch
 
 BuildRequires:  python3-devel
+
+%if %{with manpages}
+BuildRequires:  scdoc
+%endif
 
 Recommends:     (askalono-cli or trivy)
 
@@ -47,6 +52,9 @@ Enhances:       go-vendor-tools
 
 %build
 %pyproject_wheel
+%if %{with manpages}
+./doc/man/mkman.sh
+%endif
 
 
 %install
@@ -61,6 +69,11 @@ install -Dpm 0644 rpm/macros.go_vendor_tools -t %{buildroot}%{_rpmmacrodir}
 mkdir -p %{buildroot}%{_docdir}/go-vendor-tools-doc
 cp -rL doc/* %{buildroot}%{_docdir}/go-vendor-tools-doc
 
+# Install manpages
+%if %{with manpages}
+install -Dpm 0644 doc/man/*.1 -t %{buildroot}%{_mandir}/man1/
+%endif
+
 
 %check
 %pytest
@@ -72,6 +85,9 @@ cp -rL doc/* %{buildroot}%{_docdir}/go-vendor-tools-doc
 %license LICENSES/*
 %{_bindir}/go_vendor*
 %{_rpmmacrodir}/macros.go_vendor_tools
+%if %{with manpages}
+%{_mandir}/man1/go*.1*
+%endif
 
 %files doc
 %doc %{_docdir}/go-vendor-tools-doc/
