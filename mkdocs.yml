@@ -10,6 +10,7 @@ theme:
   features:
     - content.code.copy
     - navigation.footer
+    - navigation.sections
 # REUSE-IgnoreStart
 copyright: >
   Copyright (C) 2024 Maxwell G and contributors |
@@ -29,14 +30,20 @@ markdown_extensions:
 plugins:
   - exclude:
       glob:
-        # TODO(gotmax23): Include generated manpages in docsite
         - "man/**"
         - ".gitignore"
+  - gen-files:
+      scripts:
+        - doc/man/mkdocs_mangen.py
 
 nav:
   - README.md
   - news.md
   - contributing.md
+  - Manpages:
+    - "go_vendor_archive(1)": man/go_vendor_archive1.md
+    - "go_vendor_archive_create(1)": man/go_vendor_archive_create1.md
+    - "go_vendor_archive_override(1)": man/go_vendor_archive_override1.md
   - scenarios.md
   - config.md
   - architecture.md

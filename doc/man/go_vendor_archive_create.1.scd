@@ -18,6 +18,7 @@ _PATH_
 	. Go source tree with a *go.mod* file
 	. Path to a (compressed) tar archive
 	. Path to a specfile. *SOURCE0* will automatically be unpacked.
+
 *--config* _PATH_
 	Path to config file
 *--write-config*
