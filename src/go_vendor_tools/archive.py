@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import os
 import tarfile
-from collections.abc import Sequence
+from collections.abc import Collection, Sequence
 from pathlib import Path, PurePath
 
 
@@ -47,10 +47,13 @@ def add_files_to_archive(
     directory: Path,
     files: Sequence[Path],
     top_level_dir: bool = False,
+    optional_files: Collection[Path] = frozenset(),
 ) -> None:
     for file in files:
         if file.is_absolute():
             raise ValueError(f"{file} is not a relative path!")
+        if not (directory / file).exists() and file in optional_files:
+            continue
         dest = (directory.resolve().name / file) if top_level_dir else file
         tf.add(directory / file, dest, filter=reproducible_filter)
 

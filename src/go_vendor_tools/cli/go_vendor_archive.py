@@ -42,6 +42,7 @@ if TYPE_CHECKING:
 
 DEFAULT_OUTPUT = "vendor.tar.bz2"
 ARCHIVE_FILES = (Path("go.mod"), Path("go.sum"), Path("vendor"))
+OPTIONAL_FILES = frozenset({Path("go.sum")})
 GO_PROXY_ENV = {
     "GOPROXY": "https://proxy.golang.org,direct",
     "GOSUMDB": "sum.golang.org",
@@ -245,11 +246,19 @@ def create_archive(args: CreateArchiveArgs) -> None:
         if args.tidy:
             run_command(runner, ["go", "mod", "tidy"])
         run_command(runner, ["go", "mod", "vendor"])
+        # Create vendor directory so it is there even if there are no
+        # dependencies to download
+        (vdir := cwd / "vendor").mkdir(exist_ok=True)
+        (vdir / "modules.txt").touch(exist_ok=True)
         for command in args.config["archive"]["post_commands"]:
             run_command(runner, command)
         print("Creating archive...")
         add_files_to_archive(
-            tf, Path(cwd), ARCHIVE_FILES, top_level_dir=args.use_top_level_dir
+            tf,
+            Path(cwd),
+            ARCHIVE_FILES,
+            top_level_dir=args.use_top_level_dir,
+            optional_files=OPTIONAL_FILES,
         )
         if args.write_config:
             args.write_config_opts()
