@@ -4,7 +4,7 @@
 
 %bcond manpages 1
 %global forgeurl https://gitlab.com/fedora/sigs/go/go-vendor-tools
-%define tag v%{version}
+%define tag v%{version_no_tilde %{quote:%nil}}
 
 Name:           go-vendor-tools
 Version:        0.3.0
