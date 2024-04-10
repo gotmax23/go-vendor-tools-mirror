@@ -5,6 +5,26 @@ SPDX-License-Identifier: MIT
 
 # NEWS
 
+## 0.4.0b1 - 2024-04-10 <a id='0.4.0b1'></a>
+
+### Added
+
+- `cli`: support compression algorithms other than `xz` (#7, #45)
+- `doc`: add manpages for go_vendor_archive commands (#40)
+- `go_vendor_archive create`: add `--idempotent` flag
+- `go_vendor_archive create`: add `--write-config` flag
+- `go_vendor_archive create`: add missing `--no-use-module-proxy` flag to
+    disable default `--use-module-proxy`.
+- `go_vendor_archive create`: change default output file to `vendor.tar.bz2`
+    (#7, #46)
+- `go_vendor_archive create`: handle projects without any dependencies (#29)
+
+### Fixed
+
+- `doc config`: fix markdown syntax error
+- `doc config`: remove stray backtick in archive section
+- `go_vendor_license install`: properly own intermediate directories
+
 ## 0.3.0 - 2024-03-28 <a id='0.3.0'></a>
 
 ### Added

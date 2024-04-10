@@ -7,7 +7,7 @@
 %define tag v%{version_no_tilde %{quote:%nil}}
 
 Name:           go-vendor-tools
-Version:        0.3.0
+Version:        0.4.0b1
 %forgemeta
 Release:        1%{?dist}
 Summary:        Tools for handling Go library vendoring in Fedora
@@ -95,6 +95,9 @@ install -Dpm 0644 doc/man/*.1 -t %{buildroot}%{_mandir}/man1/
 %pyproject_extras_subpkg -n go-vendor-tools all
 
 %changelog
+* Wed Apr 10 2024 Maxwell G <maxwell@gtmx.me> - 0.4.0b1-1
+- Release 0.4.0b1.
+
 * Thu Mar 28 2024 Maxwell G <maxwell@gtmx.me> - 0.3.0-1
 - Release 0.3.0.
 
