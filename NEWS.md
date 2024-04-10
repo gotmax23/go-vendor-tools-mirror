@@ -5,6 +5,10 @@ SPDX-License-Identifier: MIT
 
 # NEWS
 
+## 0.4.0 - 2024-04-10 <a id='0.4.0'></a>
+
+See the notes for 0.4.0b1.
+
 ## 0.4.0b1 - 2024-04-10 <a id='0.4.0b1'></a>
 
 ### Added
