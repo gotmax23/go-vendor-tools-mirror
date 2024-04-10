@@ -26,6 +26,11 @@ markdown_extensions:
   # pymdownx
   - pymdownx.highlight:
       anchor_linenums: true
+  - pymdownx.magiclink:
+      repo_url_shorthand: true
+      provider: gitlab
+      user: "fedora/sigs/go"
+      repo: "go-vendor-tools"
   - pymdownx.superfences
 plugins:
   - exclude:
