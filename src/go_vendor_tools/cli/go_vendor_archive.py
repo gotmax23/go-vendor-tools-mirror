@@ -155,7 +155,6 @@ def parseargs(argv: list[str] | None = None) -> CreateArchiveArgs | OverrideArgs
     create_subparser.add_argument("-c", "--config", type=Path, dest="config_path")
     create_subparser.add_argument(
         "--tidy",
-        help="%(default)s",
         action=argparse.BooleanOptionalAction,
         default=argparse.SUPPRESS,
     )
