@@ -98,6 +98,11 @@ test:
 
 pages:
   script:
+    - >-
+      sudo dnf install
+      --setopt=install_weak_deps=0 -y
+      pandoc
+      scd2html
     - nox -e mkdocs -- build -d public
   artifacts:
     paths:
