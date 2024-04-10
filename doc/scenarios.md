@@ -9,8 +9,8 @@ SPDX-License-Identifier: MIT
 Example case: You wish to package `github.com/opencontainers/runc` using
 vendored dependencies.
 
-Once support for go-vendor-tools is merged into go2rpm, you will be able to
-generate a specfile with the vendor profile with the following command
+go2rpm versions 1.12.0 and later ship with a `vendor` profile that integrates
+with go-vendor-tools.
 
 1. Generate the base specfile
 
