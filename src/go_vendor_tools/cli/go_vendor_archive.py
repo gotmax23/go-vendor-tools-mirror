@@ -220,7 +220,7 @@ def create_archive(args: CreateArchiveArgs) -> None:
     if args.path.suffix == ".spec":
         _create_archive_read_from_specfile(args)
         _already_checked_is_file = True
-    else:
+    elif not args.output:
         args.output = Path(DEFAULT_OUTPUT)
     if args.idempotent and args.output.exists():
         print(f"{args.output} already exists")
