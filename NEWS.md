@@ -5,6 +5,17 @@ SPDX-License-Identifier: MIT
 
 # NEWS
 
+## 0.5.0 - 2024-04-11 <a id='0.5.0'></a>
+
+### Added
+
+- `cli`: add argcomplete-generated shell completions
+
+### Fixed
+
+- `doc scenarios`: fix outdated info about go2rpm profile
+- `go_vendor_archive`: fix broken `--help` message
+
 ## 0.4.0 - 2024-04-10 <a id='0.4.0'></a>
 
 See the notes for 0.4.0b1.
