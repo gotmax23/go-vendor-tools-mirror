@@ -5,6 +5,10 @@ SPDX-License-Identifier: MIT
 
 # NEWS
 
+## 0.5.1 - 2024-04-11 <a id='0.5.1'></a>
+
+- `go_vendor_archive create`: don't override manually specified `--output`
+
 ## 0.5.0 - 2024-04-11 <a id='0.5.0'></a>
 
 ### Added
