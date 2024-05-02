@@ -3,8 +3,8 @@
 # SPDX-License-Identifier: MIT
 site_name: Go Vendor Tools
 docs_dir: doc
-site_url: https://gotmax23.gitlab.io/go-vendor-tools
-repo_url: https://gitlab.com/gotmax23/go-vendor-tools
+site_url: https://fedora.gitlab.io/sigs/go/go-vendor-tools
+repo_url: https://gitlab.com/fedora/sigs/go/go-vendor-tools
 theme:
   name: material
   features:
