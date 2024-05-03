@@ -29,8 +29,8 @@ All fields are optional.
 Explicitly choose a license detector.
 Currently supported detectors are:
 
-1. trivy
-2. askalono
+1. askalono
+2. trivy
 
 If no detector is specified, `go_vendor_license` will attempt to load the first
 available license detector from first to last in the above list.
