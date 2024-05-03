@@ -4,7 +4,7 @@ SPDX-License-Identifier: MIT
 -->
 # Scenarios
 
-## Generate specfile with go2rpm
+## Generate specfile with go2rpm {: #generate-go2rpm}
 
 Example case: You wish to package `github.com/opencontainers/runc` using
 vendored dependencies.
@@ -98,3 +98,31 @@ in `go-vendor-tools.toml`.
     ```
 
     Fill the outputted license expression into the specfile's `License:` field.
+
+## Manually update specfile for new upstream version
+
+Example case: Upstream has released version 1.10.1 of foo.
+go2rpm was used to generate the original specfile using vendored dependencies.
+`go-vendor-tools.toml` is the configuration file for `go_vendor_archive`.
+
+!!!tip
+
+    Consider [re-generating a new specfile with `go2rpm`](#generate-go2rpm)
+    instead of updating an existing one to pick up go2rpm template
+    improvements.
+
+1. In the project directory containing `foo.spec` and `go-vendor-tools.toml`, update the Version to 1.10.1 in the spec file.
+
+2. Retrieve the new v1.10.1 source archive from upstream.
+
+    ``` bash
+    spectool -g foo.spec
+    ```
+
+3. Generate the vendor archive from the v1.10.1 source archive.
+
+    ``` bash
+    go_vendor_archive create --config go-vendor-tools.toml foo.spec
+    ```
+
+4. Upload new sources and continue with your normal package update workflow.
