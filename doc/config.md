@@ -1,13 +1,12 @@
 ---
+
 title: Configuration
+
 ---
 <!--
 Copyright (C) 2024 Maxwell G <maxwell@gtmx.me>
 SPDX-License-Identifier: MIT
 -->
-
-# Configuration
-
 go-vendor-tools stores its configuration in a TOML file.
 Conventionally, this file is named `go-vendor-tools.toml`,
 but this is not a requirement;

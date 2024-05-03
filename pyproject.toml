@@ -114,8 +114,16 @@ module = ["license_expression.*", "boolean.*"]
 ignore_missing_imports = true
 
 
+[tool.pymarkdownlnt.extensions.front-matter]
+enabled = true
 [tool.pymarkdown.plugins.first-line-heading]
 enabled = false
+# Too many false positives
+[tool.pymarkdown.plugins.heading-style]
+enabled = false
+[tool.pymarkdown.plugins.ul-indent]
+enabled = false
+#
 [tool.pymarkdown.plugins.no-inline-html]
 enabled = false
 [tool.pymarkdown.plugins.line-length]

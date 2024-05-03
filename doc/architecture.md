@@ -2,6 +2,7 @@
 Copyright (C) 2024 Maxwell G <maxwell@gtmx.me>
 SPDX-License-Identifier: MIT
 -->
+
 # Architecture
 
 The Go Vendor Tools project has four main pieces:

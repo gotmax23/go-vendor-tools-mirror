@@ -2,6 +2,8 @@
 Copyright (C) 2024 Maxwell G <maxwell@gtmx.me>
 SPDX-License-Identifier: MIT
 -->
+<!--- pyml disable-num-lines 111 code-block-style-->
+
 # Scenarios
 
 ## Generate specfile with go2rpm {: #generate-go2rpm}
@@ -29,7 +31,6 @@ with go-vendor-tools.
 
 2. Open up the specfile in an editor and replace the `License` field with the
    expression that `go2rpm` outputs.
-
 
 ## Security updates
 
@@ -66,13 +67,15 @@ in `go-vendor-tools.toml`.
 
 2. Identify the module's license file and determine its SPDX identifier
 
-    - 
+    - First, check the module directory for a license file
+
         ``` bash
         ls vendor/github.com/google/shlex
         [...]
         COPYING
         [...]
         ```
+
     - The SPDX identifier was determined to be `Apache-2.0`.
 
 3. Use the `go_vendor_license explicit` command to add the license entry to the
@@ -90,6 +93,7 @@ in `go-vendor-tools.toml`.
     sha256sum = "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
     expression = "Apache-2.0"
     ```
+
 5. You can now rerun the `go_vendor_license report` subcommand to determine the
    license expression.
 
@@ -111,7 +115,8 @@ go2rpm was used to generate the original specfile using vendored dependencies.
     instead of updating an existing one to pick up go2rpm template
     improvements.
 
-1. In the project directory containing `foo.spec` and `go-vendor-tools.toml`, update the Version to 1.10.1 in the spec file.
+1. In the project directory containing `foo.spec` and `go-vendor-tools.toml`,
+   update the Version to 1.10.1 in the spec file.
 
 2. Retrieve the new v1.10.1 source archive from upstream.
 

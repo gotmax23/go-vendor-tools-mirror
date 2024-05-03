@@ -177,9 +177,7 @@ def codeqa(session: nox.Session):
     install(session, ".[codeqa]")
     session.run("ruff", "check", *session.posargs, *LINT_FILES)
     session.run("shellcheck", *iglob("contrib/*.sh"))
-    session.run(
-        "pymarkdownlnt", "scan", *iglob("*.md"), *iglob("docs/**/*.md", recursive=True)
-    )
+    session.run("pymarkdownlnt", "scan", *iglob("*.md"), *iglob("doc/*.md"))
     session.run("reuse", "lint")
 
 
