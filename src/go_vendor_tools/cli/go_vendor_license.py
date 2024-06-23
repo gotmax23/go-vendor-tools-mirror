@@ -275,7 +275,7 @@ def print_licenses(
             print()
         if show_undetected:
             red_if_true(
-                paths_relative_to_list(results.undetected_licenses, directory),
+                results.undetected_licenses,
                 "The following license files were found "
                 "but the correct license identifier couldn't be determined:",
             )
