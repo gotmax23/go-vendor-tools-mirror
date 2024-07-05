@@ -28,6 +28,7 @@ INTEGRATION_PACKAGES = ("autorestic", "fzf")
 COVERAGE_FAIL_UNDER = os.environ.get("COVERAGE_FAIL_UNDER") or "85"
 
 nox.options.sessions = ("lint", "covtest")
+nox.options.error_on_external_run = True
 
 
 # Helpers
@@ -133,6 +134,7 @@ def integration_test_build(session: nox.Session):
                 "--nodeps",
                 "-ba", "fzf.spec",
                 env=cov_env|{"RPM": "rpmbuild"},
+                external=True,
             )
             # fmt: on
 
