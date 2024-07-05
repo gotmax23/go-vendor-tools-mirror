@@ -373,7 +373,7 @@ def get_report_write_config_data(
     new_config_path = _write_config_verify_path(config_path)
     loaded = load_tomlkit_if_exists(config_path)
     write_config_data = loaded.setdefault("licensing", {})
-    write_config_data |= {"detector": detector.NAME}
+    write_config_data["detector"] = detector.NAME
     return new_config_path, loaded
 
 
