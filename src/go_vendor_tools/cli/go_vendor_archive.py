@@ -49,8 +49,10 @@ if TYPE_CHECKING:
     from _typeshed import StrPath
 
 DEFAULT_OUTPUT = "vendor.tar.bz2"
-ARCHIVE_FILES = (Path("go.mod"), Path("go.sum"), Path("vendor"))
+ARCHIVE_FILES = (Path("go.mod"), Path("go.sum"), Path("vendor/"))
+GO_WORK_ARCHIVE_FILES = (Path("go.work"), Path("go.work.sum"), Path("vendor/"))
 OPTIONAL_FILES = frozenset({Path("go.sum")})
+GO_WORK_OPTIONAL_FILES = frozenset({Path("go.work.sum")})
 GO_PROXY_ENV = {
     "GOPROXY": "https://proxy.golang.org,direct",
     "GOSUMDB": "sum.golang.org",
@@ -252,9 +254,13 @@ def create_archive(args: CreateArchiveArgs) -> None:
         )
         for command in pre_commands:
             run_command(runner, command)
-        if args.tidy:
-            run_command(runner, ["go", "mod", "tidy"])
-        run_command(runner, ["go", "mod", "vendor"])
+        use_go_work = (cwd / "go.work").is_file()
+        if use_go_work:
+            run_command(runner, ["go", "work", "vendor"])
+        else:
+            if args.tidy:
+                run_command(runner, ["go", "mod", "tidy"])
+            run_command(runner, ["go", "mod", "vendor"])
         # Create vendor directory so it is there even if there are no
         # dependencies to download
         (vdir := cwd / "vendor").mkdir(exist_ok=True)
@@ -265,9 +271,11 @@ def create_archive(args: CreateArchiveArgs) -> None:
         add_files_to_archive(
             tf,
             Path(cwd),
-            ARCHIVE_FILES,
+            ARCHIVE_FILES if not use_go_work else GO_WORK_ARCHIVE_FILES,
             top_level_dir=args.use_top_level_dir,
-            optional_files=OPTIONAL_FILES,
+            optional_files=(
+                OPTIONAL_FILES if not use_go_work else GO_WORK_OPTIONAL_FILES
+            ),
         )
         if args.write_config:
             args.write_config_opts()
