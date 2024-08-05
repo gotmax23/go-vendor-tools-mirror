@@ -15,6 +15,15 @@ Tools for handling Go library vendoring in Fedora
 
 <https://fedora.gitlab.io/sigs/go/go-vendor-tools/>
 
+## Stability
+
+go-vendor-tools is under active development and available in the stable Fedora
+and Fedora EPEL repos for testing purposes.
+Expect some breaking changes between releases.
+Anyone using the `%go_vendor_*` macros in active Fedora packages MUST join the
+Fedora Golang Matrix room and Fedora Go SIG mailing list to be notified of any
+major changes.
+
 ## Author
 
 go-vendor-tools was authored by Maxwell G and is maintained by them and the
