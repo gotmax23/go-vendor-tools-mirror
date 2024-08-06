@@ -27,7 +27,9 @@ from go_vendor_tools.licensing import combine_licenses
 if TYPE_CHECKING:
     from _typeshed import StrPath
 
-EXTRA_LICENSE_FILE_REGEX = re.compile(r"^(AUTHORS|NOTICE).*$", flags=re.IGNORECASE)
+EXTRA_LICENSE_FILE_REGEX = re.compile(
+    r"^(AUTHORS|NOTICE|PATENTS).*$", flags=re.IGNORECASE
+)
 
 
 def get_manual_license_entries(

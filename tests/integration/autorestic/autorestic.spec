@@ -49,7 +49,7 @@ install -Dpm 0755 -t %{buildroot}%{_bindir} autorestic
 
 %check
 %go_vendor_license_check -c %{S:2} -d askalono -D askalono_path=/usr/bin/askalono
-diff -u licenses.list %{S:3}
+diff -u "%{S:3}" "$(pwd)/licenses.list"
 test "$(cat buildrequires)" = "askalono-cli"
 %if %{with check}
 %gocheck

@@ -71,7 +71,9 @@
 %license /usr/share/licenses/test-autorestic/vendor/github.com/spf13/viper/LICENSE
 %license /usr/share/licenses/test-autorestic/vendor/github.com/subosito/gotenv/LICENSE
 %license /usr/share/licenses/test-autorestic/vendor/golang.org/x/sys/LICENSE
+%license /usr/share/licenses/test-autorestic/vendor/golang.org/x/sys/PATENTS
 %license /usr/share/licenses/test-autorestic/vendor/golang.org/x/text/LICENSE
+%license /usr/share/licenses/test-autorestic/vendor/golang.org/x/text/PATENTS
 %license /usr/share/licenses/test-autorestic/vendor/gopkg.in/ini.v1/LICENSE
 %license /usr/share/licenses/test-autorestic/vendor/gopkg.in/yaml.v2/LICENSE
 %license /usr/share/licenses/test-autorestic/vendor/gopkg.in/yaml.v2/LICENSE.libyaml
