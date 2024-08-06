@@ -11,13 +11,13 @@ import os
 from typing import Any, TypedDict, cast
 
 
-class LicenseEntry(TypedDict, total=False):
+class LicenseEntry(TypedDict):
     path: str
     sha256sum: str
     expression: str
 
 
-class LicenseConfig(TypedDict, total=False):
+class LicenseConfig(TypedDict):
     """
     TypedDict representing the script's config file
     """
