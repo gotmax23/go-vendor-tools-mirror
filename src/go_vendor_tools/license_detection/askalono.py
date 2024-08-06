@@ -22,7 +22,7 @@ from .base import (
     LicenseDetectorNotAvailableError,
     filter_license_map,
     find_extra_license_files,
-    get_extra_licenses,
+    get_manual_license_entries,
     is_unwanted_path,
 )
 
@@ -149,14 +149,14 @@ class AskalonoLicenseDetector(LicenseDetector[AskalonoLicenseData]):
         results, undetected = _filter_license_data(
             _get_askalono_data(directory), Path(directory)
         )
-        extra_licenses, unmatched = get_extra_licenses(
+        manual_license_map, manual_unmatched = get_manual_license_entries(
             self.license_config["licenses"], directory
         )
         license_map = _get_simplified_license_map(
-            Path(directory), results, extra_licenses
+            Path(directory), results, manual_license_map
         )
         # Remove manually specified licenses
-        undetected -= set(extra_licenses)
+        undetected -= set(manual_license_map)
         undetected = {
             path
             for path in undetected
@@ -186,7 +186,7 @@ class AskalonoLicenseDetector(LicenseDetector[AskalonoLicenseData]):
             directory=Path(directory),
             license_map=filtered_license_map,
             undetected_licenses=undetected,
-            unmatched_extra_licenses=unmatched,
+            unmatched_extra_licenses=manual_unmatched,
             askalono_license_data=results,
             extra_license_files=extra_license_files,
         )

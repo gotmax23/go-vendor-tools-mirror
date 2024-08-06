@@ -14,7 +14,7 @@ from go_vendor_tools.config.base import load_config
 from go_vendor_tools.license_detection.base import (
     LicenseData,
     LicenseDetector,
-    get_extra_licenses,
+    get_manual_license_entries,
 )
 from go_vendor_tools.license_detection.load import get_detctors
 
@@ -69,7 +69,9 @@ def test_get_extra_licenses(test_data: Path) -> None:
     case_dir = test_data / "case1"
     licenses_dir = case_dir / "licenses"
     config = load_config(case_dir / "config.toml")
-    matched, missing = get_extra_licenses(config["licensing"]["licenses"], licenses_dir)
+    matched, missing = get_manual_license_entries(
+        config["licensing"]["licenses"], licenses_dir
+    )
     expected_map = {
         Path("LICENSE.BSD3"): "BSD-3-Clause",
         Path("LICENSE.MIT"): "MIT",
@@ -81,7 +83,7 @@ def test_get_extra_licenses(test_data: Path) -> None:
 def test_get_extra_licenses_error(test_data: Path) -> None:
     case_dir = test_data / "case1"
     licenses_dir = case_dir / "licenses"
-    matched, missing = get_extra_licenses(
+    matched, missing = get_manual_license_entries(
         CONFIG1_BROKEN["licensing"]["licenses"], licenses_dir
     )
     expected_map = {Path("LICENSE.BSD3"): "BSD-3-Clause"}

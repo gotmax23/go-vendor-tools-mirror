@@ -11,6 +11,7 @@ import abc
 import dataclasses
 import os
 import re
+import sys
 from collections.abc import Collection, Iterator
 from itertools import chain
 from pathlib import Path
@@ -29,7 +30,7 @@ if TYPE_CHECKING:
 EXTRA_LICENSE_FILE_REGEX = re.compile(r"^(AUTHORS|NOTICE).*$", flags=re.IGNORECASE)
 
 
-def get_extra_licenses(
+def get_manual_license_entries(
     licenses: list[LicenseEntry], directory: StrPath
 ) -> tuple[dict[Path, str], list[Path]]:
     results: dict[Path, str] = {}
@@ -84,6 +85,10 @@ def find_extra_license_files(
     directory: StrPath,
     exclude_directories: Collection[StrPath],
     exclude_files: Collection[StrPath],
+    *,
+    regex: re.Pattern[str] = EXTRA_LICENSE_FILE_REGEX,
+    exclude_regex: re.Pattern[str] | None = None,
+    relative_paths: bool = False,
 ) -> Iterator[Path]:
     """
     Determine extra files (e.g., AUTHORS or NOTICE files) that we should
@@ -95,8 +100,14 @@ def find_extra_license_files(
             relpath = path.relative_to(directory)
             if is_unwanted_path(relpath, exclude_directories, exclude_files):
                 continue
-            if EXTRA_LICENSE_FILE_REGEX.match(file):
-                yield path
+            if regex.match(file) and (
+                not exclude_regex or not exclude_regex.match(file)
+            ):
+                yield relpath if relative_paths else path
+
+
+def python3dist(package: str, /) -> str:
+    return f"python{sys.version_info.major}.{sys.version_info.minor}dist({package})"
 
 
 @dataclasses.dataclass()

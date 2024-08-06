@@ -24,7 +24,7 @@ from .base import (
     LicenseDetectorNotAvailableError,
     filter_license_map,
     find_extra_license_files,
-    get_extra_licenses,
+    get_manual_license_entries,
 )
 
 if TYPE_CHECKING:
@@ -116,10 +116,10 @@ class TrivyLicenseDetector(LicenseDetector[TrivyLicenseData]):
             else:
                 license_map[path] = name
 
-        extra, unmatched = get_extra_licenses(
+        manual_license_map, manual_unmatched = get_manual_license_entries(
             self.license_config["licenses"], directory
         )
-        license_map |= extra
+        license_map |= manual_license_map
         filtered_license_map = filter_license_map(
             license_map,
             self.license_config["exclude_directories"],
@@ -141,7 +141,7 @@ class TrivyLicenseDetector(LicenseDetector[TrivyLicenseData]):
             license_map=filtered_license_map,
             # Trivy doesn't include undetected_licenses
             undetected_licenses=[],
-            unmatched_extra_licenses=unmatched,
+            unmatched_extra_licenses=manual_unmatched,
             trivy_license_data=licenses,
             extra_license_files=extra_license_files,
         )
