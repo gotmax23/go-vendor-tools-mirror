@@ -198,14 +198,14 @@ class LicenseData:
         return newdata
 
     @classmethod
-    def from_jsonable(cls: type[LicenseDataT], data: dict[Any, Any]) -> LicenseDataT:
+    def from_jsonable(cls: type[_LicenseDataT], data: dict[Any, Any]) -> _LicenseDataT:
         return cls(**cls._from_jsonable_to_dict(data))
 
 
-LicenseDataT = TypeVar("LicenseDataT", bound=LicenseData)
+_LicenseDataT = TypeVar("_LicenseDataT", bound=LicenseData)
 
 
-class LicenseDetector(Generic[LicenseDataT], metaclass=abc.ABCMeta):
+class LicenseDetector(Generic[_LicenseDataT], metaclass=abc.ABCMeta):
     NAME: ClassVar[str]
     PACKAGES_NEEDED: ClassVar[tuple[str, ...]] = ()
 
@@ -214,7 +214,7 @@ class LicenseDetector(Generic[LicenseDataT], metaclass=abc.ABCMeta):
         self, cli_config: dict[str, str], license_config: LicenseConfig
     ) -> None: ...
     @abc.abstractmethod
-    def detect(self, directory: StrPath) -> LicenseDataT: ...
+    def detect(self, directory: StrPath) -> _LicenseDataT: ...
 
 
 class LicenseDetectorNotAvailableError(LicenseError):
