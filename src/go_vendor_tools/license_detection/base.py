@@ -175,12 +175,14 @@ class LicenseData:
     def __post_init__(self) -> None:
         self.license_set = set(self.license_map.values())
         self.license_expression = (
-            combine_licenses(*self.license_set) if self.license_map else None
+            self._combine_licenses(*self.license_set) if self.license_map else None
         )
         self.license_file_paths = tuple(
             self.directory / lic
             for lic in chain(self.license_map, self.undetected_licenses)
         )
+
+    _combine_licenses = staticmethod(combine_licenses)
 
     # TODO(gotmax23): Consider cattrs or pydantic
     def to_jsonable(self) -> dict[str, Any]:
