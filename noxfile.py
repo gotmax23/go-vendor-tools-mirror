@@ -96,6 +96,7 @@ def integration(session: nox.Session) -> None:
     install(session, ".", "coverage[toml]", editable=True)
     packages_env = session.env.get("PACKAGES")
     packages = shlex.split(packages_env) if packages_env else INTEGRATION_PACKAGES
+    script_dir = Path("contrib").resolve()
     with (
         coverage_run(session) as cov_env,
         # askalono does not like that the temporary directory is in the
@@ -105,11 +106,14 @@ def integration(session: nox.Session) -> None:
         cov_env["TMPDIR"] = str(tmp)
         for package in packages:
             with session.chdir(Path("tests/integration", package)):
-                for script in ("integration-archive", "verify-license"):
+                for script_name in ("integration-archive.sh", "verify-license.sh"):
+                    for try_path in (Path.cwd(), script_dir):
+                        if (script_path := try_path / script_name).exists():
+                            break
                     session.run(
                         "bash",
                         "-x",
-                        f"../../../contrib/{script}.sh",
+                        str(script_path),
                         env=cov_env,
                         external=True,
                     )

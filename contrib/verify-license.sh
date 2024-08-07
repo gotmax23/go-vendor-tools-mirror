@@ -12,10 +12,12 @@ GO_VENDOR_LICENSE="${GO_VENDOR_LICENSE:-${_path:-${_default_path}}}"
 IFS=" " read -r -a command <<< "${GO_VENDOR_LICENSE}"
 
 
-license="$(rpmspec -q --qf "%{LICENSE}\n" ./*.spec | head -n1)"
-if [ -f "go-vendor-tools.toml" ]; then
-    command+=("--config" "$(pwd)/go-vendor-tools.toml")
+license_home="${GO_VENDOR_LICENSE_HOME:-"$(pwd)"}"
+license="$(rpmspec -q --qf "%{LICENSE}\n" "${license_home}"/*.spec | head -n1)"
+if [ -f "${license_home}/go-vendor-tools.toml" ]; then
+    command+=("--config" "${license_home}/go-vendor-tools.toml")
 fi
+license_path="${GO_VENDOR_LICENSE_DIR:-"$(echo ./*.spec)"}"
 # Ensure the stdout is also correct
-gotten="$("${command[@]}" -C ./*.spec report expression)"
+gotten="$("${command[@]}" -C "${license_path}" report expression --write-json report.json)"
 python -c 'from go_vendor_tools.licensing import compare_licenses; import sys; assert compare_licenses(*sys.argv[1:])' "${license}" "${gotten}"

@@ -67,9 +67,10 @@ def _get_askalono_data(directory: StrPath) -> list[AskalonoLicenseDict]:
     Crawl `directory` with askalono and return the serialized JSON representation
     """
     licenses_json = subprocess.run(
-        ("askalono", "--format=json", "crawl", directory),
+        ("askalono", "--format=json", "crawl", "."),
         check=True,
         capture_output=True,
+        cwd=directory,
     ).stdout.decode("utf-8")
     licenses = [
         cast(AskalonoLicenseDict, json.loads(line))

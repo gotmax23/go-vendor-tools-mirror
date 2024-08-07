@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: MIT
 
 [licensing]
-detector = "askalono"
+detector = "trivy"
 
 [[licensing.licenses]]
 path = "vendor/gopkg.in/yaml.v3/LICENSE"
