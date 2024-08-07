@@ -16,14 +16,12 @@ Name:           test-fzf
 Release:        1%{?dist}
 Summary:        :cherry_blossom: A command-line fuzzy finder
 
-%if %{undefined el9}
-SourceLicense:  MIT
-%endif
 License:        Apache-2.0 AND BSD-3-Clause AND MIT
 URL:            %{gourl}
 Source0:        %{gosource}
 Source1:        fzf-%{version}-vendor.tar.bz2
 Source2:        expected-licenses.list
+Source3:        go-vendor-tools.toml
 
 BuildRequires:  go-vendor-tools
 
@@ -35,7 +33,8 @@ BuildRequires:  go-vendor-tools
 %autopatch -p1
 
 %generate_buildrequires
-%go_vendor_license_buildrequires
+%go_vendor_license_buildrequires -c %{S:3}
+%go_vendor_license_buildrequires -c %{S:3} -d trivy
 
 %build
 %dnl We don't care about building or installing the package for the purposes of
@@ -50,10 +49,11 @@ test "$(cat buildrequires)" = "askalono-cli"
 (%{go_vendor_license_buildrequires -d trivy}) | tee buildrequires
 test "$(cat buildrequires)" = "trivy"
 # Specify -n manually for testing purposes
-%go_vendor_license_install -n not-fzf
+%go_vendor_license_install -n not-fzf -c %{S:3} -D askalono_path=/usr/bin/askalono
 
 %check
-%go_vendor_license_check
+%go_vendor_license_check -c %{S:3}
+%go_vendor_license_check -d trivy -c %{S:3}
 
 diff -u "%{S:2}" "$(pwd)/licenses.list"
 

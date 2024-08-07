@@ -42,6 +42,8 @@ test:
       git-core
       go-rpm-macros
       golang-bin
+      libxml2-devel
+      libxslt-devel
       pipx
       python3-devel
       redhat-rpm-config
