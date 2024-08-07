@@ -93,8 +93,24 @@ def find_extra_license_files(
     relative_paths: bool = False,
 ) -> Iterator[Path]:
     """
-    Determine extra files (e.g., AUTHORS or NOTICE files) that we should
-    include in the distribution but not run through the license detector
+    Search a directory for license files matching a certain pattern
+
+    Arguments:
+        directory:
+            Directory to search through for file matches
+        exclude_directories:
+            List of directories (relative paths inside `directory`) to exclude
+            from search
+        exclude_files:
+            List of files (relative paths inside `directory`) to exclude from
+            search
+        regex:
+            Filename matcher
+        exclude_regex:
+            If a filename matches this regex, do not include it in the result
+        relative_paths:
+            Whether to return relative paths to license files or full paths
+            including `directory`
     """
     for root, _, files in os.walk(directory):
         for file in files:
