@@ -7,6 +7,10 @@ Utilities for working with license expressions
 
 from __future__ import annotations
 
+from collections.abc import Callable
+from functools import lru_cache, partial
+from typing import cast
+
 import license_expression
 from boolean.boolean import DualBase
 
@@ -17,13 +21,22 @@ def combine_licenses(
     *expressions: str | license_expression.LicenseExpression | None,
     validate=True,
     strict=True,
-) -> license_expression.LicenseExpression:
+    recursive_simplify: bool = False,
+) -> str:
     """
     Combine SPDX license expressions with AND
     """
+    converter = cast(
+        "Callable[[str | license_expression.LicenseExpression], str]",
+        (
+            partial(simplify_license, validate=False, strict=False)
+            if recursive_simplify
+            else str
+        ),
+    )
     # Set a file's license to an empty string or None to exclude it from the
     # calculation.
-    filtered = [str(expression) for expression in expressions if expression]
+    filtered = [converter(expression) for expression in expressions if expression]
     filtered.sort()
     return simplify_license(
         str(license_expression.combine_expressions(filtered, licensing=licensing)),
@@ -41,6 +54,7 @@ def _sort_expression_recursive(
     return parsed
 
 
+@lru_cache(500)
 def simplify_license(
     expression: str | license_expression.LicenseExpression,
     *,
