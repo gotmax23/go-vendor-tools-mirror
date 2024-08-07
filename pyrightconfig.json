@@ -1,3 +1,4 @@
 {
-  "exclude": ["tests/integration/**", ".nox/**", ".old/**", "fedora/**"]
+  "exclude": ["tests/integration/**", ".nox/**", ".old/**", "fedora/**"],
+  "typeCheckingMode": "basic",
 }
