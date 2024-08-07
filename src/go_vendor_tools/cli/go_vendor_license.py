@@ -298,7 +298,7 @@ def print_licenses(
 
 def write_license_json(data: LicenseData, file: Path) -> None:
     with file.open("w", encoding="utf-8") as fp:
-        json.dump(data.to_jsonable(), fp)
+        json.dump(data.to_jsonable(), fp, indent=2)
 
 
 @cache
