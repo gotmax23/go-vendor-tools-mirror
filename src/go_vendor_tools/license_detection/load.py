@@ -10,11 +10,14 @@ from __future__ import annotations
 from ..config.licenses import LicenseConfig
 from .askalono import AskalonoLicenseDetector
 from .base import LicenseDetector, LicenseDetectorNotAvailableError
+from .scancode import ScancodeLicenseDetector
 from .trivy import TrivyLicenseDetector
 
 DETECTORS: dict[str, type[LicenseDetector]] = {
     AskalonoLicenseDetector.NAME: AskalonoLicenseDetector,
     TrivyLicenseDetector.NAME: TrivyLicenseDetector,
+    # TODO(gotmax23): Make scancode the default
+    ScancodeLicenseDetector.NAME: ScancodeLicenseDetector,
 }
 
 
