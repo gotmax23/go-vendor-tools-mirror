@@ -80,11 +80,12 @@ test:
   image: "$IMAGE"
   parallel:
     matrix:
-        - IMAGE: "registry.fedoraproject.org/fedora:rawhide"
+        # - IMAGE: "registry.fedoraproject.org/fedora:rawhide"
+        #   PACKAGES: "autorestic fzf"
+        #   SHOULD_RPMBUILD: "true"
+        - IMAGE: "registry.fedoraproject.org/fedora:40"
           PACKAGES: "autorestic fzf"
           SHOULD_RPMBUILD: "true"
-        # - IMAGE: "registry.fedoraproject.org/fedora:40"
-        #   PACKAGES: "autorestic fzf"
         - IMAGE: "registry.fedoraproject.org/fedora:39"
           PACKAGES: "autorestic fzf"
           SHOULD_RPMBUILD: "false"
