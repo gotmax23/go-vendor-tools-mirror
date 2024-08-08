@@ -33,7 +33,7 @@
     install
     --destdir %{buildroot}
     --install-directory %{_defaultlicensedir}/%{?-n*}%{!?-n:%{NAME}}
-    --filelist licenses.list
+    --filelist %{go_vendor_license_filelist}
 }
 
 # Ensure the license expression matches what the go_vendor_licenses tool expects
