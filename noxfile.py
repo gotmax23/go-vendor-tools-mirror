@@ -93,7 +93,7 @@ def test(session: nox.Session):
 
 @nox.session
 def integration(session: nox.Session) -> None:
-    install(session, ".[scancode]", "coverage[toml]", editable=True)
+    install(session, ".[test]", "coverage[toml]", editable=True)
     packages_env = session.env.get("PACKAGES")
     packages = shlex.split(packages_env) if packages_env else INTEGRATION_PACKAGES
     script_dir = Path("contrib").resolve()
@@ -121,7 +121,7 @@ def integration(session: nox.Session) -> None:
 
 @nox.session(name="integration-test-build")
 def integration_test_build(session: nox.Session):
-    install(session, ".[scancode]", "coverage[toml]", editable=True)
+    install(session, ".[test]", "coverage[toml]", editable=True)
     packages_env = session.env.get("PACKAGES")
     packages = shlex.split(packages_env) if packages_env else INTEGRATION_PACKAGES
     with coverage_run(session) as cov_env:
