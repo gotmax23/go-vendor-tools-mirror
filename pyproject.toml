@@ -43,7 +43,6 @@ go_vendor_license = "go_vendor_tools.cli.go_vendor_license:main"
 # User-facing
 all = [
     "argcomplete",
-    "go-vendor-tools[scancode]",
     "tomlkit",
 ]
 # Dev
@@ -66,11 +65,9 @@ typing = [
     # For checking noxfile.py
     "nox",
 ]
-scancode = [
-    "scancode-toolkit",
-]
 test = [
     "go-vendor-tools[all]",
+    "scancode-toolkit",
     "pytest",
     "pytest-mock",
 ]
