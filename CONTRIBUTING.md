@@ -33,8 +33,8 @@ sudo dnf upgrade go-vendor-tools go2rpm
 ## How do I test the go-vendor-tools main branch in mock?
 
 ``` bash
-copr mock-config @go-sig/go-vendor-tools-dev fedora-rawhide-x86_64
-fedpkg --release rawhide mockbuild
+copr mock-config @go-sig/go-vendor-tools-dev fedora-rawhide-x86_64 > go-vendor-tools.cfg
+fedpkg --release rawhide mockbuild --root go-vendor-tools.cfg
 ```
 
 [issue tracker]: https://gitlab.com/gotmax23/go-vendor-tools/-/issues
