@@ -31,10 +31,12 @@ Currently supported detectors are:
 
 1. askalono
 2. trivy
+3. scancode (uses the `scancode-toolkit` Python library)
 
 If no detector is specified, `go_vendor_license` will attempt to load the first
 available license detector from first to last in the above list.
-`go_vendor_license` will error if neither `trivy` nor `askalono` is installed.
+`go_vendor_license` will error if neither `trivy`, `askalono`, nor
+`scancode-toolkit` is installed.
 
 #### `licenses` (list of license entry tables)
 
