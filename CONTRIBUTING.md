@@ -23,17 +23,17 @@ Install `nox` with `dnf install` or `pipx install`.
 Run the plain `nox` to run the baseline unit tests and linters.
 Run `nox -e all` to additionally run integration tests and check code coverage.
 
-## How do I test go-vendor-tools locally?
+## How do I test the go-vendor-tools main branch locally?
 
 ``` bash
 sudo dnf copr enable @go-sig/go-vendor-tools-dev
 sudo dnf upgrade go-vendor-tools go2rpm
 ```
 
-## How do I test go-vendor-tools in mock?
+## How do I test the go-vendor-tools main branch in mock?
 
 ``` bash
-copr mock-config @go-sig/go-vendor-tools fedora-rawhide-x86_64
+copr mock-config @go-sig/go-vendor-tools-dev fedora-rawhide-x86_64
 fedpkg --release rawhide mockbuild
 ```
 
