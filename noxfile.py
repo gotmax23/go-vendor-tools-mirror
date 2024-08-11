@@ -23,7 +23,7 @@ ALLOW_EDITABLE = os.environ.get("ALLOW_EDITABLE", str(not IN_CI)).lower() in (
 PROJECT = "go_vendor_tools"
 SPECFILE = "go-vendor-tools.spec"
 LINT_SESSIONS = ("formatters", "codeqa", "typing")
-LINT_FILES = (f"src/{PROJECT}", "tests/pytests", "noxfile.py")
+LINT_FILES = (f"src/{PROJECT}", "tests/pytests", "noxfile.py", "contrib")
 INTEGRATION_PACKAGES = ("autorestic", "fzf")
 COVERAGE_FAIL_UNDER = os.environ.get("COVERAGE_FAIL_UNDER") or "85"
 
@@ -202,7 +202,7 @@ def formatters(session: nox.Session):
 
 @nox.session
 def typing(session: nox.Session):
-    install(session, ".[typing]", editable=True)
+    install(session, ".[typing]", "-r", "contrib/requirements.txt", editable=True)
     session.run("mypy", *LINT_FILES)
 
 
