@@ -157,5 +157,6 @@ exclude_lines = [
     'if t\.TYPE_CHECKING:',
     '@(abc\.)?abstractmethod',
     '@overload',
+    'except ImportError:',
 ]
 
