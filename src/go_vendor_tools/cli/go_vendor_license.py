@@ -591,7 +591,7 @@ def generate_buildrequires_command(args: argparse.Namespace) -> None:
         available, missing = get_detctors({}, create_license_config())
         detector = next(iter(available), "") or next(iter(missing))
     elif detector not in DETECTORS:
-        sys.exit(f"{detector!r} is does not exist! Choices: {tuple(DETECTORS)}")
+        sys.exit(f"{detector!r} does not exist! Choices: {tuple(DETECTORS)}")
     detector_cls = DETECTORS[detector]
     for requirement in detector_cls.PACKAGES_NEEDED:
         print(requirement)
