@@ -87,7 +87,7 @@ def choose_license_detector(
         print("Failed to load license detectors:", file=sys.stderr)
         for detector, err in missing.items():
             print(f"! {detector}: {err}")
-        sys.exit()
+        sys.exit(1)
     return next(iter(available.values()))
 
 
