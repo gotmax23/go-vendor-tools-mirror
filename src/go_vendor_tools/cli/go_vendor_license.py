@@ -257,7 +257,7 @@ def print_licenses(
     unlicensed_mods: Collection[Path],
     mode: str,
     show_undetected: bool,
-    show_unlicensed,
+    show_unlicensed: bool,
     directory: Path,
 ) -> None:
     if mode in ("all", "list"):
