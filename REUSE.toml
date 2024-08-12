@@ -1,0 +1,16 @@
+# SPDX-FileCopyrightText: None
+# SPDX-License-Identifier: LicenseRef-Not-Copyrightable
+
+version = 1
+
+[[annotations]]
+path = "tests/pytests/test_data/case1/**/*.toml"
+precedence = "override"
+SPDX-FileCopyrightText = "None"
+SPDX-License-Identifier = "LicenseRef-Not-Copyrightable"
+
+[[annotations]]
+path = "doc/man/**.scd"
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2024 Maxwell G <maxwell@gtmx.me>"
+SPDX-License-Identifier = "MIT"
