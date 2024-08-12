@@ -18,7 +18,7 @@ from tempfile import TemporaryDirectory
 from textwrap import dedent
 from typing import IO, Any, cast
 
-import license_expression
+from license_expression import ExpressionError
 from zstarfile import ZSTarfile
 
 from go_vendor_tools import __version__
@@ -55,7 +55,8 @@ RED = "\033[31m"  # ]
 CLEAR = "\033[0m"  # ]
 
 
-def red(__msg: str, /, *, file: IO[str] = sys.stdout) -> None:
+def red(__msg: str, /, *, file: IO[str] | None = None) -> None:
+    file = cast(IO[str], sys.stdout if file is None else file)
     color = COLOR
     if color is None:
         color = file.isatty()
@@ -249,7 +250,10 @@ def red_if_true(items: Collection[object], message: str, bullet: str = "- ") -> 
 
 
 def paths_relative_to_list(paths: Collection[Path], directory: Path) -> list[Path]:
-    return [path.resolve().relative_to(directory.resolve()) for path in paths]
+    return [
+        path.resolve().relative_to(directory.resolve()) if path.is_absolute() else path
+        for path in paths
+    ]
 
 
 def print_licenses(
@@ -314,6 +318,8 @@ def tomlkit_dump(obj: Any, path: Path) -> None:
         tomlkit.dump(obj, fp)
 
 
+# TODO(gotmax23): Unit test prompt_missing_licenses and write_config code.
+# This'll require some mocking of the input() stuff.
 def prompt_missing_licenses(
     data: LicenseData,
     entries: MutableSequence[LicenseEntry],
@@ -355,7 +361,7 @@ def _write_config_verify_path(config_path: Path | None) -> Path:
     need_tomlkit("--write-config")
 
     default = Path.cwd() / "go-vendor-tools.toml"
-    if default.is_file():
+    if not default.is_file():
         sys.exit("--write-config: Please pass --config to write configuration file!")
     else:
         print(
@@ -570,7 +576,7 @@ def explicit_command(args: argparse.Namespace) -> None:
         expression = (
             simplify_license(args.license_expression) if args.license_expression else ""
         )
-    except license_expression.ExpressionError as exc:
+    except ExpressionError as exc:
         sys.exit(f"Failed to parse license: {exc}")
     entry = LicenseEntry(
         path=str(relpath),

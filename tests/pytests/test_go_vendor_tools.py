@@ -4,16 +4,21 @@
 from __future__ import annotations
 
 import sys
+from functools import partial
+from io import StringIO
 from pathlib import Path
 from shutil import copy2
+from textwrap import dedent
 
 import pytest
+from pytest_mock import MockerFixture
 
 from go_vendor_tools.cli import go_vendor_license
 from go_vendor_tools.config.base import load_config
 from go_vendor_tools.license_detection.base import (
     LicenseData,
     LicenseDetector,
+    LicenseDetectorNotAvailableError,
     get_manual_license_entries,
 )
 from go_vendor_tools.license_detection.load import get_detctors
@@ -116,3 +121,121 @@ def test_detect_nothing(tmp_path: Path, detector: type[LicenseDetector]) -> None
     assert not data.undetected_licenses
     assert not data.license_set
     assert data.license_expression is None
+
+
+def test_need_tomlkit(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(go_vendor_license, "HAS_TOMLKIT", False)
+    go_vendor_license.need_tomlkit.cache_clear()
+    raise_decorator = partial(
+        pytest.raises,
+        SystemExit,
+        match="tomlkit is required for this action. Please install it!",
+    )
+    with raise_decorator():
+        go_vendor_license.need_tomlkit()
+    with raise_decorator():
+        go_vendor_license.need_tomlkit()
+    go_vendor_license.need_tomlkit.cache_clear()
+
+
+def test_choose_license_detector_error_1(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(
+        "go_vendor_tools.license_detection.scancode.HAS_SCANCODE", False
+    )
+    with pytest.raises(
+        SystemExit,
+        match="Failed to get detector 'scancode':"
+        " The scancode-toolkit library must be installed!",
+    ):
+        go_vendor_license.choose_license_detector(
+            "scancode", CONFIG1["licensing"], None
+        )
+
+
+def test_choose_license_detector_error_2(
+    mocker: MockerFixture, capsys: pytest.CaptureFixture
+) -> None:
+    return_value: tuple[dict, dict] = (
+        {},
+        {
+            "abcd": LicenseDetectorNotAvailableError("acbd is missing!?!?"),
+            "123": LicenseDetectorNotAvailableError("123 is missing."),
+        },
+    )
+    gd_mock = mocker.patch(
+        "go_vendor_tools.cli.go_vendor_license.get_detctors",
+        return_value=return_value,
+    )
+    with pytest.raises(SystemExit, match="1"):
+        go_vendor_license.choose_license_detector(None, CONFIG1["licensing"], None)
+    out, err = capsys.readouterr()
+    assert err == "Failed to load license detectors:\n"
+    expected = """\
+    ! abcd: acbd is missing!?!?
+    ! 123: 123 is missing.
+    """
+    assert dedent(expected) == out
+    gd_mock.assert_called_once()
+
+
+def test_red() -> None:
+    with StringIO() as stream:
+        go_vendor_license.red("This is an error", file=stream)
+        value = stream.getvalue()
+    assert value == "This is an error\n"
+    with StringIO() as stream:
+        stream.isatty = lambda: True  # type: ignore
+        go_vendor_license.red("This is an error", file=stream)
+        value = stream.getvalue()
+    assert value == "\033[31mThis is an error\033[0m\n"
+
+
+def test_print_licenses_all(capsys: pytest.CaptureFixture) -> None:
+    directory = Path("/does-not-exist")
+    license_data = LicenseData(
+        directory=directory,
+        license_map={
+            Path("LICENSE.md"): "MIT",
+            Path("vendor/xyz/COPYING"): "GPL-3.0-only",
+        },
+        undetected_licenses=[
+            Path("LICENSE.undetected"),
+            Path("vendor/123/COPYING.123"),
+        ],
+        unmatched_extra_licenses=[
+            Path("LICENSE-Custom"),
+            Path("vendor/custom/LICENSE"),
+        ],
+        extra_license_files=[],
+    )
+    go_vendor_license.print_licenses(
+        results=license_data,
+        unlicensed_mods=[
+            Path("LICENSE.unmatched"),
+            Path("vendor/123/456/LICENSE.unmatched1"),
+        ],
+        mode="all",
+        show_undetected=True,
+        show_unlicensed=True,
+        directory=directory,
+    )
+    out, err = capsys.readouterr()
+    # print(out)
+    assert not err
+    expected = """\
+    LICENSE.md: MIT
+    vendor/xyz/COPYING: GPL-3.0-only
+
+    The following license files were found but the correct license identifier couldn't be determined:
+    - LICENSE.undetected
+    - vendor/123/COPYING.123
+    The following modules are missing license files:
+    - LICENSE.unmatched
+    - vendor/123/456/LICENSE.unmatched1
+    The following license files that were specified in the configuration have changed:
+    - LICENSE-Custom
+    - vendor/custom/LICENSE
+
+    GPL-3.0-only AND MIT
+    """  # noqa: E501
+    assert out == dedent(expected)

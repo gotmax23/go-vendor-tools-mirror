@@ -25,7 +25,7 @@ SPECFILE = "go-vendor-tools.spec"
 LINT_SESSIONS = ("formatters", "codeqa", "typing")
 LINT_FILES = (f"src/{PROJECT}", "tests/pytests", "noxfile.py", "contrib")
 INTEGRATION_PACKAGES = ("autorestic", "fzf")
-COVERAGE_FAIL_UNDER = os.environ.get("COVERAGE_FAIL_UNDER") or "85"
+COVERAGE_FAIL_UNDER = os.environ.get("COVERAGE_FAIL_UNDER") or "90"
 
 nox.options.sessions = ("lint", "covtest")
 nox.options.error_on_external_run = True
