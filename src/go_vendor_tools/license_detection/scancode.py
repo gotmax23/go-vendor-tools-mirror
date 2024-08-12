@@ -105,7 +105,7 @@ class ScancodeLicenseDetector(LicenseDetector[ScancodeLicenseData]):
         license_config: LicenseConfig,
     ) -> None:
         if not HAS_SCANCODE:
-            LicenseDetectorNotAvailableError(
+            raise LicenseDetectorNotAvailableError(
                 "The scancode-toolkit library must be installed!"
             )
         self.license_config = license_config
