@@ -1,7 +1,7 @@
 # Copyright (C) 2024 Maxwell G <maxwell@gtmx.me>
 # SPDX-License-Identifier: MIT
 
-[*.{sh,md,py,toml,json,yml,yaml}]
+[*.{sh,md,py,toml,json}]
 end_of_line = lf
 insert_final_newline = true
 indent_style = space
@@ -10,3 +10,6 @@ max_line_length = 90
 
 [*.md]
 max_line_length = 80
+
+[*.{yaml,yml}]
+indent_size = 2
