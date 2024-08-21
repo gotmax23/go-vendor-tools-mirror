@@ -61,7 +61,7 @@ def is_unwanted_path(
     return (
         # Hardcoded exception
         "testdata" in path.parts
-        or path in exclude_files
+        or str(path) in map(str, exclude_files)
         or any(path.is_relative_to(directory) for directory in exclude_directories)
     )
 
