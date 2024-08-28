@@ -5,6 +5,44 @@ SPDX-License-Identifier: MIT
 
 # NEWS
 
+## 0.6.0 - 2024-08-28 <a id='0.6.0'></a>
+
+### Added
+
+**Documentation:**
+
+- CONTRIBUTING: add additional sections about testing
+- README: add note about project stability
+- scenarios: document how to manually update specfile for new upstream version
+  (from Brad Smith)
+
+**`go_vendor_archive`**
+
+- create: add support for go workspaces
+
+**`go_vendor_license`**
+
+- **Add `scancode-toolkit`-based backend.**
+  See the [warning in the docs] before using.
+- `report --write-json`: use pretty formatting for JSON
+- install: include `PATENTS` in installed license files
+
+[warning in the docs]: https://fedora.gitlab.io/sigs/go/go-vendor-tools/config/#detector-string
+
+### Fixed
+
+**`go_vendor_license`**
+
+- all: exit with proper error code when no backends are available
+- all: allow users to pass either relative or absolute paths to `--path` and
+  improve testing of this functionality
+- report: fix printing of undetected licenses.
+- `report --write-config`: work around bug with old tomlkit versions
+
+**rpm:**
+
+- all: use `%{go_vendor_license_filelist}` in the other macros
+
 ## 0.5.1 - 2024-04-11 <a id='0.5.1'></a>
 
 - `go_vendor_archive create`: don't override manually specified `--output`
