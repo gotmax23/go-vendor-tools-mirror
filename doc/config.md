@@ -33,6 +33,13 @@ Currently supported detectors are:
 2. trivy
 3. scancode (uses the `scancode-toolkit` Python library)
 
+    !!! warning
+        Note that the scancode backend is **experimental** and currently depends
+        on packages that are not available on s390x.
+        For now, scancode should not be used as the default backend for
+        packages, as `BuildRequire`ing `scancode-toolkit` will cause FTBFSs
+        with s390x.
+
 If no detector is specified, `go_vendor_license` will attempt to load the first
 available license detector from first to last in the above list.
 `go_vendor_license` will error if neither `trivy`, `askalono`, nor
