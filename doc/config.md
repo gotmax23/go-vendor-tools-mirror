@@ -29,8 +29,8 @@ All fields are optional.
 Explicitly choose a license detector.
 Currently supported detectors are:
 
-1. askalono
-2. trivy
+1. trivy
+2. askalono
 3. scancode (uses the `scancode-toolkit` Python library)
 
     !!! warning
