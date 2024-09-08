@@ -2,6 +2,7 @@
 # Copyright (C) 2024 Maxwell G <maxwell@gtmx.me>
 # SPDX-License-Identifier: MIT
 site_name: Go Vendor Tools
+site_description: Tools for handling Go library vendoring in Fedora
 docs_dir: doc
 site_url: https://fedora.gitlab.io/sigs/go/go-vendor-tools
 repo_url: https://gitlab.com/fedora/sigs/go/go-vendor-tools
