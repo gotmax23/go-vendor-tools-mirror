@@ -19,6 +19,7 @@ Source0:        %{forgesource}
 
 BuildArch:      noarch
 
+BuildRequires:  tomcli
 BuildRequires:  python3-devel
 
 %if %{with manpages}
@@ -54,6 +55,10 @@ Enhances:       go-vendor-tools
 
 %prep
 %autosetup -p1 %{forgesetupargs}
+# Remove scancode-toolkit test dependency.
+# It's not available on s390x and not needed for unit tests.
+tomcli-set pyproject.toml lists delitem \
+    'project.optional-dependencies.test' 'scancode-toolkit.*'
 
 
 %generate_buildrequires
