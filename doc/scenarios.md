@@ -17,13 +17,13 @@ with go-vendor-tools.
 1. Generate the base specfile
 
     ``` bash
-    go2rpm --profile vendor -d --no-clean github.com/opencontainers/runc --name runc
+    go2rpm --profile vendor -d github.com/opencontainers/runc --name runc
     ```
 
     This command will create a `runc` directory with the specfile, the
     downloaded upstream source archive, and the vendor tarball generated with
     `go_vendor_archive`.
-    `go2rpm` will also output a license report and a cummulative SPDX expression
+    `go2rpm` will also output a license report and a cumulative SPDX expression
     generated with `go_vendor_license`.
     It is the packager's responsibility to perform a basic check of the output
     and manually determine the SPDX expression for packages listed as
