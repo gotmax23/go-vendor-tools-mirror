@@ -41,6 +41,7 @@ plugins:
   - gen-files:
       scripts:
         - doc/man/mkdocs_mangen.py
+  - search
 
 nav:
   - README.md
