@@ -131,3 +131,51 @@ go2rpm was used to generate the original specfile using vendored dependencies.
     ```
 
 4. Upload new sources and continue with your normal package update workflow.
+
+## Review license report for unneeded content
+
+The license detector (`trivy` or `askalono` or `scancode`) may, at times,
+include files that are not license related.
+Examples include shell scrips, dockerfiles, or other text files.
+Below is a short extract of example license output from the containerd package:
+
+```
+/usr/share/licenses/containerd/script
+/usr/share/licenses/containerd/script/critest.sh
+/usr/share/licenses/containerd/script/go-test-fuzz.sh
+/usr/share/licenses/containerd/script/resize-vagrant-root.sh
+```
+
+Inspection of these files shows that they are utility scripts and do not contain
+license information.
+They do not need to be added as license files in the package rpm.
+
+Use one of the steps below to generate the listing.
+
+1. Use rpm to list the content of an installable rpm (using `containerd` as the
+   example).
+
+   ``` bash
+   rpm -qpl containerd-2.0.0-2.fc42.x86_64.rpm
+   ```
+
+1. Use `go_vendor_license report` to generate a list of license files.
+
+Options in the go-vendor-tools configuration file (`go-vendor-tools.toml` by default) can be used to exclude files and/or directories from the license scan.
+See the [licenses section in
+Configuration](https://fedora.gitlab.io/sigs/go/go-vendor-tools/config/#licenses-list-of-license-entry-tables) for a description.
+
+An example `go-vendor-tools.toml` file with files and a directory excluded:
+
+```
+[licensing]
+detector = "trivy"
+exclude_directories = [
+    "hack/dockerfiles",
+]
+exclude_files = [
+    "vendor/go.opentelemetry.io/otel/get_main_pkgs.sh",
+    "vendor/go.opentelemetry.io/otel/verify_examples.sh",
+    "vendor/google.golang.org/grpc/regenerate.sh",
+]
+```
