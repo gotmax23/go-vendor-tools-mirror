@@ -159,8 +159,7 @@ Use one of the steps below to generate the listing.
    rpm -qpl containerd-2.0.0-2.fc42.x86_64.rpm
    ```
 
-1. Use the report step in [Manually detecting
-   licences](https://fedora.gitlab.io/sigs/go/go-vendor-tools/scenarios/#manually-detecting-licenses).
+1. Use `go_vendor_license report` to generate a list of license files.
 
 Options in the go-vendor-tools configuration file (`go-vendor-tools.toml` by default) can be used to exclude files and/or directories from the license scan.
 See the [licenses section in
