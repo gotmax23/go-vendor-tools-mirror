@@ -81,6 +81,7 @@ def filter_license_map(
     }
 
 
+# TODO(gotmax23): Remove once trivy stops using it
 def find_extra_license_files(
     directory: StrPath,
     exclude_directories: Collection[StrPath],

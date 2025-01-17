@@ -14,7 +14,7 @@ if TYPE_CHECKING:
     from _typeshed import StrPath
 
 
-# Adapted from the ignore Rust crate's patterns that askalono crawl use
+# Adapted from the ignore Rust crate's patterns that askalono crawl uses
 # https://github.com/BurntSushi/ripgrep/blob/79cbe89deb1151e703f4d91b19af9cdcc128b765/crates/ignore/src/default_types.rs#L123
 _LICENSE_GLOBS: Sequence[str] = (
     # General
@@ -93,12 +93,12 @@ def _clean_dirnames(dirnames: Collection[object]) -> set[str]:
     return {d.rstrip("/") for d in map(str, dirnames)}
 
 
-# TODO(gotmax23): Add REUSE support
 def find_license_files(
     directory: StrPath,
     relative_paths: bool,
     exclude_directories: Collection[str] = (),
     exclude_files: Collection[str] = (),
+    # TODO(gotmax23): Properly integrate and test REUSE support
     reuse_roots: Collection[StrPath] = (),
     *,
     filetype_info: Sequence[LicenseRegexFileType] = DEFAULT_FILE_TYPES,
