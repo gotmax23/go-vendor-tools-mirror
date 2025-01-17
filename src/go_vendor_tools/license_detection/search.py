@@ -98,7 +98,7 @@ def find_license_files(
     relative_paths: bool,
     exclude_directories: Collection[str] = (),
     exclude_files: Collection[str] = (),
-    # TODO(gotmax23): Properly integrate and test REUSE support
+    # FIXME(gotmax23): Properly integrate and test REUSE support
     reuse_roots: Collection[StrPath] = (),
     *,
     filetype_info: Sequence[LicenseRegexFileType] = DEFAULT_FILE_TYPES,
