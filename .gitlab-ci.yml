@@ -82,9 +82,10 @@ test:
   image: "$IMAGE"
   parallel:
     matrix:
-        - IMAGE: "registry.fedoraproject.org/fedora:rawhide"
-          PACKAGES: "autorestic fzf"
-          SHOULD_RPMBUILD: "true"
+        # https://github.com/WojciechMula/pyahocorasick/issues/199
+        # - IMAGE: "registry.fedoraproject.org/fedora:rawhide"
+        #   PACKAGES: "autorestic fzf"
+        #   SHOULD_RPMBUILD: "true"
         - IMAGE: "registry.fedoraproject.org/fedora:41"
           PACKAGES: "autorestic fzf"
           SHOULD_RPMBUILD: "true"
