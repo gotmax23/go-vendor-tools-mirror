@@ -23,12 +23,14 @@ def get_go_module_names(directory: Path) -> dict[str, str]:
     return results
 
 
-def get_go_module_dirs(directory: Path) -> list[Path]:
+def get_go_module_dirs(directory: Path, relative_paths: bool = False) -> list[Path]:
     results: list[Path] = []
     for ipath in get_go_module_names(directory):
         moddir = directory / "vendor" / ipath
         if moddir.is_dir():
-            results.append(moddir.resolve())
+            results.append(
+                moddir.relative_to(directory) if relative_paths else moddir.resolve()
+            )
     return results
 
 

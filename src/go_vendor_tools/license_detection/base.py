@@ -17,8 +17,6 @@ from itertools import chain
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, ClassVar, Generic, TypeVar
 
-import license_expression
-
 from go_vendor_tools.config.licenses import LicenseConfig, LicenseEntry
 from go_vendor_tools.exceptions import LicenseError
 from go_vendor_tools.hashing import verify_hash
@@ -159,9 +157,7 @@ class LicenseData:
     undetected_licenses: Collection[Path]
     unmatched_extra_licenses: Collection[Path]
     license_set: set[str] = dataclasses.field(init=False)
-    license_expression: license_expression.LicenseExpression | None = dataclasses.field(
-        init=False
-    )
+    license_expression: str | None = dataclasses.field(init=False)
     license_file_paths: Collection[Path] = dataclasses.field(init=False)
     extra_license_files: list[Path]
     _LIST_PATH_FIELDS: ClassVar = (
