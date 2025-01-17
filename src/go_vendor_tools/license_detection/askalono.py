@@ -28,6 +28,7 @@ from .base import (
     LicenseDetectorNotAvailableError,
     get_manual_license_entries,
     is_unwanted_path,
+    reuse_path_to_license_map,
 )
 from .search import find_license_files
 
@@ -219,6 +220,9 @@ class AskalonoLicenseDetector(LicenseDetector[AskalonoLicenseData]):
         license_map = _get_simplified_license_map(
             Path(directory), filtered_license_data, manual_license_map
         )
+        license_map |= reuse_path_to_license_map(license_file_lists["reuse"])
+        # Sort
+        license_map = dict(sorted(license_map.items(), key=lambda item: item[0]))
         # Remove manually specified licenses
         undetected -= set(manual_license_map)
         undetected = {
@@ -237,7 +241,7 @@ class AskalonoLicenseDetector(LicenseDetector[AskalonoLicenseData]):
             undetected_licenses=undetected,
             unmatched_extra_licenses=manual_unmatched,
             askalono_license_data=askalono_license_data,
-            # TODO(gotmax23): Change the design of LicenseData to not require full paths
+            # FIXME(gotmax): Change the design of LicenseData to not require full paths
             extra_license_files=[
                 Path(directory, file) for file in license_file_lists["notice"]
             ],

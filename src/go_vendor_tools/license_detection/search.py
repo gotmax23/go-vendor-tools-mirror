@@ -77,9 +77,14 @@ class LicenseFileTypes(enum.Enum):
 
 @dataclass(frozen=True)
 class LicenseRegexFileType:
+    _DISALLOWED_NAMES = ("reuse",)
     name: str
     regex: re.Pattern[str]
     exclude_regex: re.Pattern[str] | None = None
+
+    def __post_init__(self) -> None:
+        if self.name in self._DISALLOWED_NAMES:
+            raise ValueError(f"Disallowed name: {self.name}")
 
 
 LICENSE_FILE_TYPE = LicenseRegexFileType(

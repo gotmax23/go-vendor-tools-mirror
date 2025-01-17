@@ -12,7 +12,7 @@ import dataclasses
 import os
 import re
 import sys
-from collections.abc import Collection, Iterator
+from collections.abc import Collection
 from itertools import chain
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, ClassVar, Generic, TypeVar
@@ -81,50 +81,18 @@ def filter_license_map(
     }
 
 
-# FIXME(gotmax23): Remove once trivy stops using it
-def find_extra_license_files(
-    directory: StrPath,
-    exclude_directories: Collection[StrPath],
-    exclude_files: Collection[StrPath],
-    *,
-    regex: re.Pattern[str] = EXTRA_LICENSE_FILE_REGEX,
-    exclude_regex: re.Pattern[str] | None = None,
-    relative_paths: bool = False,
-) -> Iterator[Path]:
-    """
-    Search a directory for license files matching a certain pattern
-
-    Arguments:
-        directory:
-            Directory to search through for file matches
-        exclude_directories:
-            List of directories (relative paths inside `directory`) to exclude
-            from search
-        exclude_files:
-            List of files (relative paths inside `directory`) to exclude from
-            search
-        regex:
-            Filename matcher
-        exclude_regex:
-            If a filename matches this regex, do not include it in the result
-        relative_paths:
-            Whether to return relative paths to license files or full paths
-            including `directory`
-    """
-    for root, _, files in os.walk(directory):
-        for file in files:
-            path = Path(root, file)
-            relpath = path.relative_to(directory)
-            if is_unwanted_path(relpath, exclude_directories, exclude_files):
-                continue
-            if regex.match(file) and (
-                not exclude_regex or not exclude_regex.match(file)
-            ):
-                yield relpath if relative_paths else path
-
-
 def python3dist(package: str, /) -> str:
     return f"python{sys.version_info.major}.{sys.version_info.minor}dist({package})"
+
+
+# TODO(gotmax23): Should we check for valid filenames
+# (each file should be a single license name)
+def reuse_path_to_license_map(files: Collection[StrPath]) -> dict[Path, str]:
+    result: dict[Path, str] = {}
+    for file in files:
+        name = os.path.splitext(os.path.basename(file))[0]
+        result[Path(file)] = name
+    return result
 
 
 @dataclasses.dataclass()

@@ -31,6 +31,7 @@ from go_vendor_tools.license_detection.base import (
     LicenseDetectorNotAvailableError,
     get_manual_license_entries,
     python3dist,
+    reuse_path_to_license_map,
 )
 from go_vendor_tools.licensing import combine_licenses
 
@@ -131,13 +132,14 @@ class ScancodeLicenseDetector(LicenseDetector[ScancodeLicenseData]):
             self.license_config["licenses"], directory
         )
         license_map |= manual_license_map
+        license_map |= reuse_path_to_license_map(license_file_lists["reuse"])
         return ScancodeLicenseData(
             directory=directory,
             license_map=license_map,
             undetected_licenses=[],
             unmatched_extra_licenses=manual_unmatched,
             scancode_license_data=data,
-            # TODO(gotmax23): Change the design of LicenseData to not require full paths
+            # FIXME(gotmax): Change the design of LicenseData to not require full paths
             extra_license_files=[
                 Path(directory, file) for file in license_file_lists["notice"]
             ],
