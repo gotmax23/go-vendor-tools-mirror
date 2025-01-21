@@ -9,7 +9,8 @@ SPDX-License-Identifier: MIT
 
 [![Copr build status][copr-badge]][copr-package] (`@go-sig/go-vendor-tools-dev`)
 
-**This project is currently under active development on the `gotmax23-2025`
+**This project is currently under active development on the
+[`gotmax-2025`](https://gitlab.com/fedora/sigs/go/go-vendor-tools/-/tree/gotmax-2025?ref_type=heads)
 branch and is undergoing major cleanup. Please coordinate with @gotmax23 if
 you'd like to contribute a non-trivial fix.**
 
