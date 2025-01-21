@@ -12,6 +12,7 @@ import json
 import shutil
 import subprocess
 from collections.abc import Sequence
+from itertools import chain
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Literal, TypedDict, cast
 
@@ -115,9 +116,15 @@ def _trivy_license_dict_to_license_map(
 class TrivyLicenseDetector(LicenseDetector[TrivyLicenseData]):
     NAME = "trivy"
     PACKAGES_NEEDED = ("trivy",)
+    DETECT_PACKAGES_NEEDED = PACKAGES_NEEDED
 
     def __init__(
-        self, cli_config: dict[str, str], license_config: LicenseConfig
+        self,
+        cli_config: dict[str, str],
+        license_config: LicenseConfig,
+        # Ignore detect_only, as trivy uses its own license scanner that
+        # requires trivy to be installed
+        detect_only: bool = False,  # noqa: ARG002
     ) -> None:
         if path := cli_config.get("trivy_path"):
             if not Path(path).exists():
@@ -156,6 +163,9 @@ class TrivyLicenseDetector(LicenseDetector[TrivyLicenseData]):
             exclude_directories=self.license_config["exclude_directories"],
             exclude_files=self.license_config["exclude_files"],
             reuse_roots=reuse_roots,
+            # FIXME(gotmax23): Also include LICENSE_FILE_TYPE and make sure
+            # that find_license_files does not find any license files that
+            # trivy did not detect
             filetype_info=[NOTICE_FILE_TYPE],
         )
         filtered_license_map |= reuse_path_to_license_map(license_file_lists["reuse"])
@@ -173,3 +183,36 @@ class TrivyLicenseDetector(LicenseDetector[TrivyLicenseData]):
                 Path(directory, file) for file in license_file_lists["notice"]
             ],
         )
+
+    def find_license_files(self, directory: StrPath) -> list[Path]:
+        # FIXME(gotmax23): Don't call get_go_module_dirs() here. Don't assume the file
+        # exists.
+        reuse_roots = get_go_module_dirs(Path(directory), relative_paths=True)
+
+        data = _load_license_data(self.path, directory)
+        licenses = _license_data_to_trivy_license_dict(data)
+        license_map, undetected = _trivy_license_dict_to_license_map(licenses)
+        filtered_license_map = filter_license_map(
+            license_map,
+            self.license_config["exclude_directories"],
+            self.license_config["exclude_files"],
+        )
+        manual_license_map, _ = get_manual_license_entries(
+            self.license_config["licenses"], directory
+        )
+        license_file_lists = find_license_files(
+            directory,
+            relative_paths=True,
+            exclude_directories=self.license_config["exclude_directories"],
+            exclude_files=self.license_config["exclude_files"],
+            reuse_roots=reuse_roots,
+            filetype_info=[NOTICE_FILE_TYPE],
+        )
+        files: list[Path] = [
+            *filtered_license_map.keys(),
+            *undetected,
+            *manual_license_map,
+            *map(Path, chain.from_iterable(license_file_lists.values())),
+        ]
+        files.sort()
+        return files

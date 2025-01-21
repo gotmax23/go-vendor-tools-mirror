@@ -181,15 +181,25 @@ class AskalonoLicenseDetector(LicenseDetector[AskalonoLicenseData]):
     PACKAGES_NEEDED = ("askalono-cli",)
 
     def __init__(
-        self, cli_config: dict[str, str], license_config: LicenseConfig
+        self,
+        cli_config: dict[str, str],
+        license_config: LicenseConfig,
+        detect_only: bool = False,
     ) -> None:
-        if path := cli_config.get("askalono_path"):
-            if not Path(path).exists():
-                raise LicenseDetectorNotAvailableError(f"{path!r} does not exist!")
+        path: str | None = None
+        if detect_only:
+            # If detect_only, just set path to something
+            path = "askalono"
         else:
-            path = shutil.which("askalono")
-        if not path:
-            raise LicenseDetectorNotAvailableError("Failed to find askalono binary!")
+            if path := cli_config.get("askalono_path"):
+                if not Path(path).exists():
+                    raise LicenseDetectorNotAvailableError(f"{path!r} does not exist!")
+            else:
+                path = shutil.which("askalono")
+            if not path:
+                raise LicenseDetectorNotAvailableError(
+                    "Failed to find askalono binary!"
+                )
 
         self.path: str = path
         self.license_config = license_config

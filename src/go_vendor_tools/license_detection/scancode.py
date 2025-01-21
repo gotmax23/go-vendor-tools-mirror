@@ -106,8 +106,9 @@ class ScancodeLicenseDetector(LicenseDetector[ScancodeLicenseData]):
         self,
         cli_config: dict[str, str],  # noqa: ARG002
         license_config: LicenseConfig,
+        detect_only: bool = False,
     ) -> None:
-        if not HAS_SCANCODE:
+        if not detect_only and not HAS_SCANCODE:
             raise LicenseDetectorNotAvailableError(
                 "The scancode-toolkit library must be installed!"
             )

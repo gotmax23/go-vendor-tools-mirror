@@ -19,7 +19,9 @@ from typing import TYPE_CHECKING, Any, ClassVar, Generic, TypeVar
 
 from go_vendor_tools.config.licenses import LicenseConfig, LicenseEntry
 from go_vendor_tools.exceptions import LicenseError
+from go_vendor_tools.gomod import get_go_module_dirs
 from go_vendor_tools.hashing import verify_hash
+from go_vendor_tools.license_detection.search import find_license_files
 from go_vendor_tools.licensing import combine_licenses
 
 if TYPE_CHECKING:
@@ -193,13 +195,36 @@ _LicenseDataT = TypeVar("_LicenseDataT", bound=LicenseData)
 class LicenseDetector(Generic[_LicenseDataT], metaclass=abc.ABCMeta):
     NAME: ClassVar[str]
     PACKAGES_NEEDED: ClassVar[tuple[str, ...]] = ()
+    DETECT_PACKAGES_NEEDED: ClassVar[tuple[str, ...]] = ()
+    license_config: LicenseConfig
 
     @abc.abstractmethod
     def __init__(
-        self, cli_config: dict[str, str], license_config: LicenseConfig
+        self,
+        cli_config: dict[str, str],
+        license_config: LicenseConfig,
+        detect_only: bool = False,
     ) -> None: ...
     @abc.abstractmethod
     def detect(self, directory: StrPath) -> _LicenseDataT: ...
+    def find_license_files(self, directory: StrPath) -> list[Path]:
+        reuse_roots = get_go_module_dirs(Path(directory), relative_paths=True)
+        license_file_lists = find_license_files(
+            directory,
+            relative_paths=True,
+            exclude_directories=self.license_config["exclude_directories"],
+            exclude_files=self.license_config["exclude_files"],
+            reuse_roots=reuse_roots,
+        )
+        manual_license_map, _ = get_manual_license_entries(
+            self.license_config["licenses"], directory
+        )
+        files: list[Path] = [
+            Path(p) for p in chain.from_iterable(license_file_lists.values())
+        ]
+        files.extend(manual_license_map)
+        files.sort()
+        return files
 
 
 class LicenseDetectorNotAvailableError(LicenseError):
