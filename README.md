@@ -9,6 +9,10 @@ SPDX-License-Identifier: MIT
 
 [![Copr build status][copr-badge]][copr-package] (`@go-sig/go-vendor-tools-dev`)
 
+**This project is currently under active development on the `gotmax23-2025`
+branch and is undergoing major cleanup. Please coordinate with @gotmax23 if
+you'd like to contribute a non-trivial fix.**
+
 Tools for handling Go library vendoring in Fedora
 
 ## Documentation
