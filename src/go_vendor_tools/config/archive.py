@@ -54,7 +54,7 @@ def create_archive_config(config: dict[str, Any] | None = None) -> ArchiveConfig
 
 
 def get_go_dependency_update_commands(
-    dependency_overrides: Mapping[str, str]
+    dependency_overrides: Mapping[str, str],
 ) -> Iterator[tuple[str, ...]]:
     for ipath, version in dependency_overrides.items():
         yield ("go", "get", f"{ipath}@{version}")
