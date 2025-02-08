@@ -208,11 +208,10 @@ class TrivyLicenseDetector(LicenseDetector[TrivyLicenseData]):
             reuse_roots=reuse_roots,
             filetype_info=[NOTICE_FILE_TYPE],
         )
-        files: list[Path] = [
+        files: set[Path] = {
             *filtered_license_map.keys(),
             *undetected,
             *manual_license_map,
             *map(Path, chain.from_iterable(license_file_lists.values())),
-        ]
-        files.sort()
-        return files
+        }
+        return sorted(files)

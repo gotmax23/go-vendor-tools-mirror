@@ -219,12 +219,11 @@ class LicenseDetector(Generic[_LicenseDataT], metaclass=abc.ABCMeta):
         manual_license_map, _ = get_manual_license_entries(
             self.license_config["licenses"], directory
         )
-        files: list[Path] = [
+        files: set[Path] = {
             Path(p) for p in chain.from_iterable(license_file_lists.values())
-        ]
-        files.extend(manual_license_map)
-        files.sort()
-        return files
+        }
+        files.update(manual_license_map)
+        return sorted(files)
 
 
 class LicenseDetectorNotAvailableError(LicenseError):
