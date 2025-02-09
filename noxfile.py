@@ -241,11 +241,7 @@ def bump(session: nox.Session):
     # Bump changelog, commit, and tag
     git(session, "add", SPECFILE, f"src/{PROJECT}/__init__.py")
     session.run("releaserr", "clog", version, "--tag")
-    # FIXME(anyone): Temporarily disable twine check.
-    # It doesn't understand hatch 2.3 metadata.
-    session.run(
-        "releaserr", "build", "--backend", "generic", "--isolated", "--no-twine-check"
-    )
+    session.run("releaserr", "build", "--backend", "generic", "--isolated")
 
 
 @nox.session
