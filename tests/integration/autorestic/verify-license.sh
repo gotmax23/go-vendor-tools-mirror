@@ -11,6 +11,9 @@ here="$(pwd)"
 export GO_VENDOR_LICENSE_HOME="${here}"
 
 for GO_VENDOR_CONFIG in "${here}/go-vendor-tools.toml" "${here}/scancode_go-vendor-tools.toml"; do
+    if [ "${GO_VENDOR_CONFIG}" = "${here}/scancode_go-vendor-tools.toml" ] && [ "${NO_SCANCODE-}" = "true" ]; then
+        continue
+    fi
     export GO_VENDOR_CONFIG
     # Run first with the standard path
     "${verify_license}"

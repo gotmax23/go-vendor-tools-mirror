@@ -67,7 +67,6 @@ typing = [
 ]
 test = [
     "go-vendor-tools[all]",
-    "scancode-toolkit",
     "pytest",
     "pytest-mock",
 ]

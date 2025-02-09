@@ -6,7 +6,7 @@ from __future__ import annotations
 import contextlib
 import os
 import shlex
-from collections.abc import Iterator
+from collections.abc import Iterable, Iterator
 from glob import iglob
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -25,7 +25,10 @@ SPECFILE = "go-vendor-tools.spec"
 LINT_SESSIONS = ("formatters", "codeqa", "typing")
 LINT_FILES = (f"src/{PROJECT}", "tests/pytests", "noxfile.py", "contrib")
 INTEGRATION_PACKAGES = ("autorestic", "fzf")
-COVERAGE_FAIL_UNDER = os.environ.get("COVERAGE_FAIL_UNDER") or "90"
+HAS_SCANCODE = os.environ.get("NO_SCANCODE") != "true"
+COVERAGE_FAIL_UNDER = os.environ.get("COVERAGE_FAIL_UNDER") or (
+    "90" if HAS_SCANCODE else "89"
+)
 
 nox.options.sessions = ("lint", "covtest")
 nox.options.error_on_external_run = True
@@ -42,6 +45,12 @@ def install(session: nox.Session, *args, editable=False, **kwargs):
 
 def git(session: nox.Session, *args, **kwargs):
     return session.run("git", *args, **kwargs, external=True)
+
+
+def get_test_deps() -> Iterable[str]:
+    yield ".[test]"
+    if HAS_SCANCODE:
+        yield "scancode-toolkit"
 
 
 BASE_COVERAGE_COMMAND = ("coverage", "run", "-p", "--source", "go_vendor_tools")
@@ -79,7 +88,7 @@ def coverage_run(session: nox.Session) -> Iterator[dict[str, str]]:
 
 @nox.session(python=["3.9", "3.10", "3.11", "3.12"])
 def test(session: nox.Session):
-    packages: list[str] = [".[test]"]
+    packages: list[str] = [*get_test_deps()]
     env: dict[str, str] = {}
     tmp = Path(session.create_tmp())
 
@@ -93,7 +102,7 @@ def test(session: nox.Session):
 
 @nox.session
 def integration(session: nox.Session) -> None:
-    install(session, ".[test]", "coverage[toml]", editable=True)
+    install(session, *get_test_deps(), "coverage[toml]", editable=True)
     packages_env = session.env.get("PACKAGES")
     packages = shlex.split(packages_env) if packages_env else INTEGRATION_PACKAGES
     script_dir = Path("contrib").resolve()
@@ -121,7 +130,7 @@ def integration(session: nox.Session) -> None:
 
 @nox.session(name="integration-test-build")
 def integration_test_build(session: nox.Session):
-    install(session, ".[test]", "coverage[toml]", editable=True)
+    install(session, *get_test_deps(), "coverage[toml]", editable=True)
     packages_env = session.env.get("PACKAGES")
     packages = shlex.split(packages_env) if packages_env else INTEGRATION_PACKAGES
     with coverage_run(session) as cov_env:
