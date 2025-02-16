@@ -25,6 +25,7 @@ from zstarfile.extra import open_write_compressed
 
 from go_vendor_tools import __version__
 from go_vendor_tools.archive import add_files_to_archive
+from go_vendor_tools.cli.utils import catch_vendor_tools_error
 from go_vendor_tools.config.archive import get_go_dependency_update_commands
 from go_vendor_tools.config.base import BaseConfig, load_config
 from go_vendor_tools.exceptions import ArchiveError
@@ -294,10 +295,11 @@ def override_command(args: OverrideArgs) -> None:
 
 def main(argv: list[str] | None = None) -> None:
     args = parseargs(argv)
-    if isinstance(args, CreateArchiveArgs):
-        create_archive(args)
-    elif isinstance(args, OverrideArgs):
-        override_command(args)
+    with catch_vendor_tools_error():
+        if isinstance(args, CreateArchiveArgs):
+            create_archive(args)
+        elif isinstance(args, OverrideArgs):
+            override_command(args)
 
 
 if __name__ == "__main__":
