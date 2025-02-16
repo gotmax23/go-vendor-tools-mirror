@@ -6,11 +6,12 @@ from __future__ import annotations
 import contextlib
 import os
 import shlex
-from collections.abc import Iterable, Iterator
+from collections.abc import Iterable, Iterator, Sequence
 from glob import iglob
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from types import SimpleNamespace
+from typing import cast
 
 import nox
 
@@ -69,7 +70,7 @@ COVERAGE_COMMANDS = SimpleNamespace(
 
 
 @contextlib.contextmanager
-def coverage_run(session: nox.Session) -> Iterator[dict[str, str]]:
+def coverage_run(session: nox.Session) -> Iterator[dict[str, str | None]]:
     tmp = Path(session.create_tmp())
     covfile = (tmp / ".coverage").resolve()
     cov_env = {
@@ -167,7 +168,7 @@ def coverage(session: nox.Session):
 @nox.session()
 def covtest(session: nox.Session):
     session.run("rm", "-f", *iglob(".nox/*/tmp/.coverage*"), external=True)
-    test_sessions = (f"test-{v}" for v in test.python)  # type: ignore[attr-defined]
+    test_sessions = (f"test-{v}" for v in cast("Sequence[str]", test.python))
     for target in test_sessions:
         session.notify(target, ["--cov"])
 
