@@ -230,16 +230,6 @@ def create_archive(args: CreateArchiveArgs) -> None:
         print(f"{args.output} already exists")
         sys.exit()
     with ExitStack() as stack:
-        try:
-            tf = stack.enter_context(
-                open_write_compressed(
-                    args.output,
-                    compression_type=args.compression_type,
-                    compresslevel=args.compresslevel,
-                )
-            )
-        except ValueError as exc:
-            sys.exit(f"Invalid --output value: {exc}")
         # Treat as an archive if it's not a directory
         if _already_checked_is_file or args.path.is_file():
             print(f"* Treating {args.path} as an archive. Unpacking...")
@@ -269,6 +259,16 @@ def create_archive(args: CreateArchiveArgs) -> None:
         (vdir / "modules.txt").touch(exist_ok=True)
         for command in args.config["archive"]["post_commands"]:
             run_command(runner, command)
+        try:
+            tf = stack.enter_context(
+                open_write_compressed(
+                    args.output,
+                    compression_type=args.compression_type,
+                    compresslevel=args.compresslevel,
+                )
+            )
+        except ValueError as exc:
+            sys.exit(f"Invalid --output value: {exc}")
         print("Creating archive...")
         add_files_to_archive(
             tf,
