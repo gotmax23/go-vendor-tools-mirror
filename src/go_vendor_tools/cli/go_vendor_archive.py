@@ -78,12 +78,14 @@ def run_command(
 class CreateArchiveArgs:
     path: Path
     output: Path
+    # START: Config options
     use_top_level_dir: bool
     use_module_proxy: bool
     tidy: bool
     idempotent: bool
     compresslevel: int | None
     compression_type: str | None
+    # END: Config options
     config_path: Path
     config: BaseConfig
     write_config: bool
