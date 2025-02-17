@@ -34,6 +34,14 @@ def get_basename_heuristic(name: str) -> str:
 
 
 def get_specfile_sources(spec_path: Path) -> Iterator[tuple[int, str]]:
+    """
+    Iterator of specfile sources
+
+    Args:
+        spec_path: Path to specfile
+
+    Yields: (source number, location)
+    """
     if not SPECTOOL_PATH:
         raise MissingDependencyError("spectool from rpmdevtools is missing!")
     stdout = subprocess.run(
@@ -44,6 +52,13 @@ def get_specfile_sources(spec_path: Path) -> Iterator[tuple[int, str]]:
 
 
 def get_specfile_sources_relative(spec_path: Path) -> dict[int, str]:
+    """
+    Returns dictionary of specfile source numbers mapped to relative path to
+    file (as determined by get_basename_heuristic())
+
+    Args:
+        spec_path: Path to specfile
+    """
     return {
         number: get_basename_heuristic(source)
         for number, source in get_specfile_sources(spec_path)
@@ -51,6 +66,15 @@ def get_specfile_sources_relative(spec_path: Path) -> dict[int, str]:
 
 
 def get_path_and_output_from_specfile(spec_path: Path) -> tuple[Path, Path]:
+    """
+    Assuming that Source0 is the main archive and Source1 is the vendor archive,
+    return full paths to each.
+
+    Yields: (Source0 path, Source1 path)
+
+    Raises:
+        VendorToolsError: If Source0 and/or Source1 don't exist
+    """
     sources = get_specfile_sources_relative(spec_path)
     if not {0, 1} & set(sources):
         # TODO(anyone): More specific exception class
