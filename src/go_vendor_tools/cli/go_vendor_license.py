@@ -12,7 +12,6 @@ import shutil
 import sys
 from collections.abc import Collection, Iterable, Iterator, MutableSequence, Sequence
 from contextlib import ExitStack, contextmanager
-from functools import cache
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from textwrap import dedent
@@ -23,7 +22,13 @@ from zstarfile import ZSTarfile
 
 from go_vendor_tools import __version__
 from go_vendor_tools.archive import get_toplevel_directory
-from go_vendor_tools.cli.utils import catch_vendor_tools_error
+from go_vendor_tools.cli.utils import (
+    HAS_TOMLKIT,
+    catch_vendor_tools_error,
+    load_tomlkit_if_exists,
+    need_tomlkit,
+    tomlkit_dump,
+)
 from go_vendor_tools.config.base import load_config
 from go_vendor_tools.config.licenses import (
     LicenseConfig,
@@ -38,13 +43,9 @@ from go_vendor_tools.license_detection.load import DETECTORS, get_detctors
 from go_vendor_tools.licensing import compare_licenses, simplify_license
 from go_vendor_tools.specfile import VendorSpecfile
 
-try:
+if HAS_TOMLKIT:
     import tomlkit
-except ImportError:
-    HAS_TOMLKIT = False
-else:
-    HAS_TOMLKIT = True
-    from go_vendor_tools.cli.utils import load_tomlkit_if_exists
+
 try:
     import argcomplete
 except ImportError:
@@ -322,19 +323,6 @@ def print_licenses(
 def write_license_json(data: LicenseData, file: Path) -> None:
     with file.open("w", encoding="utf-8") as fp:
         json.dump(data.to_jsonable(), fp, indent=2)
-
-
-@cache
-def need_tomlkit(action="this action"):
-    if not HAS_TOMLKIT:
-        message = f"tomlkit is required for {action}. Please install it!"
-        sys.exit(message)
-
-
-def tomlkit_dump(obj: Any, path: Path) -> None:
-    need_tomlkit()
-    with path.open("w") as fp:
-        tomlkit.dump(obj, fp)
 
 
 # TODO(gotmax23): Unit test prompt_missing_licenses and write_config code.
