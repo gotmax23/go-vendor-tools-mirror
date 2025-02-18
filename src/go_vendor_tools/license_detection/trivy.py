@@ -116,16 +116,15 @@ def _trivy_license_dict_to_license_map(
 class TrivyLicenseDetector(LicenseDetector[TrivyLicenseData]):
     NAME = "trivy"
     PACKAGES_NEEDED = ("trivy",)
-    DETECT_PACKAGES_NEEDED = PACKAGES_NEEDED
+    FIND_PACKAGES_NEEDED = PACKAGES_NEEDED
 
     def __init__(
         self,
         cli_config: dict[str, str],
         license_config: LicenseConfig,
-        # Ignore detect_only, as trivy uses its own license scanner that
-        # requires trivy to be installed
-        detect_only: bool = False,  # noqa: ARG002
+        find_only: bool = False,
     ) -> None:
+        self._find_only = find_only
         if path := cli_config.get("trivy_path"):
             if not Path(path).exists():
                 raise LicenseDetectorNotAvailableError(f"{path!r} does not exist!")
@@ -135,6 +134,7 @@ class TrivyLicenseDetector(LicenseDetector[TrivyLicenseData]):
             raise LicenseDetectorNotAvailableError("Failed to find trivy binary!")
 
         self.path: str = path
+        self.cli_config = cli_config
         self.license_config = license_config
 
     # TODO(anyone): Consider splitting into separate functions

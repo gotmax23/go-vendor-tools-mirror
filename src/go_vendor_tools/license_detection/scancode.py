@@ -104,17 +104,23 @@ class ScancodeLicenseDetector(LicenseDetector[ScancodeLicenseData]):
 
     def __init__(
         self,
-        cli_config: dict[str, str],  # noqa: ARG002
+        cli_config: dict[str, str],
         license_config: LicenseConfig,
-        detect_only: bool = False,
+        find_only: bool = False,
     ) -> None:
-        if not detect_only and not HAS_SCANCODE:
+        self._find_only = find_only
+        if not self.find_only and not HAS_SCANCODE:
             raise LicenseDetectorNotAvailableError(
                 "The scancode-toolkit library must be installed!"
             )
+        self.cli_config = cli_config
         self.license_config = license_config
 
     def detect(self, directory: StrPath):
+        if self.find_only:
+            raise ValueError(
+                "This cannot be called when class was initalized with find_only=True"
+            )
         directory = Path(directory)
         # FIXME(gotmax23): Don't call get_go_module_dirs() here. Don't assume the file
         # exists.

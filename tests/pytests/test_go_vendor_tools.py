@@ -4,7 +4,6 @@
 from __future__ import annotations
 
 import sys
-from functools import partial
 from io import StringIO
 from pathlib import Path
 from shutil import copy2
@@ -219,7 +218,6 @@ def test_print_licenses_all(capsys: pytest.CaptureFixture) -> None:
         directory=directory,
     )
     out, err = capsys.readouterr()
-    # print(out)
     assert not err
     expected = """\
     LICENSE.md: MIT
@@ -238,3 +236,33 @@ def test_print_licenses_all(capsys: pytest.CaptureFixture) -> None:
     GPL-3.0-only AND MIT
     """  # noqa: E501
     assert out == dedent(expected)
+
+
+def test_generate_buildrequires(capsys: pytest.CaptureFixture):
+    go_vendor_license.main(["--detector=askalono", "generate_buildrequires"])
+    out, err = capsys.readouterr()
+    assert not err
+    assert out == "askalono-cli\n"
+
+
+def test_generate_buildrequires_no_check(capsys: pytest.CaptureFixture):
+    go_vendor_license.main(
+        ["--detector=askalono", "generate_buildrequires", "--no-check"]
+    )
+    out, err = capsys.readouterr()
+    assert not err
+    assert not out
+
+
+def test_generate_buildrequires_trivy(capsys: pytest.CaptureFixture):
+    go_vendor_license.main(["--detector=trivy", "generate_buildrequires"])
+    out, err = capsys.readouterr()
+    assert not err
+    assert out == "trivy\n"
+
+
+def test_generate_buildrequires_no_check_trivy(capsys: pytest.CaptureFixture):
+    go_vendor_license.main(["--detector=trivy", "generate_buildrequires", "--no-check"])
+    out, err = capsys.readouterr()
+    assert not err
+    assert out == "trivy\n"
