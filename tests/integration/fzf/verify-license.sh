@@ -8,12 +8,26 @@ set -euo pipefail
 
 verify_license=$(readlink -f "../../../contrib/verify-license.sh")
 here="$(pwd)"
+_path="$(command -v go_vendor_license 2>/dev/null || :)"
+_default_path="pipx run --spec ../../../[scancode] go_vendor_license"
+GO_VENDOR_LICENSE="${GO_VENDOR_LICENSE:-${_path:-${_default_path}}}"
+IFS=" " read -r -a command <<< "${GO_VENDOR_LICENSE}"
+temp="$(mktemp -d)"
+trap 'rm -rf "${temp}"' EXIT
 
 # Run first with the standard path
 "${verify_license}"
+# Use --verify-spec
+"${command[@]}" --path ./*.spec report --verify-spec
+cp "fzf.spec.wrong-license" "${temp}/fzf2.spec"
+ln -sr ./*.tar* "${temp}"
+# Try to verify an invalid spec
+(! "${command[@]}" --path "${temp}/fzf2.spec" report --verify-spec)
+# Update invalid spec
+"${command[@]}" --path "${temp}/fzf2.spec" report --update-spec
+diff "fzf.spec" "${temp}/fzf2.spec"
+(cd "${temp}" && rm -r ./*)
 # Run again in a temporary directory with unpacked sources
-temp="$(mktemp -d)"
-trap 'rm -rf "${temp}"' EXIT
 name="fzf-0.46.1"
 tar -C "${temp}" -xf "./${name}.tar.gz"
 tar -C "${temp}" -xf "./${name}-vendor.tar.bz2"

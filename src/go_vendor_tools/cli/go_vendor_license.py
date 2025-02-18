@@ -11,7 +11,7 @@ import os
 import shutil
 import sys
 from collections.abc import Collection, Iterable, Iterator, MutableSequence, Sequence
-from contextlib import contextmanager
+from contextlib import ExitStack, contextmanager
 from functools import cache
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -30,12 +30,13 @@ from go_vendor_tools.config.licenses import (
     LicenseEntry,
     create_license_config,
 )
+from go_vendor_tools.exceptions import VendorToolsError
 from go_vendor_tools.gomod import get_unlicensed_mods
 from go_vendor_tools.hashing import get_hash
 from go_vendor_tools.license_detection.base import LicenseData, LicenseDetector
 from go_vendor_tools.license_detection.load import DETECTORS, get_detctors
 from go_vendor_tools.licensing import compare_licenses, simplify_license
-from go_vendor_tools.specfile_sources import get_path_and_output_from_specfile
+from go_vendor_tools.specfile import VendorSpecfile
 
 try:
     import tomlkit
@@ -170,9 +171,26 @@ def parseargs(argv: list[str] | None = None) -> argparse.Namespace:
         help="Whether to show Go modules without licenses in the output",
     )
     report_parser.add_argument(
+        "--subpackage-name",
+        help="""
+        Which subpackage to use to find license tag.
+        Name of a subpackage.
+        - "-NAME" for "%%package NAME";
+        - "NAME" for "%%package -n NAME";
+        - Omit this args to use the main package definition
+        """,
+    )
+    verify_opts = report_parser.add_mutually_exclusive_group()
+    verify_opts.add_argument(
         "--verify",
         help="Verify license expression to make sure it matches caluclated expression",
         metavar="EXPRESSION",
+    )
+    verify_opts.add_argument(
+        "--verify-spec", help="Verify specfile license tag", action="store_true"
+    )
+    verify_opts.add_argument(
+        "--update-spec", help="Update specfile license tag", action="store_true"
     )
     report_parser.add_argument(
         "--prompt",
@@ -399,22 +417,24 @@ def write_and_prompt_report_licenses(
 
 
 @contextmanager
-def handle_alternative_sources(
-    directories: Sequence[Path], is_archive: bool
-) -> Iterator[Path]:
-    directories = list(directories)
-    # The CLI code already checks that the value is greater than zero, so
-    # assert is fine here
-    assert directories
-    if not is_archive and len(directories) > 1:
-        sys.exit("Too many paths were passed!")
+def handle_alternative_sources_and_spec(
+    directories: Sequence[Path], is_archive: bool, subpackage_name: str | None
+) -> Iterator[tuple[Path, VendorSpecfile | None]]:
+    with ExitStack() as es:
+        spec: VendorSpecfile | None = None
+        directories = list(directories)
+        # The CLI code already checks that the value is greater than zero, so
+        # assert is fine here
+        assert directories
+        if not is_archive and len(directories) > 1:
+            sys.exit("Too many paths were passed!")
 
-    if directories[0].suffix == ".spec":
-        directories[:] = get_path_and_output_from_specfile(directories[0])
-        is_archive = True
-    if is_archive:
-        with TemporaryDirectory() as _tmp:
-            tmp = Path(_tmp)
+        if directories[0].suffix == ".spec":
+            spec = es.enter_context(VendorSpecfile(directories[0], subpackage_name))
+            directories[:] = spec.source0_and_source1()
+            is_archive = True
+        if is_archive:
+            tmp = Path(es.enter_context(TemporaryDirectory()))
             # Extract the first archive
             with ZSTarfile.open(directories[0]) as tar:
                 first_toplevel = get_toplevel_directory(tar)
@@ -427,10 +447,10 @@ def handle_alternative_sources(
                     toplevel = get_toplevel_directory(tar)
                     print(f"Extracting {directory}", file=sys.stderr)
                     tar.extractall(tmp if toplevel else tmp / first_toplevel)
-            yield tmp / first_toplevel
+            yield tmp / first_toplevel, spec
 
-    else:
-        yield directories[0]
+        else:
+            yield directories[0], spec
 
 
 def report_command(args: argparse.Namespace) -> None:
@@ -445,12 +465,23 @@ def report_command(args: argparse.Namespace) -> None:
     prompt: bool = args.prompt
     config_path: Path | None = args.config_path
     use_archive: bool = args.use_archive
+    subpackage_name: str | None = args.subpackage_name
+    verify_spec: bool = args.verify_spec
+    update_spec: bool = args.update_spec
     del args
 
     if write_config:
         config_path, loaded = get_report_write_config_data(config_path, detector)
 
-    with handle_alternative_sources(paths, use_archive) as directory:
+    with handle_alternative_sources_and_spec(paths, use_archive, subpackage_name) as (
+        directory,
+        spec,
+    ):
+        if (verify_spec or update_spec) and not spec:
+            raise VendorToolsError(
+                "--path must be a path to a specfile"
+                " if --verify-spec or --update-spec is passed"
+            )
         license_data: LicenseData = detector.detect(directory)
         unlicensed_mods = (
             set()
@@ -467,12 +498,22 @@ def report_command(args: argparse.Namespace) -> None:
             not ignore_unlicensed_mods,
             directory,
         )
-    if write_json:
-        write_license_json(license_data, write_json)
-    if verify and not compare_licenses(license_data.license_expression, verify):
-        sys.exit("Failed to verify license. Expected ^")
-    if write_config:
-        tomlkit_dump(loaded, cast(Path, config_path))
+        if write_json:
+            write_license_json(license_data, write_json)
+        if spec and verify_spec:
+            verify = spec.license
+        if (
+            spec
+            and update_spec
+            and not compare_licenses(
+                spec.license, exp := license_data.license_expression
+            )
+        ):
+            spec.license = str(exp)
+        if verify and not compare_licenses(license_data.license_expression, verify):
+            sys.exit("Failed to verify license. Expected ^")
+        if write_config:
+            tomlkit_dump(loaded, cast(Path, config_path))
     sys.exit(
         bool(
             (license_data.undetected_licenses and not ignore_undetected)

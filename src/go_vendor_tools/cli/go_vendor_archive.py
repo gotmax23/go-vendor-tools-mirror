@@ -29,7 +29,7 @@ from go_vendor_tools.cli.utils import catch_vendor_tools_error
 from go_vendor_tools.config.archive import get_go_dependency_update_commands
 from go_vendor_tools.config.base import BaseConfig, load_config
 from go_vendor_tools.exceptions import ArchiveError
-from go_vendor_tools.specfile_sources import get_path_and_output_from_specfile
+from go_vendor_tools.specfile import VendorSpecfile
 
 try:
     import tomlkit
@@ -211,7 +211,7 @@ def _create_archive_read_from_specfile(args: CreateArchiveArgs) -> None:
     if args.output:
         sys.exit("Cannot pass --output when reading paths from a specfile!")
     spec_path = args.path
-    args.path, args.output = get_path_and_output_from_specfile(args.path)
+    args.path, args.output = VendorSpecfile(args.path).source0_and_source1()
     if not args.path.is_file():
         sys.exit(
             f"{args.path} does not exist!"

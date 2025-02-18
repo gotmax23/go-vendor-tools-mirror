@@ -29,9 +29,10 @@ classifiers = [
     "Typing :: Typed",
 ]
 dependencies = [
-    "zstarfile",
     "license_expression",
-    "tomli; python_version<'3.11'"
+    "specfile",
+    "tomli; python_version<'3.11'",
+    "zstarfile",
 ]
 requires-python = ">=3.9"
 
