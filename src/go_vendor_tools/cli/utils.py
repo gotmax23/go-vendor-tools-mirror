@@ -11,11 +11,29 @@ import sys
 from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
+from typing import Any
 
-import tomlkit
+try:
+    import tomlkit
+except ImportError:
+    HAS_TOMLKIT = False
+else:
+    HAS_TOMLKIT = True
 
 from go_vendor_tools.config.utils import get_envvar_boolean
-from go_vendor_tools.exceptions import VendorToolsError
+from go_vendor_tools.exceptions import MissingDependencyError, VendorToolsError
+
+
+def need_tomlkit(action="this action"):
+    if not HAS_TOMLKIT:
+        message = f"tomlkit is required for {action}. Please install it!"
+        raise MissingDependencyError(message)
+
+
+def tomlkit_dump(obj: Any, path: Path) -> None:
+    need_tomlkit()
+    with path.open("w") as fp:
+        tomlkit.dump(obj, fp)
 
 
 def load_tomlkit_if_exists(path: Path | None) -> tomlkit.TOMLDocument:
