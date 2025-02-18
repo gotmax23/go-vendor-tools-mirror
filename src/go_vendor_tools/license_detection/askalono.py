@@ -214,8 +214,6 @@ class AskalonoLicenseDetector(LicenseDetector[AskalonoLicenseData]):
         gitignore = Path(directory, ".gitignore")
         if gitignore.is_file():
             _remove_line(gitignore, lambda line: line.startswith("vendor"))
-        # FIXME(gotmax23): Don't call get_go_module_dirs() here. Don't assume the file
-        # exists.
         reuse_roots = get_go_module_dirs(Path(directory), relative_paths=True)
         license_file_lists = find_license_files(
             directory=directory,

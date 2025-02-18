@@ -92,7 +92,7 @@ def python3dist(package: str, /) -> str:
     return f"python{sys.version_info.major}.{sys.version_info.minor}dist({package})"
 
 
-# TODO(gotmax23): Should we check for valid filenames
+# TODO(anyone): Should we check for valid filenames
 # (each file should be a single license name)
 def reuse_path_to_license_map(files: Collection[StrPath]) -> dict[Path, str]:
     result: dict[Path, str] = {}

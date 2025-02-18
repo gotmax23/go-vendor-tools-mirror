@@ -14,9 +14,15 @@ from pathlib import Path
 MODULE_REGEX = re.compile(r"^# (?:.+=>)?(?P<ipath>\S+) v(?P<version>\S+)$")
 
 
-def get_go_module_names(directory: Path) -> dict[str, str]:
+def get_go_module_names(directory: Path, allow_missing: bool = True) -> dict[str, str]:
     results: dict[str, str] = {}
-    with (directory / "vendor/modules.txt").open("r", encoding="utf-8") as fp:
+    try:
+        fp = (directory / "vendor/modules.txt").open("r", encoding="utf-8")
+    except FileNotFoundError:
+        if not allow_missing:
+            raise
+        return results
+    with fp:
         for line in fp:
             if match := MODULE_REGEX.match(line):
                 results[match["ipath"]] = match["version"]

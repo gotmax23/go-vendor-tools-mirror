@@ -113,10 +113,6 @@ def test_detect_nothing(tmp_path: Path, detector: type[LicenseDetector]) -> None
     """
     Ensure the code has proper error handling for when no licenses are detected
     """
-    # FIXME(gotmax23): Remove this and fix the tools to not require modules.txt
-    (vendor_dir := tmp_path / "vendor").mkdir()
-    (vendor_dir / "modules.txt").touch()
-
     config = load_config(None)
     detector_obj = detector({}, config["licensing"])
     data: LicenseData = detector_obj.detect(tmp_path)
