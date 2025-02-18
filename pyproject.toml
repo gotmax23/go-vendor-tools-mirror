@@ -79,6 +79,10 @@ dev = [
     "go-vendor-tools[typing]",
     "nox",
 ]
+# Not meant for external usage. Use [all] instead.
+specfile = [
+    "specfile",
+]
 
 [project.urls]
 Homepage = "https://fedora.gitlab.io/sigs/go/go-vendor-tools/"
