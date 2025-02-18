@@ -184,11 +184,12 @@ class AskalonoLicenseDetector(LicenseDetector[AskalonoLicenseData]):
         self,
         cli_config: dict[str, str],
         license_config: LicenseConfig,
-        detect_only: bool = False,
+        find_only: bool = False,
     ) -> None:
+        self._find_only = find_only
         path: str | None = None
-        if detect_only:
-            # If detect_only, just set path to something
+        if self.find_only:
+            # If find_only, just set path to something
             path = "askalono"
         else:
             if path := cli_config.get("askalono_path"):
@@ -202,9 +203,14 @@ class AskalonoLicenseDetector(LicenseDetector[AskalonoLicenseData]):
                 )
 
         self.path: str = path
+        self.cli_config = cli_config
         self.license_config = license_config
 
     def detect(self, directory: StrPath) -> AskalonoLicenseData:
+        if self.find_only:
+            raise ValueError(
+                "This cannot be called when class was initalized with find_only=True"
+            )
         gitignore = Path(directory, ".gitignore")
         if gitignore.is_file():
             _remove_line(gitignore, lambda line: line.startswith("vendor"))

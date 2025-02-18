@@ -15,7 +15,7 @@ import sys
 from collections.abc import Collection
 from itertools import chain
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, ClassVar, Generic, TypeVar
+from typing import TYPE_CHECKING, Any, ClassVar, Generic
 
 from go_vendor_tools.config.licenses import LicenseConfig, LicenseEntry
 from go_vendor_tools.exceptions import LicenseError
@@ -26,6 +26,11 @@ from go_vendor_tools.licensing import combine_licenses
 
 if TYPE_CHECKING:
     from _typeshed import StrPath
+
+    # Needed for PEP 696
+    from typing_extensions import Self, TypeVar
+else:
+    from typing import TypeVar
 
 EXTRA_LICENSE_FILE_REGEX = re.compile(
     r"^(AUTHORS|NOTICE|PATENTS).*$", flags=re.IGNORECASE
@@ -185,29 +190,72 @@ class LicenseData:
         return newdata
 
     @classmethod
-    def from_jsonable(cls: type[_LicenseDataT], data: dict[Any, Any]) -> _LicenseDataT:
+    def from_jsonable(cls, data: dict[Any, Any]) -> Self:
         return cls(**cls._from_jsonable_to_dict(data))
 
 
-_LicenseDataT = TypeVar("_LicenseDataT", bound=LicenseData)
+if TYPE_CHECKING:
+    _LicenseDataT_co = TypeVar(
+        "_LicenseDataT_co", bound=LicenseData, covariant=True, default=LicenseData
+    )
+else:
+    _LicenseDataT_co = TypeVar("_LicenseDataT_co", covariant=True, bound=LicenseData)
 
 
-class LicenseDetector(Generic[_LicenseDataT], metaclass=abc.ABCMeta):
+class LicenseDetector(Generic[_LicenseDataT_co], metaclass=abc.ABCMeta):
+    """
+    ABC for a license detector backend
+
+    Attributes:
+        NAME: Name of the license detector
+        PACKAGES_NEEDED:
+            Tuple of Fedora package names needed for the license detector
+        FIND_PACKAGES_NEEDED:
+            Tuple of packages needed for find_only mode (see __init__ docstring)
+        license_config:
+            LicenseConfig object passed to the constructor
+        find_only: Whether find_only mode is enabled
+    """
+
     NAME: ClassVar[str]
     PACKAGES_NEEDED: ClassVar[tuple[str, ...]] = ()
-    DETECT_PACKAGES_NEEDED: ClassVar[tuple[str, ...]] = ()
+    FIND_PACKAGES_NEEDED: ClassVar[tuple[str, ...]] = ()
+    cli_config: dict[str, str]
     license_config: LicenseConfig
+    _find_only: bool
 
     @abc.abstractmethod
     def __init__(
         self,
         cli_config: dict[str, str],
         license_config: LicenseConfig,
-        detect_only: bool = False,
-    ) -> None: ...
+        find_only: bool = False,
+    ) -> None:
+        """
+        Args:
+            cli_config:
+                String key-value pairs of --detector-config options that are
+                defined separately for each license detector implementation
+            license_config:
+                LicenseConfig object
+            find_only:
+                When find_only is enabled, only the dependencies for the
+                find_license_files method is checked.
+                This allows a lightweight mode without the dependencies for the
+                detect() method when only a list of valid license files is
+                required.
+        """
+
+    @property
+    def find_only(self):
+        return self._find_only
+
     @abc.abstractmethod
-    def detect(self, directory: StrPath) -> _LicenseDataT: ...
+    def detect(self, directory: StrPath) -> _LicenseDataT_co: ...
     def find_license_files(self, directory: StrPath) -> list[Path]:
+        """
+        Default implementation of find_license_files.
+        """
         reuse_roots = get_go_module_dirs(Path(directory), relative_paths=True)
         license_file_lists = find_license_files(
             directory,

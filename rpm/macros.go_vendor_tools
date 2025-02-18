@@ -11,6 +11,7 @@
     %{-d:--detector %{-d*}}
     %{-D:--detector-config %{-D*}}
     generate_buildrequires
+    %{?go_vendor_license_check_disable:--no-check}
 }
 
 # NOTE(gotmax23): This is parameterized on purpose. We may add options to have
@@ -37,11 +38,11 @@
 }
 
 # Ensure the license expression matches what the go_vendor_licenses tool expects
-%go_vendor_license_check(c:d:D:) %{shrink:
+%go_vendor_license_check(c:d:D:) %{!?go_vendor_license_check_disable:%{shrink:
     %{__go_vendor_license}
     %{-c:--config %{-c*}}
     %{-d:--detector %{-d*}}
     %{-D:--detector-config %{-D*}}
     report expression
     --verify %{expr: "%{*}" ? "%{shescape:%{*}}" : "%{shescape:%{LICENSE}}" }
-}
+}}

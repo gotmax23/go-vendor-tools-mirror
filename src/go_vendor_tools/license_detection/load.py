@@ -25,12 +25,13 @@ def get_detctors(
     cli_config: dict[str, str],
     license_config: LicenseConfig,
     detectors: dict[str, type[LicenseDetector]] = DETECTORS,
+    find_only: bool = False,
 ) -> tuple[dict[str, LicenseDetector], dict[str, LicenseDetectorNotAvailableError]]:
     found: dict[str, LicenseDetector] = {}
     errored: dict[str, LicenseDetectorNotAvailableError] = {}
     for name, class_ in detectors.items():
         try:
-            detector = class_(cli_config, license_config)
+            detector = class_(cli_config, license_config, find_only)
         except LicenseDetectorNotAvailableError as exc:  # noqa PERF203
             errored[name] = exc
         else:

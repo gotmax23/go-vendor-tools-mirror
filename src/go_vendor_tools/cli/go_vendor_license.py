@@ -78,11 +78,14 @@ def split_kv_options(kv_config: list[str]) -> dict[str, str]:
 
 
 def choose_license_detector(
-    choice: str | None, license_config: LicenseConfig, kv_config: list[str] | None
+    choice: str | None,
+    license_config: LicenseConfig,
+    kv_config: list[str] | None,
+    find_only: bool = False,
 ) -> LicenseDetector:
     kv_config = kv_config or []
     cli_config = split_kv_options(kv_config)
-    available, missing = get_detctors(cli_config, license_config)
+    available, missing = get_detctors(cli_config, license_config, find_only=find_only)
     if choice:
         if choice in missing:
             sys.exit(f"Failed to get detector {choice!r}: {missing[choice]}")
@@ -156,6 +159,7 @@ def parseargs(argv: list[str] | None = None) -> argparse.Namespace:
         dest="detector_config",
         action="append",
     )
+    parser.set_defaults(detector_find_only=False)
     subparsers = parser.add_subparsers(dest="subcommand")
     subparsers.required = True
     report_parser = subparsers.add_parser("report", help="Main subcommand")
@@ -229,10 +233,16 @@ def parseargs(argv: list[str] | None = None) -> argparse.Namespace:
     install_parser.add_argument(
         "--filelist", dest="install_filelist", type=Path, required=True
     )
+    install_parser.set_defaults(detector_find_only=True)
     # TODO(gotmax23): Should we support writing JSON from the install command
-    # or just reading it? _add_json_argument(install_parser)
-    generate_buildrequires_parser = subparsers.add_parser(  # noqa F841
-        "generate_buildrequires"
+    # or just reading it?
+    # _add_json_argument(install_parser)
+    generate_buildrequires_parser = subparsers.add_parser("generate_buildrequires")
+    generate_buildrequires_parser.add_argument(
+        "--no-check",
+        help="Whether to exclude dependencies for %%go_vendor_license_check",
+        action="store_true",
+        dest="detector_find_only",
     )
 
     if HAS_ARGCOMPLETE:
@@ -248,7 +258,10 @@ def parseargs(argv: list[str] | None = None) -> argparse.Namespace:
             args.detector_name = args.config["detector"]
     if args.subcommand in ("report", "install"):
         args.detector = choose_license_detector(
-            args.detector_name, args.config, args.detector_config
+            args.detector_name,
+            args.config,
+            args.detector_config,
+            args.detector_find_only,
         )
         # TODO(anyone): Replace the print if/when we implement more granular logging
         print("Using detector:", args.detector.NAME, file=sys.stderr)
@@ -619,6 +632,7 @@ def explicit_command(args: argparse.Namespace) -> None:
 
 def generate_buildrequires_command(args: argparse.Namespace) -> None:
     detector: str = args.detector_name
+    find_only: bool = args.detector_find_only
     del args
 
     if not detector:
@@ -629,7 +643,9 @@ def generate_buildrequires_command(args: argparse.Namespace) -> None:
     elif detector not in DETECTORS:
         sys.exit(f"{detector!r} does not exist! Choices: {tuple(DETECTORS)}")
     detector_cls = DETECTORS[detector]
-    for requirement in detector_cls.PACKAGES_NEEDED:
+    for requirement in (
+        detector_cls.FIND_PACKAGES_NEEDED if find_only else detector_cls.PACKAGES_NEEDED
+    ):
         print(requirement)
 
 
