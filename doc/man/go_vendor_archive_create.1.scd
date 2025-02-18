@@ -26,7 +26,8 @@ _PATH_
 	options
 *-O* _OUTPUT_, *--output* _OUTPUT_
 	Output path for the vendored tarball.
-	When _PATH_ is a specfile, the name of *SOURCE1* will be used as the
+	When _PATH_ is a specfile (and python3-specfile is installed),
+	the name of *SOURCE1* will be used as the
 	output if one is not explicitly specified.
 	Otherwise, *./vendor.tar.bz2* is the default.
 *-p* / *--use-module-proxy*, *--no-use-module-proxy*

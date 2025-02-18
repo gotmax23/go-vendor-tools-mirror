@@ -10,11 +10,18 @@ from __future__ import annotations
 from pathlib import Path
 from typing import TYPE_CHECKING, Generic, Protocol, TypeVar
 
-import specfile
-import specfile.sections
-import specfile.sources
-import specfile.tags
-from specfile.exceptions import SpecfileException
+# specfile is opened liked this so downstreams can remove the dependency on
+# specfile and use the other functionality if they so choose
+try:
+    import specfile
+    import specfile.sections
+    import specfile.sources
+    import specfile.tags
+    from specfile.exceptions import SpecfileException
+except ImportError:
+    HAS_SPECFILE = False
+else:
+    HAS_SPECFILE = True
 
 from go_vendor_tools.exceptions import VendorToolsError
 
@@ -64,6 +71,8 @@ class VendorSpecfile:
                 - "NAME" for "%package -n NAME"
                 - None for the main package
         """
+        if not HAS_SPECFILE:
+            raise ImportError("This functionality requires python3-specfile!")
         try:
             self._spec = specfile.Specfile(spec_path, autosave=True)
         except SpecfileException as exc:

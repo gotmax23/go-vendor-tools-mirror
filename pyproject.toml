@@ -30,7 +30,6 @@ classifiers = [
 ]
 dependencies = [
     "license_expression",
-    "specfile",
     "tomli; python_version<'3.11'",
     "zstarfile",
 ]
@@ -44,6 +43,7 @@ go_vendor_license = "go_vendor_tools.cli.go_vendor_license:main"
 # User-facing
 all = [
     "argcomplete",
+    "specfile",
     "tomlkit",
 ]
 # Dev
