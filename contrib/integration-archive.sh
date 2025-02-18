@@ -7,7 +7,7 @@
 set -euo pipefail
 
 _path="$(command -v go_vendor_archive 2>/dev/null || :)"
-_default_path="pipx run --spec ../../../ go_vendor_archive"
+_default_path="pipx run --spec ../../../[specfile] go_vendor_archive"
 GO_VENDOR_ARCHIVE="${GO_VENDOR_ARCHIVE:-${_path:-${_default_path}}}"
 IFS=" " read -r -a command <<< "${GO_VENDOR_ARCHIVE}"
 command+=("create")

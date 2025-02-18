@@ -9,7 +9,7 @@ set -euo pipefail
 verify_license=$(readlink -f "../../../contrib/verify-license.sh")
 here="$(pwd)"
 _path="$(command -v go_vendor_license 2>/dev/null || :)"
-_default_path="pipx run --spec ../../../[scancode] go_vendor_license"
+_default_path="pipx run --spec '../../../[scancode,specfile]' go_vendor_license"
 GO_VENDOR_LICENSE="${GO_VENDOR_LICENSE:-${_path:-${_default_path}}}"
 IFS=" " read -r -a command <<< "${GO_VENDOR_LICENSE}"
 temp="$(mktemp -d)"
