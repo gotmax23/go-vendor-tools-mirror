@@ -13,8 +13,9 @@ from textwrap import dedent
 import pytest
 from pytest_mock import MockerFixture
 
-from go_vendor_tools.cli import go_vendor_license
+from go_vendor_tools.cli import go_vendor_license, utils
 from go_vendor_tools.config.base import load_config
+from go_vendor_tools.exceptions import MissingDependencyError
 from go_vendor_tools.license_detection.base import (
     LicenseData,
     LicenseDetector,
@@ -128,18 +129,12 @@ def test_detect_nothing(tmp_path: Path, detector: type[LicenseDetector]) -> None
 
 
 def test_need_tomlkit(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr(go_vendor_license, "HAS_TOMLKIT", False)
-    go_vendor_license.need_tomlkit.cache_clear()
-    raise_decorator = partial(
-        pytest.raises,
-        SystemExit,
+    monkeypatch.setattr(utils, "HAS_TOMLKIT", False)
+    with pytest.raises(
+        MissingDependencyError,
         match="tomlkit is required for this action. Please install it!",
-    )
-    with raise_decorator():
+    ):
         go_vendor_license.need_tomlkit()
-    with raise_decorator():
-        go_vendor_license.need_tomlkit()
-    go_vendor_license.need_tomlkit.cache_clear()
 
 
 def test_choose_license_detector_error_1(monkeypatch: pytest.MonkeyPatch) -> None:
