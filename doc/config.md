@@ -82,9 +82,45 @@ Whether to use the Google Go module proxy to download modules.
 Downloading modules manually is quite slow, so—unless you have privacy
 concerns—using the module proxy is recommended.
 
-#### `pre_commands` and `post_commands` (list of list of strings)
+#### `pre_commands` (list of list of strings)
 
-TODO
+Commands to run in the temporary source tree used to create the archive before
+downloading the vendored dependencies.
+
+For example, to remove unneeded files from the source tree so its dependencies are
+not included in the vendor archive:
+
+``` toml
+[archive]
+pre_commands = [
+    ["rm", "-rf", "hacking"],
+    ["echo", "Another command to show that multiple commands can be run here"],
+]
+```
+
+#### `post_commands` (list of list of strings)
+
+Commands to run after downloading the vendored dependencies.
+Changes made to the `vendor` directory will be reflected in the final vendor
+archive.
+
+For example, this can be used to add missing license files to the archive.
+`go_vendor_license` checks to make sure that each Go module has a license file,
+but sometimes projects may include license files in subdirectories.
+You can use `post_commands` to copy the license file from the subdirectory into
+the parent directory where `go_vendor_license` expects to find this file:
+
+``` toml
+[archive]
+post_commands = [
+    [
+        "cp", "-p",
+        "vendor/github.com/golangci/gofmt/goimports/LICENSE",
+        "vendor/github.com/golangci/gofmt/LICENSE"
+    ],
+    ["echo", "Another command to show that multiple commands can be run here"],
+]
+```
 
 #### `tidy` (boolean)
 
