@@ -238,7 +238,10 @@ def parseargs(argv: list[str] | None = None) -> argparse.Namespace:
     # TODO(gotmax23): Should we support writing JSON from the install command
     # or just reading it?
     # _add_json_argument(install_parser)
-    generate_buildrequires_parser = subparsers.add_parser("generate_buildrequires")
+    generate_buildrequires_parser = subparsers.add_parser(
+        "generate_buildrequires",
+        help="Internal command for %%go_vendor_license_buildrequires",
+    )
     generate_buildrequires_parser.add_argument(
         "--no-check",
         help="Whether to exclude dependencies for %%go_vendor_license_check",
