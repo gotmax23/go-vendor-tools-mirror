@@ -401,6 +401,7 @@ def get_report_write_config_data(
     loaded = load_tomlkit_if_exists(config_path)
     write_config_data = loaded.setdefault("licensing", {})
     write_config_data["detector"] = detector.NAME
+    write_config_data["detector_config"] = detector.detector_config
     return new_config_path, loaded
 
 
