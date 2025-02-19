@@ -494,6 +494,11 @@ def report_command(args: argparse.Namespace) -> None:
             if ignore_unlicensed_mods
             else get_unlicensed_mods(directory, license_data.license_file_paths)
         )
+        failed = bool(
+            (license_data.undetected_licenses and not ignore_undetected)
+            or (unlicensed_mods and not ignore_unlicensed_mods)
+            or license_data.unmatched_extra_licenses
+        )
         if prompt:
             license_data = write_and_prompt_report_licenses(license_data, loaded)
         print_licenses(
@@ -515,18 +520,17 @@ def report_command(args: argparse.Namespace) -> None:
                 spec.license, exp := license_data.license_expression
             )
         ):
-            spec.license = str(exp)
-        if verify and not compare_licenses(license_data.license_expression, verify):
-            sys.exit("Failed to verify license. Expected ^")
+            if failed:
+                print(
+                    "Did not update specfile license tag due to above detector errors."
+                )
+            else:
+                spec.license = str(exp)
         if write_config:
             tomlkit_dump(loaded, cast(Path, config_path))
-    sys.exit(
-        bool(
-            (license_data.undetected_licenses and not ignore_undetected)
-            or (unlicensed_mods and not ignore_unlicensed_mods)
-            or license_data.unmatched_extra_licenses
-        )
-    )
+    if verify and not compare_licenses(license_data.license_expression, verify):
+        raise VendorToolsError("Failed to verify license. Expected ^")
+    sys.exit(failed)
 
 
 def _get_intermediate_directories(
