@@ -101,4 +101,6 @@ def compare_licenses(
     license2: str | license_expression.LicenseExpression | str,
     /,
 ) -> bool:
-    return simplify_license(license1) == simplify_license(license2)
+    return simplify_license(license1, validate=False) == simplify_license(
+        license2, validate=False
+    )
