@@ -45,6 +45,28 @@ available license detector from first to last in the above list.
 `go_vendor_license` will error if neither `trivy`, `askalono`, nor
 `scancode-toolkit` is installed.
 
+#### `detector_config` (mapping of string to string)
+
+> **CLI flag**: `--detector-config`
+
+Key-value pairs that are passed to the detector backend.
+
+##### askalono
+
+- `multiple` — run `askalono detect` using the `--multiple` flag to allow
+  license files that contain more than one license text within it.
+  It is recommended to enable this option, but it is disabled by default for
+  backwards compatibility purposes.
+
+    ``` toml
+    [licensing.detector_config]
+    multiple = "true"
+    ```
+
+    ``` bash
+    go_vendor_archive --detector-config multiple=true
+    ```
+
 #### `licenses` (list of license entry tables)
 
 License detectors are not perfect.

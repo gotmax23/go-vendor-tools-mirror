@@ -185,7 +185,7 @@ class AskalonoLicenseDetector(LicenseDetector[AskalonoLicenseData]):
 
     def __init__(
         self,
-        cli_config: dict[str, str],
+        detector_config: dict[str, str],
         license_config: LicenseConfig,
         find_only: bool = False,
     ) -> None:
@@ -195,7 +195,7 @@ class AskalonoLicenseDetector(LicenseDetector[AskalonoLicenseData]):
             # If find_only, just set path to something
             path = "askalono"
         else:
-            if path := cli_config.get("askalono_path"):
+            if path := detector_config.get("askalono_path"):
                 if not Path(path).exists():
                     raise LicenseDetectorNotAvailableError(f"{path!r} does not exist!")
             else:
@@ -206,7 +206,7 @@ class AskalonoLicenseDetector(LicenseDetector[AskalonoLicenseData]):
                 )
 
         self.path: str = path
-        self.cli_config = cli_config
+        self.detector_config = detector_config
         self.license_config = license_config
 
     def detect(self, directory: StrPath) -> AskalonoLicenseData:
@@ -228,7 +228,7 @@ class AskalonoLicenseDetector(LicenseDetector[AskalonoLicenseData]):
         askalono_license_data = _get_askalono_data(
             directory,
             license_file_lists["license"],
-            str_to_bool(self.cli_config.get("multiple"), CONFIG_MULTIPLE_DEFAULT),
+            str_to_bool(self.detector_config.get("multiple"), CONFIG_MULTIPLE_DEFAULT),
         )
         filtered_license_data, undetected = _filter_license_data(
             askalono_license_data, Path(directory)

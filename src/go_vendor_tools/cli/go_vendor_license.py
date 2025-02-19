@@ -84,7 +84,7 @@ def choose_license_detector(
     find_only: bool = False,
 ) -> LicenseDetector:
     kv_config = kv_config or []
-    cli_config = split_kv_options(kv_config)
+    cli_config = license_config["detector_config"] | split_kv_options(kv_config)
     available, missing = get_detctors(cli_config, license_config, find_only=find_only)
     if choice:
         if choice in missing:
@@ -155,7 +155,8 @@ def parseargs(argv: list[str] | None = None) -> argparse.Namespace:
         "--dc",
         "--detector-config",
         help="KEY=VALUE pairs to pass to the license detector."
-        " Can be passed multiple times",
+        " Can be passed multiple times."
+        " Overrides settings defined in licensing.detector_config.",
         dest="detector_config",
         action="append",
     )

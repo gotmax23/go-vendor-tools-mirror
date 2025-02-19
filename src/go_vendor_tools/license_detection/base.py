@@ -215,30 +215,34 @@ class LicenseDetector(Generic[_LicenseDataT_co], metaclass=abc.ABCMeta):
             Tuple of packages needed for find_only mode (see __init__ docstring)
         license_config:
             LicenseConfig object passed to the constructor
+        detector_config:
+            Options passeed to constructor
         find_only: Whether find_only mode is enabled
     """
 
     NAME: ClassVar[str]
     PACKAGES_NEEDED: ClassVar[tuple[str, ...]] = ()
     FIND_PACKAGES_NEEDED: ClassVar[tuple[str, ...]] = ()
-    cli_config: dict[str, str]
+    detector_config: dict[str, str]
     license_config: LicenseConfig
     _find_only: bool
 
     @abc.abstractmethod
     def __init__(
         self,
-        cli_config: dict[str, str],
+        detector_config: dict[str, str],
         license_config: LicenseConfig,
         find_only: bool = False,
     ) -> None:
         """
         Args:
-            cli_config:
+            detector_config:
                 String key-value pairs of --detector-config options that are
                 defined separately for each license detector implementation
             license_config:
-                LicenseConfig object
+                LicenseConfig object.
+                The detector_config option is ignored in favor of the
+                detector_config argument.
             find_only:
                 When find_only is enabled, only the dependencies for the
                 find_license_files method is checked.

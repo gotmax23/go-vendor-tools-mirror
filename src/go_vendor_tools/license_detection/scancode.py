@@ -104,7 +104,7 @@ class ScancodeLicenseDetector(LicenseDetector[ScancodeLicenseData]):
 
     def __init__(
         self,
-        cli_config: dict[str, str],
+        detector_config: dict[str, str],
         license_config: LicenseConfig,
         find_only: bool = False,
     ) -> None:
@@ -113,7 +113,7 @@ class ScancodeLicenseDetector(LicenseDetector[ScancodeLicenseData]):
             raise LicenseDetectorNotAvailableError(
                 "The scancode-toolkit library must be installed!"
             )
-        self.cli_config = cli_config
+        self.detector_config = detector_config
         self.license_config = license_config
 
     def detect(self, directory: StrPath):
