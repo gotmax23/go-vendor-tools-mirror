@@ -236,6 +236,7 @@ def test_print_licenses_all(capsys: pytest.CaptureFixture) -> None:
             Path("vendor/custom/LICENSE"),
         ],
         extra_license_files=[],
+        detector_name="",
     )
     go_vendor_license.print_licenses(
         results=license_data,

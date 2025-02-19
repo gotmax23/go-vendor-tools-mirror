@@ -13,6 +13,7 @@
     "/placeholder/LICENSE"
   ],
   "extra_license_files": [],
+  "detector_name": "askalono",
   "askalono_license_data": [
     {
       "path": "LICENSE",

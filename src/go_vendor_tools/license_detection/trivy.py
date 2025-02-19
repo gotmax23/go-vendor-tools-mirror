@@ -182,6 +182,7 @@ class TrivyLicenseDetector(LicenseDetector[TrivyLicenseData]):
             extra_license_files=[
                 Path(directory, file) for file in license_file_lists["notice"]
             ],
+            detector_name=self.NAME,
         )
 
     def find_license_files(self, directory: StrPath) -> list[Path]:

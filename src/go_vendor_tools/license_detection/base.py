@@ -136,6 +136,7 @@ class LicenseData:
     license_expression: str | None = dataclasses.field(init=False)
     license_file_paths: Collection[Path] = dataclasses.field(init=False)
     extra_license_files: list[Path]
+    detector_name: str
     _LIST_PATH_FIELDS: ClassVar = (
         "undetected_licenses",
         "unmatched_extra_licenses",

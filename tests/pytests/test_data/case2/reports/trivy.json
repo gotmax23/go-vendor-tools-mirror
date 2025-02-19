@@ -13,6 +13,7 @@
     "/placeholder/LICENSE"
   ],
   "extra_license_files": [],
+  "detector_name": "trivy",
   "trivy_license_data": {
     "Target": "Loose File License(s)",
     "Class": "license-file",

@@ -264,4 +264,5 @@ class AskalonoLicenseDetector(LicenseDetector[AskalonoLicenseData]):
             extra_license_files=[
                 Path(directory, file) for file in license_file_lists["notice"]
             ],
+            detector_name=self.NAME,
         )
