@@ -141,7 +141,7 @@ class ScancodeLicenseDetector(LicenseDetector[ScancodeLicenseData]):
         return ScancodeLicenseData(
             directory=directory,
             license_map=license_map,
-            undetected_licenses=[],
+            undetected_licenses=set(),
             unmatched_extra_licenses=manual_unmatched,
             scancode_license_data=data,
             # FIXME(gotmax): Change the design of LicenseData to not require full paths

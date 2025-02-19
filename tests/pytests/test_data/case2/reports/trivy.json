@@ -1,0 +1,31 @@
+{
+  "directory": "/placeholder",
+  "license_map": {
+    "LICENSE": "ISC"
+  },
+  "undetected_licenses": [],
+  "unmatched_extra_licenses": [],
+  "license_set": [
+    "ISC"
+  ],
+  "license_expression": "ISC",
+  "license_file_paths": [
+    "/placeholder/LICENSE"
+  ],
+  "extra_license_files": [],
+  "trivy_license_data": {
+    "Target": "Loose File License(s)",
+    "Class": "license-file",
+    "Licenses": [
+      {
+        "Severity": "LOW",
+        "Category": "notice",
+        "PkgName": "",
+        "FilePath": "LICENSE",
+        "Name": "ISC",
+        "Confidence": 1,
+        "Link": "https://spdx.org/licenses/ISC.html"
+      }
+    ]
+  }
+}

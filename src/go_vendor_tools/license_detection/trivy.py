@@ -88,16 +88,16 @@ def _license_data_to_trivy_license_dict(data: dict[str, Any]) -> TrivyLicenseDic
 
 def _trivy_license_dict_to_license_map(
     data: TrivyLicenseDict,
-) -> tuple[dict[Path, str], list[Path]]:
+) -> tuple[dict[Path, str], set[Path]]:
     license_map: dict[Path, str] = {}
-    invalid: list[Path] = []
+    invalid: set[Path] = set()
     for result in data.get("Licenses", []):
         path = Path(result["FilePath"])
         name = result["Name"]
         # Sometimes trivy returns names that aren't valid SPDX expressions.
         # Treat them as undetected license files in that case.
         if not validate_license(name):
-            invalid.append(path)
+            invalid.add(path)
         # License files can have multiple matches in trivy
         if path in license_map:
             license_map[path] = str(

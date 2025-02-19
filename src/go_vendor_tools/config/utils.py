@@ -13,7 +13,10 @@ FALSY_STRINGS = frozenset(("", "0", "false"))
 
 
 def get_envvar_boolean(variable: str, default: bool) -> bool:
-    gotten = os.environ.get(variable)
-    if gotten is None:
+    return str_to_bool(os.environ.get(variable), default)
+
+
+def str_to_bool(value: str | None, default: bool) -> bool:
+    if value is None:
         return default
-    return gotten.lower() not in FALSY_STRINGS
+    return value.lower() not in FALSY_STRINGS

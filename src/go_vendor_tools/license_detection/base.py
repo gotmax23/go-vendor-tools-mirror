@@ -167,7 +167,7 @@ class LicenseData:
             elif key in self._LIST_PATH_FIELDS:
                 data[key] = list(map(str, value))
             elif key == "license_set":
-                data[key] = list(value)
+                data[key] = sorted(value)
             elif key == "license_expression":
                 data[key] = str(value)
         return data
@@ -184,7 +184,8 @@ class LicenseData:
             elif key == "license_map":
                 newdata[key] = {Path(key1): value1 for key1, value1 in value.items()}
             elif key in cls._LIST_PATH_FIELDS:
-                newdata[key] = tuple(map(Path, value))
+                func = set if key == "undetected_licenses" else sorted
+                newdata[key] = func(map(Path, value))
             else:
                 newdata[key] = value
         return newdata

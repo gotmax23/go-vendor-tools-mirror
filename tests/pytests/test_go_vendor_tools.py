@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import json
 import sys
 from io import StringIO
 from pathlib import Path
@@ -15,6 +16,7 @@ from pytest_mock import MockerFixture
 from go_vendor_tools.cli import go_vendor_license, utils
 from go_vendor_tools.config.base import load_config
 from go_vendor_tools.exceptions import MissingDependencyError
+from go_vendor_tools.license_detection.askalono import AskalonoLicenseDetector
 from go_vendor_tools.license_detection.base import (
     LicenseData,
     LicenseDetector,
@@ -96,17 +98,50 @@ def test_get_extra_licenses_error(test_data: Path) -> None:
     assert missing == [Path("LICENSE.MIT")]
 
 
+@pytest.mark.parametrize(
+    "case_name, allowed_detectors, cli_config",
+    [
+        pytest.param("case2", None, {}, id="case2"),
+        pytest.param("case3", [AskalonoLicenseDetector], {"multiple": "1"}, id="case3"),
+    ],
+)
 def test_load_dump_license_data(
-    test_data: Path, detector: type[LicenseDetector]
+    test_data: Path,
+    detector: type[LicenseDetector],
+    case_name: str,
+    allowed_detectors: list[type[LicenseDetector]] | None,
+    cli_config: dict[str, str],
+    mocker: MockerFixture,
 ) -> None:
-    case_dir = test_data / "case2"
+    if allowed_detectors and detector not in allowed_detectors:
+        pytest.skip(f"case3 does use {detector}")
+
+    # Needed for case3
+    mocker.patch("go_vendor_tools.gomod.get_go_module_names", return_value={"abc": ""})
+
+    case_dir = test_data / case_name
+    expected_report = case_dir / "reports" / f"{detector.NAME}.json"
     licenses_dir = case_dir / "licenses"
     config = load_config(None)
-    detector_obj = detector({}, config["licensing"])
+    detector_obj = detector(cli_config, config["licensing"])
     data: LicenseData = detector_obj.detect(licenses_dir)
+
+    placeholder_path = Path("/placeholder")
+    data.license_file_paths = tuple(
+        placeholder_path / path.relative_to(data.directory)
+        for path in data.license_file_paths
+    )
+    data.directory = placeholder_path
+
     jsonable = data.to_jsonable()
     new_data = type(data).from_jsonable(jsonable)
     assert new_data.to_jsonable() == jsonable
+
+    # (expected_report).write_text(json.dumps(data.to_jsonable(), indent=2))
+    with (expected_report).open() as fp:
+        gotten_json = json.load(fp)
+    assert gotten_json == jsonable
+    assert type(data).from_jsonable(gotten_json) == data
 
 
 def test_detect_nothing(tmp_path: Path, detector: type[LicenseDetector]) -> None:

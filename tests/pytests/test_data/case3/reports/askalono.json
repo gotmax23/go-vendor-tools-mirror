@@ -1,0 +1,59 @@
+{
+  "directory": "/placeholder",
+  "license_map": {
+    "LICENSE.combined": "GPL-2.0-only AND MIT",
+    "LICENSES/BSD-3-Clause.txt": "BSD-3-Clause",
+    "vendor/abc/LICENSES/ISC.txt": "ISC"
+  },
+  "undetected_licenses": [],
+  "unmatched_extra_licenses": [],
+  "license_set": [
+    "BSD-3-Clause",
+    "GPL-2.0-only AND MIT",
+    "ISC"
+  ],
+  "license_expression": "BSD-3-Clause AND GPL-2.0-only AND ISC AND MIT",
+  "license_file_paths": [
+    "/placeholder/LICENSE.combined",
+    "/placeholder/LICENSES/BSD-3-Clause.txt",
+    "/placeholder/vendor/abc/LICENSES/ISC.txt"
+  ],
+  "extra_license_files": [],
+  "askalono_license_data": [
+    {
+      "path": "LICENSE.combined",
+      "result": {
+        "score": 0.0,
+        "license": null,
+        "containing": [
+          {
+            "score": 1.0,
+            "license": {
+              "name": "MIT",
+              "kind": "original",
+              "aliases": []
+            },
+            "line_range": [
+              4,
+              12
+            ]
+          },
+          {
+            "score": 0.9972414,
+            "license": {
+              "name": "GPL-2.0-only",
+              "kind": "original",
+              "aliases": [
+                "GPL-2.0-or-later"
+              ]
+            },
+            "line_range": [
+              13,
+              128
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

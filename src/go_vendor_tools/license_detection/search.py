@@ -126,7 +126,12 @@ def find_license_files(
         rootpath = os.path.relpath(root, directory)
         rootbasename = os.path.basename(root)
         rootdirname = os.path.dirname(rootpath)
-        in_reuse_dir = rootbasename == "LICENSES" and rootdirname in reuse_roots
+        in_reuse_dir = rootbasename == "LICENSES" and (
+            # "" if rootdirname is the root directory, which we always want
+            # to consider as a reuse directory
+            rootdirname == ""
+            or rootdirname in reuse_roots
+        )
         if in_reuse_dir:
             # If it's a REUSE directory, we don't need to recurse any further
             dirnames.clear()

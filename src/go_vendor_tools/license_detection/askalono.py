@@ -17,6 +17,7 @@ from typing import TYPE_CHECKING, TypedDict, cast
 
 from license_expression import ExpressionError
 
+from go_vendor_tools.config.utils import str_to_bool
 from go_vendor_tools.exceptions import LicenseError
 
 from ..config.licenses import LicenseConfig
@@ -35,6 +36,9 @@ from .search import find_license_files
 if TYPE_CHECKING:
     from _typeshed import StrPath
     from typing_extensions import NotRequired
+
+# Whether to pass --multiple to askalono identify
+CONFIG_MULTIPLE_DEFAULT = False
 
 
 class AskalonoLicenseEntry(TypedDict):
@@ -81,20 +85,22 @@ def _filter_path(data: AskalonoLicenseDict) -> AskalonoLicenseDict:
 
 
 def _get_askalono_data(
-    directory: StrPath, relpaths: Collection[StrPath]
+    directory: StrPath, relpaths: Collection[StrPath], multiple: bool = False
 ) -> list[AskalonoLicenseDict]:
     stdin = "\n".join(map(str, relpaths))
+    cmd = [
+        "askalono",
+        "--format",
+        "json",
+        "identify",
+        "--batch",
+    ]
+    # --multiple seems to cause some licenses to not be detected at all, so
+    # gate this behind a flag
+    if multiple:
+        cmd.append("--multiple")
     licenses_json = subprocess.run(
-        (
-            "askalono",
-            "--format",
-            "json",
-            "identify",
-            # TODO(gotmax23): We might want to gate this behind a flag.
-            # --multiple seems to cause some licenses to nbot be detected at all.
-            # "--multiple",
-            "--batch",
-        ),
+        cmd,
         input=stdin,
         check=True,
         capture_output=True,
@@ -142,13 +148,10 @@ def _filter_license_data(
     results: list[AskalonoLicenseDict] = []
 
     for licensed in data:
-        # TODO(gotmax23): Get rid of this if statement now that we manually crawl for
-        # licenses
-        if "/PATENTS" not in licensed["path"] and "/NOTICE" not in licensed["path"]:
-            if _get_license_name(licensed, False):
-                results.append(licensed)
-            else:
-                undetected_licenses.add(_get_relative(directory, licensed["path"]))
+        if _get_license_name(licensed, False):
+            results.append(licensed)
+        else:
+            undetected_licenses.add(_get_relative(directory, licensed["path"]))
     return results, undetected_licenses
 
 
@@ -223,7 +226,9 @@ class AskalonoLicenseDetector(LicenseDetector[AskalonoLicenseData]):
             reuse_roots=reuse_roots,
         )
         askalono_license_data = _get_askalono_data(
-            directory, license_file_lists["license"]
+            directory,
+            license_file_lists["license"],
+            str_to_bool(self.cli_config.get("multiple"), CONFIG_MULTIPLE_DEFAULT),
         )
         filtered_license_data, undetected = _filter_license_data(
             askalono_license_data, Path(directory)
