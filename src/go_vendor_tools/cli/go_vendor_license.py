@@ -57,6 +57,8 @@ COLOR: bool | None = None
 RED = "\033[31m"  # ]
 CLEAR = "\033[0m"  # ]
 
+MANUALLY_DETECTING_LICENSES_URL = "https://fedora.gitlab.io/sigs/go/go-vendor-tools/scenarios/#manually-detecting-licenses"
+
 
 def red(__msg: str, /, *, file: IO[str] | None = None) -> None:
     file = cast(IO[str], sys.stdout if file is None else file)
@@ -107,12 +109,10 @@ def _add_json_argument(parser: argparse.ArgumentParser, **kwargs) -> None:
     parser.add_argument("--write-json", **kwargs)
 
 
-def parseargs(argv: list[str] | None = None) -> argparse.Namespace:
-    """
-    Parse arguments and return an `argparse.Namespace`
-    """
+def get_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="Handle licenses for vendored go projects"
+        description="Handle licenses for vendored go projects",
+        prog="go_vendor_license",
     )
     parser.add_argument("--version", action="version", version=__version__)
     parser.add_argument("-c", "--config", type=Path, dest="config_path")
@@ -136,11 +136,13 @@ def parseargs(argv: list[str] | None = None) -> argparse.Namespace:
         """
         ),
     )
-    parser.add_argument("--use-archive", action="store_true")
+    parser.add_argument("--use-archive", action="store_true", help="See --path.")
     parser.add_argument(
         "--color",
         action=argparse.BooleanOptionalAction,
         default=False if os.environ.get("NO_COLOR") else None,
+        help="Whether to use colored output."
+        " Defaults to True if output is a TTY and $NO_COLOR is not defined.",
     )
     parser.add_argument(
         "-d",
@@ -154,7 +156,7 @@ def parseargs(argv: list[str] | None = None) -> argparse.Namespace:
         "-D",
         "--dc",
         "--detector-config",
-        help="KEY=VALUE pairs to pass to the license detector."
+        help="`KEY=VALUE` pairs to pass to the license detector."
         " Can be passed multiple times."
         " Overrides settings defined in licensing.detector_config.",
         dest="detector_config",
@@ -163,7 +165,12 @@ def parseargs(argv: list[str] | None = None) -> argparse.Namespace:
     parser.set_defaults(detector_find_only=False)
     subparsers = parser.add_subparsers(dest="subcommand")
     subparsers.required = True
-    report_parser = subparsers.add_parser("report", help="Main subcommand")
+    report_parser = subparsers.add_parser(
+        "report",
+        help="Main subcommand",
+        description="This command detects licenses within the project tree."
+        " It creates a license summary and a normalized SPDX expression",
+    )
     report_parser.add_argument(
         "-i",
         "--ignore-undetected",
@@ -181,8 +188,9 @@ def parseargs(argv: list[str] | None = None) -> argparse.Namespace:
         help="""
         Which subpackage to use to find license tag.
         Name of a subpackage.
-        - "-NAME" for "%%package NAME";
-        - "NAME" for "%%package -n NAME";
+
+        - `-NAME` for `%%package NAME`;
+        - `NAME` for `%%package -n NAME`;
         - Omit this args to use the main package definition
         """,
     )
@@ -210,18 +218,32 @@ def parseargs(argv: list[str] | None = None) -> argparse.Namespace:
         type=str,
         choices=("all", "expression", "list"),
         default="all",
+        help="""
+        - `all` — print out a breakdown of all license files and their detected
+          license expression and then a final, cummluative expression.
+        - `expression` — print only the cummulative SPDX expression
+        - `list` — print the file-by-file breakdown only
+        """,
     )
     _add_json_argument(report_parser)
     report_parser.add_argument(
         "--write-config", help="Write a base config.", action="store_true"
     )
+    help_msg = "Add manual license entry to a config file"
     explict_parser = subparsers.add_parser(
-        "explicit", help="Add manual license entry to a config file"
+        "explicit",
+        help=help_msg,
+        description=f"{help_msg}. See {MANUALLY_DETECTING_LICENSES_URL} for usage.",
     )
     explict_parser.add_argument(
-        "-f", "--file", dest="license_file", required=True, type=Path
+        "-f",
+        "--file",
+        dest="license_file",
+        required=True,
+        type=Path,
+        help="Path to file (relative to CWD) to add to license config",
     )
-    explict_parser.add_argument("license_expression")
+    explict_parser.add_argument("license_expression", help="SPDX license expression")
     install_parser = subparsers.add_parser(
         "install", description=f"INTERNAL: {install_command.__doc__}"
     )
@@ -240,7 +262,7 @@ def parseargs(argv: list[str] | None = None) -> argparse.Namespace:
     # _add_json_argument(install_parser)
     generate_buildrequires_parser = subparsers.add_parser(
         "generate_buildrequires",
-        help="Internal command for %%go_vendor_license_buildrequires",
+        description="Internal command for %%go_vendor_license_buildrequires",
     )
     generate_buildrequires_parser.add_argument(
         "--no-check",
@@ -248,7 +270,14 @@ def parseargs(argv: list[str] | None = None) -> argparse.Namespace:
         action="store_true",
         dest="detector_find_only",
     )
+    return parser
 
+
+def parseargs(argv: list[str] | None = None) -> argparse.Namespace:
+    """
+    Parse arguments and return an `argparse.Namespace`
+    """
+    parser = get_parser()
     if HAS_ARGCOMPLETE:
         argcomplete.autocomplete(parser)
     args = parser.parse_args(argv)

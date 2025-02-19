@@ -6,7 +6,8 @@ go_vendor_license(1)
 
 # GLOBAL OPTIONS
 
-See *go_vendor_license --help*.
+See *go_vendor_license --help* or the rendered help page at
+<https://fedora.gitlab.io//sigs/go/go-vendor-tools/man/go_vendor_license/>.
 
 # SUBCOMMANDS
 

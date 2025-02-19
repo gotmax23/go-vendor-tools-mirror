@@ -65,6 +65,9 @@ typing = [
     "typing_extensions",
     # For checking noxfile.py
     "nox",
+    # For docs typing
+    "mkdocs-gen-files",
+    "releaserr",
 ]
 test = [
     "go-vendor-tools[all]",

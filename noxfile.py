@@ -24,7 +24,13 @@ ALLOW_EDITABLE = os.environ.get("ALLOW_EDITABLE", str(not IN_CI)).lower() in (
 PROJECT = "go_vendor_tools"
 SPECFILE = "go-vendor-tools.spec"
 LINT_SESSIONS = ("formatters", "codeqa", "typing")
-LINT_FILES = (f"src/{PROJECT}", "tests/pytests", "noxfile.py", "contrib")
+LINT_FILES = (
+    f"src/{PROJECT}",
+    "tests/pytests",
+    "noxfile.py",
+    "contrib",
+    *iglob("doc/man/*.py"),
+)
 INTEGRATION_PACKAGES = ("autorestic", "fzf")
 HAS_SCANCODE = os.environ.get("NO_SCANCODE") != "true"
 COVERAGE_FAIL_UNDER = os.environ.get("COVERAGE_FAIL_UNDER") or (
@@ -294,5 +300,5 @@ def releaserr(session: nox.Session):
 
 @nox.session
 def mkdocs(session: nox.Session) -> None:
-    install(session, "-r", "docs-requirements.txt")
+    install(session, "-e", ".", "-r", "docs-requirements.txt")
     session.run("mkdocs", *(session.posargs if session.posargs else ["build"]))
