@@ -23,7 +23,7 @@ from go_vendor_tools.license_detection.base import (
     LicenseDetectorNotAvailableError,
     get_manual_license_entries,
 )
-from go_vendor_tools.license_detection.load import get_detctors
+from go_vendor_tools.license_detection.load import get_detectors as gd
 
 if sys.version_info >= (3, 11):
     import tomllib
@@ -40,7 +40,7 @@ CONFIG1_BROKEN = load_config(TEST_DATA / "case1" / "config-broken.toml")
 def get_available_detectors() -> list[type[LicenseDetector]]:
     # TODO(anyone): Allow enforcing "strict mode" if any detectors are missing
     # This can be a env var and then enabled in the noxfile.
-    available, missing = get_detctors({}, CONFIG1["licensing"])
+    available, missing = gd({}, CONFIG1["licensing"])
     # HACK: We initialize the classes using a test config to check if they are
     # available and then return the base class so that it can be reinitialized
     return [type(d) for d in available.values()]
@@ -192,7 +192,7 @@ def test_choose_license_detector_error_2(
         },
     )
     gd_mock = mocker.patch(
-        "go_vendor_tools.cli.go_vendor_license.get_detctors",
+        "go_vendor_tools.cli.go_vendor_license.get_detectors",
         return_value=return_value,
     )
     with pytest.raises(SystemExit, match="1"):

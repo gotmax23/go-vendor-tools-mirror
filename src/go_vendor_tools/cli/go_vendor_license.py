@@ -39,7 +39,7 @@ from go_vendor_tools.exceptions import VendorToolsError
 from go_vendor_tools.gomod import get_unlicensed_mods
 from go_vendor_tools.hashing import get_hash
 from go_vendor_tools.license_detection.base import LicenseData, LicenseDetector
-from go_vendor_tools.license_detection.load import DETECTORS, get_detctors
+from go_vendor_tools.license_detection.load import DETECTORS, get_detectors
 from go_vendor_tools.licensing import compare_licenses, simplify_license
 from go_vendor_tools.specfile import VendorSpecfile
 
@@ -85,7 +85,7 @@ def choose_license_detector(
 ) -> LicenseDetector:
     kv_config = kv_config or []
     cli_config = license_config["detector_config"] | split_kv_options(kv_config)
-    available, missing = get_detctors(cli_config, license_config, find_only=find_only)
+    available, missing = get_detectors(cli_config, license_config, find_only=find_only)
     if choice:
         if choice in missing:
             sys.exit(f"Failed to get detector {choice!r}: {missing[choice]}")
@@ -640,7 +640,7 @@ def generate_buildrequires_command(args: argparse.Namespace) -> None:
     if not detector:
         # If the detector is not explicitly specified, attempt to fall back to
         # the one whose dependencies are already installed.
-        available, missing = get_detctors({}, create_license_config())
+        available, missing = get_detectors({}, create_license_config())
         detector = next(iter(available), "") or next(iter(missing))
     elif detector not in DETECTORS:
         sys.exit(f"{detector!r} does not exist! Choices: {tuple(DETECTORS)}")

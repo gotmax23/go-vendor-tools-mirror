@@ -21,7 +21,7 @@ DETECTORS: dict[str, type[LicenseDetector]] = {
 }
 
 
-def get_detctors(
+def get_detectors(
     cli_config: dict[str, str],
     license_config: LicenseConfig,
     detectors: dict[str, type[LicenseDetector]] = DETECTORS,
