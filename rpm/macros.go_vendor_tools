@@ -46,9 +46,9 @@
     report expression
     --verify %{expr: "%{*}" ? "%{shescape:%{*}}" : "%{shescape:%{LICENSE}}" }
 }
-%go_vendor_license_check(c:d:D:) %{expand:
+%go_vendor_license_check(c:d:D:) %{expand:%{shrink:
     %{expr:
         0%{?go_vendor_license_check_disable}
         ? "" : "%%_go_vendor_license_check %**"
     }
-}
+}}
