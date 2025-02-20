@@ -261,6 +261,10 @@ class LicenseDetector(Generic[_LicenseDataT_co], metaclass=abc.ABCMeta):
     def find_license_files(self, directory: StrPath) -> list[Path]:
         """
         Default implementation of find_license_files.
+
+        Raises:
+            LicenseError:
+                Invalid manual license config entries are present in the license config
         """
         reuse_roots = get_go_module_dirs(Path(directory), relative_paths=True)
         license_file_lists = find_license_files(
@@ -270,9 +274,15 @@ class LicenseDetector(Generic[_LicenseDataT_co], metaclass=abc.ABCMeta):
             exclude_files=self.license_config["exclude_files"],
             reuse_roots=reuse_roots,
         )
-        manual_license_map, _ = get_manual_license_entries(
+        manual_license_map, unmatched = get_manual_license_entries(
             self.license_config["licenses"], directory
         )
+        if unmatched:
+            raise LicenseError(
+                "Invalid manual license config entries:"
+                + "\n"
+                + "\n".join(map(str, unmatched)),
+            )
         files: set[Path] = {
             Path(p) for p in chain.from_iterable(license_file_lists.values())
         }

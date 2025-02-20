@@ -17,6 +17,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, Literal, TypedDict, cast
 
 from go_vendor_tools.config.licenses import LicenseConfig
+from go_vendor_tools.exceptions import LicenseError
 from go_vendor_tools.gomod import get_go_module_dirs
 from go_vendor_tools.license_detection.base import reuse_path_to_license_map
 from go_vendor_tools.license_detection.search import (
@@ -198,9 +199,15 @@ class TrivyLicenseDetector(LicenseDetector[TrivyLicenseData]):
             self.license_config["exclude_directories"],
             self.license_config["exclude_files"],
         )
-        manual_license_map, _ = get_manual_license_entries(
+        manual_license_map, unmatched = get_manual_license_entries(
             self.license_config["licenses"], directory
         )
+        if unmatched:
+            raise LicenseError(
+                "Invalid manual license config entries:"
+                + "\n"
+                + "\n".join(map(str, unmatched)),
+            )
         license_file_lists = find_license_files(
             directory,
             relative_paths=True,
