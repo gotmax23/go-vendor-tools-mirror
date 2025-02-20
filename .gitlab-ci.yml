@@ -71,6 +71,8 @@ test:
       test "$SHOULD_RPMBUILD" = "false" || pipx run nox -e test -- --cov
     - >-
       test "$SHOULD_RPMBUILD" = "true" || export COVERAGE_FAIL_UNDER=0
+    - >-
+      echo "NO_SCANCODE=$NO_SCANCODE" >> "$GITLAB_ENV"
     - pipx run nox -e coverage
   artifacts:
     paths:
@@ -82,22 +84,27 @@ test:
   image: "$IMAGE"
   parallel:
     matrix:
-        # - IMAGE: "registry.fedoraproject.org/fedora:rawhide"
-        #   PACKAGES: "autorestic fzf"
-        #   SHOULD_RPMBUILD: "true"
+        - IMAGE: "registry.fedoraproject.org/fedora:rawhide"
+          PACKAGES: "autorestic fzf"
+          SHOULD_RPMBUILD: "true"
+          # https://github.com/WojciechMula/pyahocorasick/issues/199
+          NO_SCANCODE: "true"
+        - IMAGE: "registry.fedoraproject.org/fedora:41"
+          PACKAGES: "autorestic fzf"
+          SHOULD_RPMBUILD: "true"
+          NO_SCANCODE: "false"
         - IMAGE: "registry.fedoraproject.org/fedora:40"
           PACKAGES: "autorestic fzf"
           SHOULD_RPMBUILD: "true"
+          NO_SCANCODE: "false"
         - IMAGE: "registry.fedoraproject.org/fedora:39"
           PACKAGES: "autorestic fzf"
           SHOULD_RPMBUILD: "false"
-        # autorestic requires Go 1.21+. These releases have an older version.
-        - IMAGE: "registry.fedoraproject.org/fedora:38"
-          PACKAGES: "fzf"
-          SHOULD_RPMBUILD: "false"
+          NO_SCANCODE: "false"
         - IMAGE: "quay.io/centos/centos:stream9"
           PACKAGES: "fzf"
           SHOULD_RPMBUILD: "false"
+          NO_SCANCODE: "false"
 
 pages:
   script:

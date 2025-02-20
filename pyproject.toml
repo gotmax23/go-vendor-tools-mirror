@@ -29,9 +29,9 @@ classifiers = [
     "Typing :: Typed",
 ]
 dependencies = [
-    "zstarfile",
     "license_expression",
-    "tomli; python_version<'3.11'"
+    "tomli; python_version<'3.11'",
+    "zstarfile",
 ]
 requires-python = ">=3.9"
 
@@ -43,6 +43,7 @@ go_vendor_license = "go_vendor_tools.cli.go_vendor_license:main"
 # User-facing
 all = [
     "argcomplete",
+    "specfile",
     "tomlkit",
 ]
 # Dev
@@ -64,10 +65,12 @@ typing = [
     "typing_extensions",
     # For checking noxfile.py
     "nox",
+    # For docs typing
+    "mkdocs-gen-files",
+    "releaserr",
 ]
 test = [
     "go-vendor-tools[all]",
-    "scancode-toolkit",
     "pytest",
     "pytest-mock",
 ]
@@ -78,6 +81,10 @@ dev = [
     "go-vendor-tools[test]",
     "go-vendor-tools[typing]",
     "nox",
+]
+# Not meant for external usage. Use [all] instead.
+specfile = [
+    "specfile",
 ]
 
 [project.urls]
@@ -160,3 +167,8 @@ exclude_lines = [
     'except ImportError:',
 ]
 
+
+[tool.basedpyright]
+exclude = [
+    ".nox",
+]

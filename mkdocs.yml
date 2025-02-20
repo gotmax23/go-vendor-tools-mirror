@@ -36,7 +36,8 @@ markdown_extensions:
 plugins:
   - exclude:
       glob:
-        - "man/**"
+        - "*.[0-9]"
+        - "*[0-9].md"
         - ".gitignore"
   - gen-files:
       scripts:
@@ -47,11 +48,17 @@ nav:
   - README.md
   - news.md
   - contributing.md
-  - Manpages:
-    - "go_vendor_archive(1)": man/go_vendor_archive1.md
+  - Reference:
+    - "go_vendor_archive": man/go_vendor_license.md
     - "go_vendor_archive_create(1)": man/go_vendor_archive_create1.md
     - "go_vendor_archive_override(1)": man/go_vendor_archive_override1.md
+    - "go_vendor_license(1)": man/go_vendor_license1.md
+    - "go-vendor-tools.toml(5)": man/go-vendor-tools.toml5.md
+    - "RPM macros": "man/rpm_macros.md"
   - scenarios.md
   - config.md
   - architecture.md
-  - example-specfile.md
+watch:
+  - doc
+  - src
+  - mkdocs.yml

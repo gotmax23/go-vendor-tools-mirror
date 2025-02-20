@@ -38,7 +38,9 @@ BuildRequires:  python3-devel
 %generate_buildrequires
 # Explicitly specify askalono for testing purposes
 (%{go_vendor_license_buildrequires -c %{S:2}}) | tee buildrequires
-(%{go_vendor_license_buildrequires -c %{S:4}}) | tee buildrequires2
+if [ "${NO_SCANCODE-}" != "true" ]; then
+    (%{go_vendor_license_buildrequires -c %{S:4}}) | tee buildrequires2
+fi
 
 %build
 %global gomodulesmode GO111MODULE=on
@@ -50,17 +52,23 @@ install -Dpm 0755 -t %{buildroot}%{_bindir} autorestic
 # TODO(gotmax23): Better support for multiple license files
 # (this is needed by this contrived test case and, for example, packages with multiple
 # vendor archives)
-%global go_vendor_license_filelist licenses.list.scancode
-%go_vendor_license_install -c %{S:4}
-%global go_vendor_license_filelist licenses.list
+if [ "${NO_SCANCODE-}" != "true" ]; then
+    %global go_vendor_license_filelist licenses.list.scancode
+    %go_vendor_license_install -c %{S:4}
+    %global go_vendor_license_filelist licenses.list
+fi
 
 %check
 %go_vendor_license_check -c %{S:2}
-%go_vendor_license_check -c %{S:4}
 diff -u "%{S:3}" "$(pwd)/licenses.list"
-diff -u "%{S:3}" "$(pwd)/licenses.list.scancode"
 test "$(cat buildrequires)" = "trivy"
-test "$(cat buildrequires2)" = "python%{python3_version}dist(scancode-toolkit)"
+
+if [ "${NO_SCANCODE-}" != "true" ]; then
+    %go_vendor_license_check -c %{S:4}
+    diff -u "%{S:3}" "$(pwd)/licenses.list.scancode"
+    test "$(cat buildrequires2)" = "python%{python3_version}dist(scancode-toolkit)"
+fi
+
 %if %{with check}
 %gocheck
 %endif

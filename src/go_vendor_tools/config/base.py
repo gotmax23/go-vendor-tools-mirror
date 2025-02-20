@@ -24,8 +24,6 @@ else:
 if TYPE_CHECKING:
     from _typeshed import StrPath
 
-FALSY_STRINGS = ("", "0", "false")
-
 
 class BaseConfig(TypedDict):
     licensing: LicenseConfig

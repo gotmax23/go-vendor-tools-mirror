@@ -55,6 +55,15 @@ def _sort_expression_recursive(
 
 
 @lru_cache(500)
+def _parse(
+    expression: str | license_expression.LicenseExpression,
+    validate: bool = True,
+    strict: bool = True,
+) -> license_expression.LicenseExpression:
+    return licensing.parse(str(expression), validate=validate, strict=strict)
+
+
+@lru_cache(500)
 def simplify_license(
     expression: str | license_expression.LicenseExpression,
     *,
@@ -64,7 +73,7 @@ def simplify_license(
     """
     Simplify and verify a license expression
     """
-    parsed = licensing.parse(str(expression), validate=validate, strict=strict)
+    parsed = _parse(expression, validate=validate, strict=strict)
     # DualBase subclasses are collections of licenses with an "AND" or an "OR"
     # relationship.
     if not isinstance(parsed, DualBase):
@@ -78,9 +87,20 @@ def simplify_license(
     return str(parsed)
 
 
+def validate_license(expression: str) -> bool:
+    try:
+        _parse(expression)
+    except license_expression.ExpressionError:
+        return False
+    else:
+        return True
+
+
 def compare_licenses(
     license1: license_expression.LicenseExpression | str,
     license2: str | license_expression.LicenseExpression | str,
     /,
 ) -> bool:
-    return simplify_license(license1) == simplify_license(license2)
+    return simplify_license(license1, validate=False) == simplify_license(
+        license2, validate=False
+    )

@@ -6,11 +6,12 @@ from __future__ import annotations
 import contextlib
 import os
 import shlex
-from collections.abc import Iterator
+from collections.abc import Iterable, Iterator, Sequence
 from glob import iglob
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from types import SimpleNamespace
+from typing import cast
 
 import nox
 
@@ -23,9 +24,18 @@ ALLOW_EDITABLE = os.environ.get("ALLOW_EDITABLE", str(not IN_CI)).lower() in (
 PROJECT = "go_vendor_tools"
 SPECFILE = "go-vendor-tools.spec"
 LINT_SESSIONS = ("formatters", "codeqa", "typing")
-LINT_FILES = (f"src/{PROJECT}", "tests/pytests", "noxfile.py", "contrib")
+LINT_FILES = (
+    f"src/{PROJECT}",
+    "tests/pytests",
+    "noxfile.py",
+    "contrib",
+    *iglob("doc/man/*.py"),
+)
 INTEGRATION_PACKAGES = ("autorestic", "fzf")
-COVERAGE_FAIL_UNDER = os.environ.get("COVERAGE_FAIL_UNDER") or "90"
+HAS_SCANCODE = os.environ.get("NO_SCANCODE") != "true"
+COVERAGE_FAIL_UNDER = os.environ.get("COVERAGE_FAIL_UNDER") or (
+    "90" if HAS_SCANCODE else "89"
+)
 
 nox.options.sessions = ("lint", "covtest")
 nox.options.error_on_external_run = True
@@ -44,6 +54,12 @@ def git(session: nox.Session, *args, **kwargs):
     return session.run("git", *args, **kwargs, external=True)
 
 
+def get_test_deps() -> Iterable[str]:
+    yield ".[test]"
+    if HAS_SCANCODE:
+        yield "scancode-toolkit"
+
+
 BASE_COVERAGE_COMMAND = ("coverage", "run", "-p", "--source", "go_vendor_tools")
 COVERAGE_COMMANDS = SimpleNamespace(
     go_vendor_archive=(
@@ -60,7 +76,7 @@ COVERAGE_COMMANDS = SimpleNamespace(
 
 
 @contextlib.contextmanager
-def coverage_run(session: nox.Session) -> Iterator[dict[str, str]]:
+def coverage_run(session: nox.Session) -> Iterator[dict[str, str | None]]:
     tmp = Path(session.create_tmp())
     covfile = (tmp / ".coverage").resolve()
     cov_env = {
@@ -79,7 +95,7 @@ def coverage_run(session: nox.Session) -> Iterator[dict[str, str]]:
 
 @nox.session(python=["3.9", "3.10", "3.11", "3.12"])
 def test(session: nox.Session):
-    packages: list[str] = [".[test]"]
+    packages: list[str] = [*get_test_deps()]
     env: dict[str, str] = {}
     tmp = Path(session.create_tmp())
 
@@ -93,7 +109,7 @@ def test(session: nox.Session):
 
 @nox.session
 def integration(session: nox.Session) -> None:
-    install(session, ".[test]", "coverage[toml]", editable=True)
+    install(session, *get_test_deps(), "coverage[toml]", editable=True)
     packages_env = session.env.get("PACKAGES")
     packages = shlex.split(packages_env) if packages_env else INTEGRATION_PACKAGES
     script_dir = Path("contrib").resolve()
@@ -121,7 +137,7 @@ def integration(session: nox.Session) -> None:
 
 @nox.session(name="integration-test-build")
 def integration_test_build(session: nox.Session):
-    install(session, ".[test]", "coverage[toml]", editable=True)
+    install(session, *get_test_deps(), "coverage[toml]", editable=True)
     packages_env = session.env.get("PACKAGES")
     packages = shlex.split(packages_env) if packages_env else INTEGRATION_PACKAGES
     with coverage_run(session) as cov_env:
@@ -158,7 +174,7 @@ def coverage(session: nox.Session):
 @nox.session()
 def covtest(session: nox.Session):
     session.run("rm", "-f", *iglob(".nox/*/tmp/.coverage*"), external=True)
-    test_sessions = (f"test-{v}" for v in test.python)  # type: ignore[attr-defined]
+    test_sessions = (f"test-{v}" for v in cast("Sequence[str]", test.python))
     for target in test_sessions:
         session.notify(target, ["--cov"])
 
@@ -232,11 +248,7 @@ def bump(session: nox.Session):
     # Bump changelog, commit, and tag
     git(session, "add", SPECFILE, f"src/{PROJECT}/__init__.py")
     session.run("releaserr", "clog", version, "--tag")
-    # FIXME(anyone): Temporarily disable twine check.
-    # It doesn't understand hatch 2.3 metadata.
-    session.run(
-        "releaserr", "build", "--backend", "generic", "--isolated", "--no-twine-check"
-    )
+    session.run("releaserr", "build", "--backend", "generic", "--isolated")
 
 
 @nox.session
@@ -288,5 +300,5 @@ def releaserr(session: nox.Session):
 
 @nox.session
 def mkdocs(session: nox.Session) -> None:
-    install(session, "-r", "docs-requirements.txt")
+    install(session, "-e", ".", "-r", "docs-requirements.txt")
     session.run("mkdocs", *(session.posargs if session.posargs else ["build"]))

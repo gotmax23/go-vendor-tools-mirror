@@ -20,6 +20,7 @@ packages:
         - "./contrib/main-archive.sh go-vendor-tools.spec"
         - "sh -c 'ls go-vendor-tools-*.tar.gz'"
     release_suffix: ""
+    osh_diff_scan_after_copr_build: false
   # Integration packages
   autorestic:
     specfile_path: autorestic.spec
@@ -31,6 +32,7 @@ packages:
         - bash -x ../../../contrib/integration-archive.sh
       post-upstream-clone:
         - bash -x ../../../contrib/wait-for-copr.sh
+    osh_diff_scan_after_copr_build: false
   fzf:
     specfile_path: fzf.spec
     paths:
@@ -41,6 +43,7 @@ packages:
         - bash -x ../../../contrib/integration-archive.sh
       post-upstream-clone:
         - bash -x ../../../contrib/wait-for-copr.sh
+    osh_diff_scan_after_copr_build: false
 jobs:
   - job: copr_build
     packages:

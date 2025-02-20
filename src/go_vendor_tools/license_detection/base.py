@@ -12,20 +12,25 @@ import dataclasses
 import os
 import re
 import sys
-from collections.abc import Collection, Iterator
+from collections.abc import Collection
 from itertools import chain
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, ClassVar, Generic, TypeVar
-
-import license_expression
+from typing import TYPE_CHECKING, Any, ClassVar, Generic
 
 from go_vendor_tools.config.licenses import LicenseConfig, LicenseEntry
 from go_vendor_tools.exceptions import LicenseError
+from go_vendor_tools.gomod import get_go_module_dirs
 from go_vendor_tools.hashing import verify_hash
+from go_vendor_tools.license_detection.search import find_license_files
 from go_vendor_tools.licensing import combine_licenses
 
 if TYPE_CHECKING:
     from _typeshed import StrPath
+
+    # Needed for PEP 696
+    from typing_extensions import Self, TypeVar
+else:
+    from typing import TypeVar
 
 EXTRA_LICENSE_FILE_REGEX = re.compile(
     r"^(AUTHORS|NOTICE|PATENTS).*$", flags=re.IGNORECASE
@@ -83,49 +88,18 @@ def filter_license_map(
     }
 
 
-def find_extra_license_files(
-    directory: StrPath,
-    exclude_directories: Collection[StrPath],
-    exclude_files: Collection[StrPath],
-    *,
-    regex: re.Pattern[str] = EXTRA_LICENSE_FILE_REGEX,
-    exclude_regex: re.Pattern[str] | None = None,
-    relative_paths: bool = False,
-) -> Iterator[Path]:
-    """
-    Search a directory for license files matching a certain pattern
-
-    Arguments:
-        directory:
-            Directory to search through for file matches
-        exclude_directories:
-            List of directories (relative paths inside `directory`) to exclude
-            from search
-        exclude_files:
-            List of files (relative paths inside `directory`) to exclude from
-            search
-        regex:
-            Filename matcher
-        exclude_regex:
-            If a filename matches this regex, do not include it in the result
-        relative_paths:
-            Whether to return relative paths to license files or full paths
-            including `directory`
-    """
-    for root, _, files in os.walk(directory):
-        for file in files:
-            path = Path(root, file)
-            relpath = path.relative_to(directory)
-            if is_unwanted_path(relpath, exclude_directories, exclude_files):
-                continue
-            if regex.match(file) and (
-                not exclude_regex or not exclude_regex.match(file)
-            ):
-                yield relpath if relative_paths else path
-
-
 def python3dist(package: str, /) -> str:
     return f"python{sys.version_info.major}.{sys.version_info.minor}dist({package})"
+
+
+# TODO(anyone): Should we check for valid filenames
+# (each file should be a single license name)
+def reuse_path_to_license_map(files: Collection[StrPath]) -> dict[Path, str]:
+    result: dict[Path, str] = {}
+    for file in files:
+        name = os.path.splitext(os.path.basename(file))[0]
+        result[Path(file)] = name
+    return result
 
 
 @dataclasses.dataclass()
@@ -159,11 +133,10 @@ class LicenseData:
     undetected_licenses: Collection[Path]
     unmatched_extra_licenses: Collection[Path]
     license_set: set[str] = dataclasses.field(init=False)
-    license_expression: license_expression.LicenseExpression | None = dataclasses.field(
-        init=False
-    )
+    license_expression: str | None = dataclasses.field(init=False)
     license_file_paths: Collection[Path] = dataclasses.field(init=False)
     extra_license_files: list[Path]
+    detector_name: str
     _LIST_PATH_FIELDS: ClassVar = (
         "undetected_licenses",
         "unmatched_extra_licenses",
@@ -195,7 +168,7 @@ class LicenseData:
             elif key in self._LIST_PATH_FIELDS:
                 data[key] = list(map(str, value))
             elif key == "license_set":
-                data[key] = list(value)
+                data[key] = sorted(value)
             elif key == "license_expression":
                 data[key] = str(value)
         return data
@@ -212,29 +185,109 @@ class LicenseData:
             elif key == "license_map":
                 newdata[key] = {Path(key1): value1 for key1, value1 in value.items()}
             elif key in cls._LIST_PATH_FIELDS:
-                newdata[key] = tuple(map(Path, value))
+                func = set if key == "undetected_licenses" else sorted
+                newdata[key] = func(map(Path, value))
             else:
                 newdata[key] = value
         return newdata
 
     @classmethod
-    def from_jsonable(cls: type[_LicenseDataT], data: dict[Any, Any]) -> _LicenseDataT:
+    def from_jsonable(cls, data: dict[Any, Any]) -> Self:
         return cls(**cls._from_jsonable_to_dict(data))
 
 
-_LicenseDataT = TypeVar("_LicenseDataT", bound=LicenseData)
+if TYPE_CHECKING:
+    _LicenseDataT_co = TypeVar(
+        "_LicenseDataT_co", bound=LicenseData, covariant=True, default=LicenseData
+    )
+else:
+    _LicenseDataT_co = TypeVar("_LicenseDataT_co", covariant=True, bound=LicenseData)
 
 
-class LicenseDetector(Generic[_LicenseDataT], metaclass=abc.ABCMeta):
+class LicenseDetector(Generic[_LicenseDataT_co], metaclass=abc.ABCMeta):
+    """
+    ABC for a license detector backend
+
+    Attributes:
+        NAME: Name of the license detector
+        PACKAGES_NEEDED:
+            Tuple of Fedora package names needed for the license detector
+        FIND_PACKAGES_NEEDED:
+            Tuple of packages needed for find_only mode (see __init__ docstring)
+        license_config:
+            LicenseConfig object passed to the constructor
+        detector_config:
+            Options passeed to constructor
+        find_only: Whether find_only mode is enabled
+    """
+
     NAME: ClassVar[str]
     PACKAGES_NEEDED: ClassVar[tuple[str, ...]] = ()
+    FIND_PACKAGES_NEEDED: ClassVar[tuple[str, ...]] = ()
+    detector_config: dict[str, str]
+    license_config: LicenseConfig
+    _find_only: bool
 
     @abc.abstractmethod
     def __init__(
-        self, cli_config: dict[str, str], license_config: LicenseConfig
-    ) -> None: ...
+        self,
+        detector_config: dict[str, str],
+        license_config: LicenseConfig,
+        find_only: bool = False,
+    ) -> None:
+        """
+        Args:
+            detector_config:
+                String key-value pairs of --detector-config options that are
+                defined separately for each license detector implementation
+            license_config:
+                LicenseConfig object.
+                The detector_config option is ignored in favor of the
+                detector_config argument.
+            find_only:
+                When find_only is enabled, only the dependencies for the
+                find_license_files method is checked.
+                This allows a lightweight mode without the dependencies for the
+                detect() method when only a list of valid license files is
+                required.
+        """
+
+    @property
+    def find_only(self):
+        return self._find_only
+
     @abc.abstractmethod
-    def detect(self, directory: StrPath) -> _LicenseDataT: ...
+    def detect(self, directory: StrPath) -> _LicenseDataT_co: ...
+    def find_license_files(self, directory: StrPath) -> list[Path]:
+        """
+        Default implementation of find_license_files.
+
+        Raises:
+            LicenseError:
+                Invalid manual license config entries are present in the license config
+        """
+        reuse_roots = get_go_module_dirs(Path(directory), relative_paths=True)
+        license_file_lists = find_license_files(
+            directory,
+            relative_paths=True,
+            exclude_directories=self.license_config["exclude_directories"],
+            exclude_files=self.license_config["exclude_files"],
+            reuse_roots=reuse_roots,
+        )
+        manual_license_map, unmatched = get_manual_license_entries(
+            self.license_config["licenses"], directory
+        )
+        if unmatched:
+            raise LicenseError(
+                "Invalid manual license config entries:"
+                + "\n"
+                + "\n".join(map(str, unmatched)),
+            )
+        files: set[Path] = {
+            Path(p) for p in chain.from_iterable(license_file_lists.values())
+        }
+        files.update(manual_license_map)
+        return sorted(files)
 
 
 class LicenseDetectorNotAvailableError(LicenseError):

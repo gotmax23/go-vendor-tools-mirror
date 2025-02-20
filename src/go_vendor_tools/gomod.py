@@ -14,21 +14,29 @@ from pathlib import Path
 MODULE_REGEX = re.compile(r"^# (?:.+=>)?(?P<ipath>\S+) v(?P<version>\S+)$")
 
 
-def get_go_module_names(directory: Path) -> dict[str, str]:
+def get_go_module_names(directory: Path, allow_missing: bool = True) -> dict[str, str]:
     results: dict[str, str] = {}
-    with (directory / "vendor/modules.txt").open("r", encoding="utf-8") as fp:
+    try:
+        fp = (directory / "vendor/modules.txt").open("r", encoding="utf-8")
+    except FileNotFoundError:
+        if not allow_missing:
+            raise
+        return results
+    with fp:
         for line in fp:
             if match := MODULE_REGEX.match(line):
                 results[match["ipath"]] = match["version"]
     return results
 
 
-def get_go_module_dirs(directory: Path) -> list[Path]:
+def get_go_module_dirs(directory: Path, relative_paths: bool = False) -> list[Path]:
     results: list[Path] = []
     for ipath in get_go_module_names(directory):
         moddir = directory / "vendor" / ipath
         if moddir.is_dir():
-            results.append(moddir.resolve())
+            results.append(
+                moddir.relative_to(directory) if relative_paths else moddir.resolve()
+            )
     return results
 
 

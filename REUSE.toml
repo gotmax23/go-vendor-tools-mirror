@@ -4,13 +4,13 @@
 version = 1
 
 [[annotations]]
-path = "tests/pytests/test_data/case1/**/*.toml"
+path = "tests/pytests/test_data/**"
 precedence = "override"
 SPDX-FileCopyrightText = "None"
 SPDX-License-Identifier = "LicenseRef-Not-Copyrightable"
 
 [[annotations]]
-path = "doc/man/**.scd"
+path = ["doc/man/**.scd", "doc/man/rpm_macros.md"]
 precedence = "aggregate"
 SPDX-FileCopyrightText = "2024 Maxwell G <maxwell@gtmx.me>"
 SPDX-License-Identifier = "MIT"

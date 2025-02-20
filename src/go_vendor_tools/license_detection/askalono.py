@@ -11,23 +11,34 @@ import dataclasses
 import json
 import shutil
 import subprocess
-from collections.abc import Callable
+from collections.abc import Callable, Collection
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, TypedDict, cast
+from typing import TYPE_CHECKING, TypedDict, cast
+
+from license_expression import ExpressionError
+
+from go_vendor_tools.config.utils import str_to_bool
+from go_vendor_tools.exceptions import LicenseError
 
 from ..config.licenses import LicenseConfig
+from ..gomod import get_go_module_dirs
+from ..licensing import combine_licenses
 from .base import (
     LicenseData,
     LicenseDetector,
     LicenseDetectorNotAvailableError,
-    filter_license_map,
-    find_extra_license_files,
     get_manual_license_entries,
     is_unwanted_path,
+    reuse_path_to_license_map,
 )
+from .search import find_license_files
 
 if TYPE_CHECKING:
     from _typeshed import StrPath
+    from typing_extensions import NotRequired
+
+# Whether to pass --multiple to askalono identify
+CONFIG_MULTIPLE_DEFAULT = False
 
 
 class AskalonoLicenseEntry(TypedDict):
@@ -36,15 +47,21 @@ class AskalonoLicenseEntry(TypedDict):
     aliases: list[str]
 
 
-class AskalonoLicenseResult(TypedDict):
+class AskalonoLicenseContainingEntry(TypedDict):
     score: float
     license: AskalonoLicenseEntry
-    containing: list[Any]
+    line_range: list[int]
+
+
+class AskalonoLicenseResult(TypedDict):
+    score: float
+    license: AskalonoLicenseEntry | None
+    containing: list[AskalonoLicenseContainingEntry]
 
 
 class AskalonoLicenseDict(TypedDict):
     path: str
-    result: AskalonoLicenseResult
+    result: NotRequired[AskalonoLicenseResult]
 
 
 def _remove_line(file: StrPath, key: Callable[[str], bool]) -> None:
@@ -62,18 +79,36 @@ def _remove_line(file: StrPath, key: Callable[[str], bool]) -> None:
         fp.truncate()
 
 
-def _get_askalono_data(directory: StrPath) -> list[AskalonoLicenseDict]:
-    """
-    Crawl `directory` with askalono and return the serialized JSON representation
-    """
+def _filter_path(data: AskalonoLicenseDict) -> AskalonoLicenseDict:
+    data["path"] = data["path"].strip("\n")
+    return data
+
+
+def _get_askalono_data(
+    directory: StrPath, relpaths: Collection[StrPath], multiple: bool = False
+) -> list[AskalonoLicenseDict]:
+    stdin = "\n".join(map(str, relpaths))
+    cmd = [
+        "askalono",
+        "--format",
+        "json",
+        "identify",
+        "--batch",
+    ]
+    # --multiple seems to cause some licenses to not be detected at all, so
+    # gate this behind a flag
+    if multiple:
+        cmd.append("--multiple")
     licenses_json = subprocess.run(
-        ("askalono", "--format=json", "crawl", "."),
+        cmd,
+        input=stdin,
         check=True,
         capture_output=True,
+        text=True,
         cwd=directory,
-    ).stdout.decode("utf-8")
+    ).stdout
     licenses = [
-        cast(AskalonoLicenseDict, json.loads(line))
+        _filter_path(cast(AskalonoLicenseDict, json.loads(line)))
         for line in licenses_json.splitlines()
     ]
     return licenses
@@ -82,6 +117,26 @@ def _get_askalono_data(directory: StrPath) -> list[AskalonoLicenseDict]:
 def _get_relative(base_dir: Path, file: str | Path) -> Path:
     file = Path(file)
     return file.relative_to(base_dir) if file.is_absolute() else file
+
+
+def _get_license_name(data: AskalonoLicenseDict, check: bool) -> str | None:
+    name: str | None = None
+    if "result" not in data:
+        pass
+    elif con := data["result"]["containing"]:
+        try:
+            name = combine_licenses(
+                *(entry["license"]["name"] for entry in con),
+                validate=check,
+                strict=check,
+            )
+        except ExpressionError as exc:  # pragma: no cover
+            raise LicenseError(
+                f"Failed to detect license for {data.get('path')}: {exc}"
+            ) from exc
+    elif data["result"]["license"]:
+        name = data["result"]["license"].get("name")
+    return name
 
 
 def _filter_license_data(
@@ -93,13 +148,10 @@ def _filter_license_data(
     results: list[AskalonoLicenseDict] = []
 
     for licensed in data:
-        if "/PATENTS" not in licensed["path"] and "/NOTICE" not in licensed["path"]:
-            try:
-                licensed["result"]["license"]["name"]
-            except KeyError:
-                undetected_licenses.add(_get_relative(directory, licensed["path"]))
-            else:
-                results.append(licensed)
+        if _get_license_name(licensed, False):
+            results.append(licensed)
+        else:
+            undetected_licenses.add(_get_relative(directory, licensed["path"]))
     return results, undetected_licenses
 
 
@@ -114,7 +166,9 @@ def _get_simplified_license_map(
     """
     results: dict[Path, str] = {}
     for licensed in filtered_license_data:
-        license_name = licensed["result"]["license"]["name"]
+        license_name = _get_license_name(licensed, check=True)
+        if not license_name:  # pragma: no cover
+            raise RuntimeError("Should never get here after filtering the license map")
         results[_get_relative(directory, licensed["path"])] = license_name
     results.update(extra_license_mapping or {})
     return dict(sorted(results.items(), key=lambda item: item[0]))
@@ -130,32 +184,64 @@ class AskalonoLicenseDetector(LicenseDetector[AskalonoLicenseData]):
     PACKAGES_NEEDED = ("askalono-cli",)
 
     def __init__(
-        self, cli_config: dict[str, str], license_config: LicenseConfig
+        self,
+        detector_config: dict[str, str],
+        license_config: LicenseConfig,
+        find_only: bool = False,
     ) -> None:
-        if path := cli_config.get("askalono_path"):
-            if not Path(path).exists():
-                raise LicenseDetectorNotAvailableError(f"{path!r} does not exist!")
+        self._find_only = find_only
+        path: str | None = None
+        if self.find_only:
+            # If find_only, just set path to something
+            path = "askalono"
         else:
-            path = shutil.which("askalono")
-        if not path:
-            raise LicenseDetectorNotAvailableError("Failed to find askalono binary!")
+            if path := detector_config.get("askalono_path"):
+                if not Path(path).exists():
+                    raise LicenseDetectorNotAvailableError(f"{path!r} does not exist!")
+            else:
+                path = shutil.which("askalono")
+            if not path:
+                raise LicenseDetectorNotAvailableError(
+                    "Failed to find askalono binary!"
+                )
 
         self.path: str = path
+        self.detector_config = detector_config
         self.license_config = license_config
 
     def detect(self, directory: StrPath) -> AskalonoLicenseData:
+        if self.find_only:
+            raise ValueError(
+                "This cannot be called when class was initalized with find_only=True"
+            )
         gitignore = Path(directory, ".gitignore")
         if gitignore.is_file():
             _remove_line(gitignore, lambda line: line.startswith("vendor"))
-        results, undetected = _filter_license_data(
-            _get_askalono_data(directory), Path(directory)
+        reuse_roots = get_go_module_dirs(Path(directory), relative_paths=True)
+        license_file_lists = find_license_files(
+            directory=directory,
+            relative_paths=True,
+            exclude_directories=self.license_config["exclude_directories"],
+            exclude_files=self.license_config["exclude_files"],
+            reuse_roots=reuse_roots,
+        )
+        askalono_license_data = _get_askalono_data(
+            directory,
+            license_file_lists["license"],
+            str_to_bool(self.detector_config.get("multiple"), CONFIG_MULTIPLE_DEFAULT),
+        )
+        filtered_license_data, undetected = _filter_license_data(
+            askalono_license_data, Path(directory)
         )
         manual_license_map, manual_unmatched = get_manual_license_entries(
             self.license_config["licenses"], directory
         )
         license_map = _get_simplified_license_map(
-            Path(directory), results, manual_license_map
+            Path(directory), filtered_license_data, manual_license_map
         )
+        license_map |= reuse_path_to_license_map(license_file_lists["reuse"])
+        # Sort
+        license_map = dict(sorted(license_map.items(), key=lambda item: item[0]))
         # Remove manually specified licenses
         undetected -= set(manual_license_map)
         undetected = {
@@ -167,27 +253,16 @@ class AskalonoLicenseDetector(LicenseDetector[AskalonoLicenseData]):
                 self.license_config["exclude_files"],
             )
         }
-
-        filtered_license_map = filter_license_map(
-            license_map,
-            self.license_config["exclude_directories"],
-            self.license_config["exclude_files"],
-        )
-        filtered_license_map = dict(
-            sorted(filtered_license_map.items(), key=lambda item: item[0])
-        )
-        extra_license_files = list(
-            find_extra_license_files(
-                directory,
-                self.license_config["exclude_directories"],
-                self.license_config["exclude_files"],
-            )
-        )
+        undetected -= set(manual_license_map)
         return AskalonoLicenseData(
             directory=Path(directory),
-            license_map=filtered_license_map,
+            license_map=license_map,
             undetected_licenses=undetected,
             unmatched_extra_licenses=manual_unmatched,
-            askalono_license_data=results,
-            extra_license_files=extra_license_files,
+            askalono_license_data=askalono_license_data,
+            # FIXME(gotmax): Change the design of LicenseData to not require full paths
+            extra_license_files=[
+                Path(directory, file) for file in license_file_lists["notice"]
+            ],
+            detector_name=self.NAME,
         )

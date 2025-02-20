@@ -11,8 +11,7 @@ import os
 import shutil
 import sys
 from collections.abc import Collection, Iterable, Iterator, MutableSequence, Sequence
-from contextlib import contextmanager
-from functools import cache
+from contextlib import ExitStack, contextmanager
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from textwrap import dedent
@@ -23,26 +22,30 @@ from zstarfile import ZSTarfile
 
 from go_vendor_tools import __version__
 from go_vendor_tools.archive import get_toplevel_directory
+from go_vendor_tools.cli.utils import (
+    HAS_TOMLKIT,
+    catch_vendor_tools_error,
+    load_tomlkit_if_exists,
+    need_tomlkit,
+    tomlkit_dump,
+)
 from go_vendor_tools.config.base import load_config
 from go_vendor_tools.config.licenses import (
     LicenseConfig,
     LicenseEntry,
     create_license_config,
 )
+from go_vendor_tools.exceptions import VendorToolsError
 from go_vendor_tools.gomod import get_unlicensed_mods
 from go_vendor_tools.hashing import get_hash
 from go_vendor_tools.license_detection.base import LicenseData, LicenseDetector
-from go_vendor_tools.license_detection.load import DETECTORS, get_detctors
+from go_vendor_tools.license_detection.load import DETECTORS, get_detectors
 from go_vendor_tools.licensing import compare_licenses, simplify_license
-from go_vendor_tools.specfile_sources import get_path_and_output_from_specfile
+from go_vendor_tools.specfile import VendorSpecfile
 
-try:
+if HAS_TOMLKIT:
     import tomlkit
-except ImportError:
-    HAS_TOMLKIT = False
-else:
-    HAS_TOMLKIT = True
-    from go_vendor_tools.cli.utils import load_tomlkit_if_exists
+
 try:
     import argcomplete
 except ImportError:
@@ -53,6 +56,8 @@ else:
 COLOR: bool | None = None
 RED = "\033[31m"  # ]
 CLEAR = "\033[0m"  # ]
+
+MANUALLY_DETECTING_LICENSES_URL = "https://fedora.gitlab.io/sigs/go/go-vendor-tools/scenarios/#manually-detecting-licenses"
 
 
 def red(__msg: str, /, *, file: IO[str] | None = None) -> None:
@@ -75,11 +80,14 @@ def split_kv_options(kv_config: list[str]) -> dict[str, str]:
 
 
 def choose_license_detector(
-    choice: str | None, license_config: LicenseConfig, kv_config: list[str] | None
+    choice: str | None,
+    license_config: LicenseConfig,
+    kv_config: list[str] | None,
+    find_only: bool = False,
 ) -> LicenseDetector:
     kv_config = kv_config or []
-    cli_config = split_kv_options(kv_config)
-    available, missing = get_detctors(cli_config, license_config)
+    cli_config = license_config["detector_config"] | split_kv_options(kv_config)
+    available, missing = get_detectors(cli_config, license_config, find_only=find_only)
     if choice:
         if choice in missing:
             sys.exit(f"Failed to get detector {choice!r}: {missing[choice]}")
@@ -101,12 +109,10 @@ def _add_json_argument(parser: argparse.ArgumentParser, **kwargs) -> None:
     parser.add_argument("--write-json", **kwargs)
 
 
-def parseargs(argv: list[str] | None = None) -> argparse.Namespace:
-    """
-    Parse arguments and return an `argparse.Namespace`
-    """
+def get_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="Handle licenses for vendored go projects"
+        description="Handle licenses for vendored go projects",
+        prog="go_vendor_license",
     )
     parser.add_argument("--version", action="version", version=__version__)
     parser.add_argument("-c", "--config", type=Path, dest="config_path")
@@ -130,11 +136,13 @@ def parseargs(argv: list[str] | None = None) -> argparse.Namespace:
         """
         ),
     )
-    parser.add_argument("--use-archive", action="store_true")
+    parser.add_argument("--use-archive", action="store_true", help="See --path.")
     parser.add_argument(
         "--color",
         action=argparse.BooleanOptionalAction,
         default=False if os.environ.get("NO_COLOR") else None,
+        help="Whether to use colored output."
+        " Defaults to True if output is a TTY and $NO_COLOR is not defined.",
     )
     parser.add_argument(
         "-d",
@@ -148,14 +156,21 @@ def parseargs(argv: list[str] | None = None) -> argparse.Namespace:
         "-D",
         "--dc",
         "--detector-config",
-        help="KEY=VALUE pairs to pass to the license detector."
-        " Can be passed multiple times",
+        help="`KEY=VALUE` pairs to pass to the license detector."
+        " Can be passed multiple times."
+        " Overrides settings defined in licensing.detector_config.",
         dest="detector_config",
         action="append",
     )
+    parser.set_defaults(detector_find_only=False)
     subparsers = parser.add_subparsers(dest="subcommand")
     subparsers.required = True
-    report_parser = subparsers.add_parser("report", help="Main subcommand")
+    report_parser = subparsers.add_parser(
+        "report",
+        help="Main subcommand",
+        description="This command detects licenses within the project tree."
+        " It creates a license summary and a normalized SPDX expression",
+    )
     report_parser.add_argument(
         "-i",
         "--ignore-undetected",
@@ -169,9 +184,27 @@ def parseargs(argv: list[str] | None = None) -> argparse.Namespace:
         help="Whether to show Go modules without licenses in the output",
     )
     report_parser.add_argument(
+        "--subpackage-name",
+        help="""
+        Which subpackage to use to find license tag.
+        Name of a subpackage.
+
+        - `-NAME` for `%%package NAME`;
+        - `NAME` for `%%package -n NAME`;
+        - Omit this args to use the main package definition
+        """,
+    )
+    verify_opts = report_parser.add_mutually_exclusive_group()
+    verify_opts.add_argument(
         "--verify",
         help="Verify license expression to make sure it matches caluclated expression",
         metavar="EXPRESSION",
+    )
+    verify_opts.add_argument(
+        "--verify-spec", help="Verify specfile license tag", action="store_true"
+    )
+    verify_opts.add_argument(
+        "--update-spec", help="Update specfile license tag", action="store_true"
     )
     report_parser.add_argument(
         "--prompt",
@@ -185,18 +218,32 @@ def parseargs(argv: list[str] | None = None) -> argparse.Namespace:
         type=str,
         choices=("all", "expression", "list"),
         default="all",
+        help="""
+        - `all` — print out a breakdown of all license files and their detected
+          license expression and then a final, cummluative expression.
+        - `expression` — print only the cummulative SPDX expression
+        - `list` — print the file-by-file breakdown only
+        """,
     )
     _add_json_argument(report_parser)
     report_parser.add_argument(
         "--write-config", help="Write a base config.", action="store_true"
     )
+    help_msg = "Add manual license entry to a config file"
     explict_parser = subparsers.add_parser(
-        "explicit", help="Add manual license entry to a config file"
+        "explicit",
+        help=help_msg,
+        description=f"{help_msg}. See {MANUALLY_DETECTING_LICENSES_URL} for usage.",
     )
     explict_parser.add_argument(
-        "-f", "--file", dest="license_file", required=True, type=Path
+        "-f",
+        "--file",
+        dest="license_file",
+        required=True,
+        type=Path,
+        help="Path to file (relative to CWD) to add to license config",
     )
-    explict_parser.add_argument("license_expression")
+    explict_parser.add_argument("license_expression", help="SPDX license expression")
     install_parser = subparsers.add_parser(
         "install", description=f"INTERNAL: {install_command.__doc__}"
     )
@@ -209,12 +256,28 @@ def parseargs(argv: list[str] | None = None) -> argparse.Namespace:
     install_parser.add_argument(
         "--filelist", dest="install_filelist", type=Path, required=True
     )
+    install_parser.set_defaults(detector_find_only=True)
     # TODO(gotmax23): Should we support writing JSON from the install command
-    # or just reading it? _add_json_argument(install_parser)
-    generate_buildrequires_parser = subparsers.add_parser(  # noqa F841
-        "generate_buildrequires"
+    # or just reading it?
+    # _add_json_argument(install_parser)
+    generate_buildrequires_parser = subparsers.add_parser(
+        "generate_buildrequires",
+        description="Internal command for %%go_vendor_license_buildrequires",
     )
+    generate_buildrequires_parser.add_argument(
+        "--no-check",
+        help="Whether to exclude dependencies for %%go_vendor_license_check",
+        action="store_true",
+        dest="detector_find_only",
+    )
+    return parser
 
+
+def parseargs(argv: list[str] | None = None) -> argparse.Namespace:
+    """
+    Parse arguments and return an `argparse.Namespace`
+    """
+    parser = get_parser()
     if HAS_ARGCOMPLETE:
         argcomplete.autocomplete(parser)
     args = parser.parse_args(argv)
@@ -228,7 +291,10 @@ def parseargs(argv: list[str] | None = None) -> argparse.Namespace:
             args.detector_name = args.config["detector"]
     if args.subcommand in ("report", "install"):
         args.detector = choose_license_detector(
-            args.detector_name, args.config, args.detector_config
+            args.detector_name,
+            args.config,
+            args.detector_config,
+            args.detector_find_only,
         )
         # TODO(anyone): Replace the print if/when we implement more granular logging
         print("Using detector:", args.detector.NAME, file=sys.stderr)
@@ -305,19 +371,6 @@ def write_license_json(data: LicenseData, file: Path) -> None:
         json.dump(data.to_jsonable(), fp, indent=2)
 
 
-@cache
-def need_tomlkit(action="this action"):
-    if not HAS_TOMLKIT:
-        message = f"tomlkit is required for {action}. Please install it!"
-        sys.exit(message)
-
-
-def tomlkit_dump(obj: Any, path: Path) -> None:
-    need_tomlkit()
-    with path.open("w") as fp:
-        tomlkit.dump(obj, fp)
-
-
 # TODO(gotmax23): Unit test prompt_missing_licenses and write_config code.
 # This'll require some mocking of the input() stuff.
 def prompt_missing_licenses(
@@ -380,6 +433,7 @@ def get_report_write_config_data(
     loaded = load_tomlkit_if_exists(config_path)
     write_config_data = loaded.setdefault("licensing", {})
     write_config_data["detector"] = detector.NAME
+    write_config_data["detector_config"] = detector.detector_config
     return new_config_path, loaded
 
 
@@ -398,22 +452,24 @@ def write_and_prompt_report_licenses(
 
 
 @contextmanager
-def handle_alternative_sources(
-    directories: Sequence[Path], is_archive: bool
-) -> Iterator[Path]:
-    directories = list(directories)
-    # The CLI code already checks that the value is greater than zero, so
-    # assert is fine here
-    assert directories
-    if not is_archive and len(directories) > 1:
-        sys.exit("Too many paths were passed!")
+def handle_alternative_sources_and_spec(
+    directories: Sequence[Path], is_archive: bool, subpackage_name: str | None
+) -> Iterator[tuple[Path, VendorSpecfile | None]]:
+    with ExitStack() as es:
+        spec: VendorSpecfile | None = None
+        directories = list(directories)
+        # The CLI code already checks that the value is greater than zero, so
+        # assert is fine here
+        assert directories
+        if not is_archive and len(directories) > 1:
+            sys.exit("Too many paths were passed!")
 
-    if directories[0].suffix == ".spec":
-        directories[:] = get_path_and_output_from_specfile(directories[0])
-        is_archive = True
-    if is_archive:
-        with TemporaryDirectory() as _tmp:
-            tmp = Path(_tmp)
+        if directories[0].suffix == ".spec":
+            spec = es.enter_context(VendorSpecfile(directories[0], subpackage_name))
+            directories[:] = spec.source0_and_source1()
+            is_archive = True
+        if is_archive:
+            tmp = Path(es.enter_context(TemporaryDirectory()))
             # Extract the first archive
             with ZSTarfile.open(directories[0]) as tar:
                 first_toplevel = get_toplevel_directory(tar)
@@ -426,10 +482,10 @@ def handle_alternative_sources(
                     toplevel = get_toplevel_directory(tar)
                     print(f"Extracting {directory}", file=sys.stderr)
                     tar.extractall(tmp if toplevel else tmp / first_toplevel)
-            yield tmp / first_toplevel
+            yield tmp / first_toplevel, spec
 
-    else:
-        yield directories[0]
+        else:
+            yield directories[0], spec
 
 
 def report_command(args: argparse.Namespace) -> None:
@@ -444,17 +500,33 @@ def report_command(args: argparse.Namespace) -> None:
     prompt: bool = args.prompt
     config_path: Path | None = args.config_path
     use_archive: bool = args.use_archive
+    subpackage_name: str | None = args.subpackage_name
+    verify_spec: bool = args.verify_spec
+    update_spec: bool = args.update_spec
     del args
 
     if write_config:
         config_path, loaded = get_report_write_config_data(config_path, detector)
 
-    with handle_alternative_sources(paths, use_archive) as directory:
+    with handle_alternative_sources_and_spec(paths, use_archive, subpackage_name) as (
+        directory,
+        spec,
+    ):
+        if (verify_spec or update_spec) and not spec:
+            raise VendorToolsError(
+                "--path must be a path to a specfile"
+                " if --verify-spec or --update-spec is passed"
+            )
         license_data: LicenseData = detector.detect(directory)
         unlicensed_mods = (
             set()
             if ignore_unlicensed_mods
             else get_unlicensed_mods(directory, license_data.license_file_paths)
+        )
+        failed = bool(
+            (license_data.undetected_licenses and not ignore_undetected)
+            or (unlicensed_mods and not ignore_unlicensed_mods)
+            or license_data.unmatched_extra_licenses
         )
         if prompt:
             license_data = write_and_prompt_report_licenses(license_data, loaded)
@@ -466,19 +538,28 @@ def report_command(args: argparse.Namespace) -> None:
             not ignore_unlicensed_mods,
             directory,
         )
-    if write_json:
-        write_license_json(license_data, write_json)
+        if write_json:
+            write_license_json(license_data, write_json)
+        if spec and verify_spec:
+            verify = spec.license
+        if (
+            spec
+            and update_spec
+            and not compare_licenses(
+                spec.license, exp := license_data.license_expression
+            )
+        ):
+            if failed:
+                print(
+                    "Did not update specfile license tag due to above detector errors."
+                )
+            else:
+                spec.license = str(exp)
+        if write_config:
+            tomlkit_dump(loaded, cast(Path, config_path))
     if verify and not compare_licenses(license_data.license_expression, verify):
-        sys.exit("Failed to verify license. Expected ^")
-    if write_config:
-        tomlkit_dump(loaded, cast(Path, config_path))
-    sys.exit(
-        bool(
-            (license_data.undetected_licenses and not ignore_undetected)
-            or (unlicensed_mods and not ignore_unlicensed_mods)
-            or license_data.unmatched_extra_licenses
-        )
-    )
+        raise VendorToolsError("Failed to verify license. Expected ^")
+    sys.exit(failed)
 
 
 def _get_intermediate_directories(
@@ -532,10 +613,10 @@ def install_command(args: argparse.Namespace) -> None:
     install_filelist: Path = args.install_filelist
     del args
 
-    license_data: LicenseData = detector.detect(directory)
+    license_files = detector.find_license_files(directory)
     copy_licenses(
         directory,
-        sorted({*license_data.license_file_paths, *license_data.extra_license_files}),
+        license_files,
         install_destdir,
         install_directory,
         install_filelist,
@@ -589,30 +670,34 @@ def explicit_command(args: argparse.Namespace) -> None:
 
 def generate_buildrequires_command(args: argparse.Namespace) -> None:
     detector: str = args.detector_name
+    find_only: bool = args.detector_find_only
     del args
 
     if not detector:
         # If the detector is not explicitly specified, attempt to fall back to
         # the one whose dependencies are already installed.
-        available, missing = get_detctors({}, create_license_config())
+        available, missing = get_detectors({}, create_license_config())
         detector = next(iter(available), "") or next(iter(missing))
     elif detector not in DETECTORS:
         sys.exit(f"{detector!r} does not exist! Choices: {tuple(DETECTORS)}")
     detector_cls = DETECTORS[detector]
-    for requirement in detector_cls.PACKAGES_NEEDED:
+    for requirement in (
+        detector_cls.FIND_PACKAGES_NEEDED if find_only else detector_cls.PACKAGES_NEEDED
+    ):
         print(requirement)
 
 
 def main(argv: list[str] | None = None) -> None:
     args = parseargs(argv)
-    if args.subcommand == "report":
-        report_command(args)
-    elif args.subcommand == "explicit":
-        explicit_command(args)
-    elif args.subcommand == "install":
-        install_command(args)
-    elif args.subcommand == "generate_buildrequires":
-        generate_buildrequires_command(args)
+    with catch_vendor_tools_error():
+        if args.subcommand == "report":
+            report_command(args)
+        elif args.subcommand == "explicit":
+            explicit_command(args)
+        elif args.subcommand == "install":
+            install_command(args)
+        elif args.subcommand == "generate_buildrequires":
+            generate_buildrequires_command(args)
 
 
 if __name__ == "__main__":

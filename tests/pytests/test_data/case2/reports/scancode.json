@@ -1,0 +1,69 @@
+{
+  "directory": "/placeholder",
+  "license_map": {
+    "LICENSE": "ISC"
+  },
+  "undetected_licenses": [],
+  "unmatched_extra_licenses": [],
+  "license_set": [
+    "ISC"
+  ],
+  "license_expression": "ISC",
+  "license_file_paths": [
+    "/placeholder/LICENSE"
+  ],
+  "extra_license_files": [],
+  "detector_name": "scancode",
+  "scancode_license_data": [
+    {
+      "detected_license_expression": "isc",
+      "detected_license_expression_spdx": "ISC",
+      "license_detections": [
+        {
+          "license_expression": "isc",
+          "license_expression_spdx": "ISC",
+          "matches": [
+            {
+              "license_expression": "isc",
+              "license_expression_spdx": "ISC",
+              "from_file": null,
+              "start_line": 1,
+              "end_line": 1,
+              "matcher": "2-aho",
+              "score": 99.0,
+              "matched_length": 2,
+              "match_coverage": 100.0,
+              "rule_relevance": 99,
+              "rule_identifier": "isc_22.RULE",
+              "rule_url": "https://github.com/nexB/scancode-toolkit/tree/develop/src/licensedcode/data/rules/isc_22.RULE"
+            }
+          ],
+          "identifier": "isc-d21e4a8e-7cce-593b-6804-3c0c88f62348"
+        },
+        {
+          "license_expression": "isc",
+          "license_expression_spdx": "ISC",
+          "matches": [
+            {
+              "license_expression": "isc",
+              "license_expression_spdx": "ISC",
+              "from_file": null,
+              "start_line": 6,
+              "end_line": 8,
+              "matcher": "2-aho",
+              "score": 100.0,
+              "matched_length": 110,
+              "match_coverage": 100.0,
+              "rule_relevance": 100,
+              "rule_identifier": "isc_20.RULE",
+              "rule_url": "https://github.com/nexB/scancode-toolkit/tree/develop/src/licensedcode/data/rules/isc_20.RULE"
+            }
+          ],
+          "identifier": "isc-027c5afe-e7fe-a7fe-149e-fdcae05e6c2e"
+        }
+      ],
+      "license_clues": [],
+      "percentage_of_license_text": 86.15
+    }
+  ]
+}

@@ -99,6 +99,7 @@ cp -rL doc/* %{buildroot}%{_docdir}/go-vendor-tools-doc
 # Install manpages
 %if %{with manpages}
 install -Dpm 0644 doc/man/*.1 -t %{buildroot}%{_mandir}/man1/
+install -Dpm 0644 doc/man/*.5 -t %{buildroot}%{_mandir}/man5/
 %endif
 
 # Install completions
@@ -122,6 +123,7 @@ install -Dpm 0644 zsh_completions/* -t %{buildroot}%{zsh_completions_dir}/
 %{_rpmmacrodir}/macros.go_vendor_tools
 %if %{with manpages}
 %{_mandir}/man1/go*.1*
+%{_mandir}/man5/go*.5*
 %endif
 
 %files doc

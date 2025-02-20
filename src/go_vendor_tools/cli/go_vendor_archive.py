@@ -25,10 +25,11 @@ from zstarfile.extra import open_write_compressed
 
 from go_vendor_tools import __version__
 from go_vendor_tools.archive import add_files_to_archive
+from go_vendor_tools.cli.utils import catch_vendor_tools_error
 from go_vendor_tools.config.archive import get_go_dependency_update_commands
 from go_vendor_tools.config.base import BaseConfig, load_config
 from go_vendor_tools.exceptions import ArchiveError
-from go_vendor_tools.specfile_sources import get_path_and_output_from_specfile
+from go_vendor_tools.specfile import VendorSpecfile
 
 try:
     import tomlkit
@@ -78,12 +79,14 @@ def run_command(
 class CreateArchiveArgs:
     path: Path
     output: Path
+    # START: Config options
     use_top_level_dir: bool
     use_module_proxy: bool
     tidy: bool
     idempotent: bool
     compresslevel: int | None
     compression_type: str | None
+    # END: Config options
     config_path: Path
     config: BaseConfig
     write_config: bool
@@ -208,7 +211,7 @@ def _create_archive_read_from_specfile(args: CreateArchiveArgs) -> None:
     if args.output:
         sys.exit("Cannot pass --output when reading paths from a specfile!")
     spec_path = args.path
-    args.path, args.output = get_path_and_output_from_specfile(args.path)
+    args.path, args.output = VendorSpecfile(args.path).source0_and_source1()
     if not args.path.is_file():
         sys.exit(
             f"{args.path} does not exist!"
@@ -228,16 +231,6 @@ def create_archive(args: CreateArchiveArgs) -> None:
         print(f"{args.output} already exists")
         sys.exit()
     with ExitStack() as stack:
-        try:
-            tf = stack.enter_context(
-                open_write_compressed(
-                    args.output,
-                    compression_type=args.compression_type,
-                    compresslevel=args.compresslevel,
-                )
-            )
-        except ValueError as exc:
-            sys.exit(f"Invalid --output value: {exc}")
         # Treat as an archive if it's not a directory
         if _already_checked_is_file or args.path.is_file():
             print(f"* Treating {args.path} as an archive. Unpacking...")
@@ -267,6 +260,16 @@ def create_archive(args: CreateArchiveArgs) -> None:
         (vdir / "modules.txt").touch(exist_ok=True)
         for command in args.config["archive"]["post_commands"]:
             run_command(runner, command)
+        try:
+            tf = stack.enter_context(
+                open_write_compressed(
+                    args.output,
+                    compression_type=args.compression_type,
+                    compresslevel=args.compresslevel,
+                )
+            )
+        except ValueError as exc:
+            sys.exit(f"Invalid --output value: {exc}")
         print("Creating archive...")
         add_files_to_archive(
             tf,
@@ -292,10 +295,11 @@ def override_command(args: OverrideArgs) -> None:
 
 def main(argv: list[str] | None = None) -> None:
     args = parseargs(argv)
-    if isinstance(args, CreateArchiveArgs):
-        create_archive(args)
-    elif isinstance(args, OverrideArgs):
-        override_command(args)
+    with catch_vendor_tools_error():
+        if isinstance(args, CreateArchiveArgs):
+            create_archive(args)
+        elif isinstance(args, OverrideArgs):
+            override_command(args)
 
 
 if __name__ == "__main__":

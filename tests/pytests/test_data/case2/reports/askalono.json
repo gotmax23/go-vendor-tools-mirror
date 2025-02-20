@@ -1,0 +1,31 @@
+{
+  "directory": "/placeholder",
+  "license_map": {
+    "LICENSE": "ISC"
+  },
+  "undetected_licenses": [],
+  "unmatched_extra_licenses": [],
+  "license_set": [
+    "ISC"
+  ],
+  "license_expression": "ISC",
+  "license_file_paths": [
+    "/placeholder/LICENSE"
+  ],
+  "extra_license_files": [],
+  "detector_name": "askalono",
+  "askalono_license_data": [
+    {
+      "path": "LICENSE",
+      "result": {
+        "score": 1.0,
+        "license": {
+          "name": "ISC",
+          "kind": "original",
+          "aliases": []
+        },
+        "containing": []
+      }
+    }
+  ]
+}
