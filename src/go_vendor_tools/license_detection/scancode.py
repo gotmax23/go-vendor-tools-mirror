@@ -7,7 +7,6 @@ scancode-toolkit-based license detector backend
 
 from __future__ import annotations
 
-import re
 from collections.abc import Iterable
 from dataclasses import dataclass
 from functools import partial
@@ -37,28 +36,6 @@ from go_vendor_tools.licensing import combine_licenses
 
 if TYPE_CHECKING:
     from _typeshed import StrPath
-
-# Based on go2rpm
-# TODO(gotmax23): Change this to a verbose regex with explanatory comments like
-# LICENSE_EXCLUDE_PATTERN
-LICENSE_PATTERN = re.compile(
-    r"(COPYING|COPYING[\.\-].*|COPYRIGHT|COPYRIGHT[\.\-].*|"
-    r"COPYLEFT.*|EULA|EULA[\.\-].*|LICEN[CS]E|Li[cs]ense|li[cs]ense.md|"
-    r"LICEN[CS]E[\.\-].*|.*[\.\-]LICEN[CS]E.*|"
-    r"UNLICEN[CS]E|UNLICEN[CS]E[\.\-].*|"
-    r"agpl[\.\-].*|gpl[\.\-].*|lgpl[\.\-].*|AGPL-.*[0-9].*|"
-    r"APACHE-.*[0-9].*|BSD-.*[0-9].*|CC-BY-.*|GFDL-.*[0-9].*|"
-    r"GNU-.*[0-9].*|GPL-.*[0-9].*|LGPL-.*[0-9].*|MIT.*|"
-    r"MPL-.*[0-9].*|OFL-.*[0-9].*)"
-)
-LICENSE_EXCLUDE_PATTERN = re.compile(
-    r"""
-    (
-        LICENSE.docs|   # Docs are not used for the build process.
-        (?!)            # Dummy regex to allow a trailing "|"
-    )""",
-    flags=re.VERBOSE,
-)
 
 
 class ScancodeLicenseDict(TypedDict):
