@@ -1,16 +1,19 @@
 {
   "directory": "/placeholder",
   "license_map": {
-    "LICENSE": "ISC"
+    "LICENSE": "ISC",
+    "LICENSE.docs": "CC-BY-SA-4.0"
   },
   "undetected_licenses": [],
   "unmatched_extra_licenses": [],
   "license_set": [
+    "CC-BY-SA-4.0",
     "ISC"
   ],
-  "license_expression": "ISC",
+  "license_expression": "CC-BY-SA-4.0 AND ISC",
   "license_file_paths": [
-    "/placeholder/LICENSE"
+    "/placeholder/LICENSE",
+    "/placeholder/LICENSE.docs"
   ],
   "extra_license_files": [],
   "detector_name": "askalono",
@@ -21,6 +24,18 @@
         "score": 1.0,
         "license": {
           "name": "ISC",
+          "kind": "original",
+          "aliases": []
+        },
+        "containing": []
+      }
+    },
+    {
+      "path": "LICENSE.docs",
+      "result": {
+        "score": 0.99690855,
+        "license": {
+          "name": "CC-BY-SA-4.0",
           "kind": "original",
           "aliases": []
         },

@@ -1,16 +1,19 @@
 {
   "directory": "/placeholder",
   "license_map": {
-    "LICENSE": "ISC"
+    "LICENSE": "ISC",
+    "LICENSE.docs": "CC-BY-SA-4.0"
   },
   "undetected_licenses": [],
   "unmatched_extra_licenses": [],
   "license_set": [
+    "CC-BY-SA-4.0",
     "ISC"
   ],
-  "license_expression": "ISC",
+  "license_expression": "CC-BY-SA-4.0 AND ISC",
   "license_file_paths": [
-    "/placeholder/LICENSE"
+    "/placeholder/LICENSE",
+    "/placeholder/LICENSE.docs"
   ],
   "extra_license_files": [],
   "detector_name": "scancode",
@@ -64,6 +67,35 @@
       ],
       "license_clues": [],
       "percentage_of_license_text": 86.15
+    },
+    {
+      "detected_license_expression": "cc-by-sa-4.0",
+      "detected_license_expression_spdx": "CC-BY-SA-4.0",
+      "license_detections": [
+        {
+          "license_expression": "cc-by-sa-4.0",
+          "license_expression_spdx": "CC-BY-SA-4.0",
+          "matches": [
+            {
+              "license_expression": "cc-by-sa-4.0",
+              "license_expression_spdx": "CC-BY-SA-4.0",
+              "from_file": null,
+              "start_line": 5,
+              "end_line": 174,
+              "matcher": "2-aho",
+              "score": 100.0,
+              "matched_length": 2742,
+              "match_coverage": 100.0,
+              "rule_relevance": 100,
+              "rule_identifier": "cc-by-sa-4.0.SPDX.RULE",
+              "rule_url": "https://github.com/nexB/scancode-toolkit/tree/develop/src/licensedcode/data/rules/cc-by-sa-4.0.SPDX.RULE"
+            }
+          ],
+          "identifier": "cc_by_sa_4_0-9e50cc42-6e2e-a028-838d-d71613a15f54"
+        }
+      ],
+      "license_clues": [],
+      "percentage_of_license_text": 99.02
     }
   ]
 }

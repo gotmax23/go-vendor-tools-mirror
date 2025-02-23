@@ -60,8 +60,16 @@ _LICENSE_PATTERN = re.compile(
 _LICENSE_EXCLUDE_PATTERN = re.compile(
     r"""
     (
-        LICENSE.docs|   # Docs are not used for the build process.
         .*\.go|         # Some projects have license.go files that are code
+        (?!)            # Dummy regex to allow a trailing "|"
+    )""",
+    flags=re.VERBOSE,
+)
+# License exclude patterns that should only apply to subdirectories of vendor/.
+_LICENSE_EXCLUDE_PATTERN_SUBDIR = re.compile(
+    r"""
+    (
+        LICENSE.docs|   # Docs from vendored libs are not included in the final package
         (?!)            # Dummy regex to allow a trailing "|"
     )""",
     flags=re.VERBOSE,
@@ -81,6 +89,7 @@ class LicenseRegexFileType:
     name: str
     regex: re.Pattern[str]
     exclude_regex: re.Pattern[str] | None = None
+    exclude_subdir_regex: re.Pattern[str] | None = None
 
     def __post_init__(self) -> None:
         if self.name in self._DISALLOWED_NAMES:
@@ -88,7 +97,10 @@ class LicenseRegexFileType:
 
 
 LICENSE_FILE_TYPE = LicenseRegexFileType(
-    "license", _LICENSE_PATTERN, _LICENSE_EXCLUDE_PATTERN
+    "license",
+    _LICENSE_PATTERN,
+    _LICENSE_EXCLUDE_PATTERN,
+    _LICENSE_EXCLUDE_PATTERN_SUBDIR,
 )
 NOTICE_FILE_TYPE = LicenseRegexFileType("notice", _NOTICE_PATTERN)
 DEFAULT_FILE_TYPES = (LICENSE_FILE_TYPE, NOTICE_FILE_TYPE)
@@ -151,7 +163,15 @@ def find_license_files(
             else:
                 for ft in filetype_info:
                     if ft.regex.fullmatch(file) and (
-                        not ft.exclude_regex or not ft.exclude_regex.fullmatch(file)
+                        (not ft.exclude_regex or not ft.exclude_regex.fullmatch(file))
+                        and (
+                            # Inside the root directory so n/a
+                            not rootpath.startswith(f"vendor{os.sep}")
+                            # Regex is None so n/a
+                            or not ft.exclude_subdir_regex
+                            # Regex does not match, so okay to include
+                            or not ft.exclude_subdir_regex.fullmatch(file)
+                        )
                     ):
                         licenses[ft.name].append(
                             filepath if relative_paths else fullpath
