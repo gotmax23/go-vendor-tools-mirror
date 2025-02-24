@@ -5,7 +5,7 @@ verify the License: tag in the specfile and install license files into the
 package's directory in `/usr/share/licenses`.
 
 !!! note
-    In this document, the macro `%{S:2}` will be used to represent the path to
+    In this document, the macro `%{S:1}` will be used to represent the path to
     the `go-vendor-tools.toml` file.
     In the go2rpm specfile template, this file is always included as `Source1`.
 
