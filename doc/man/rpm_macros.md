@@ -112,7 +112,7 @@ checking on if license checking has been disabled globally, on RHEL, or on i386:
 ``` spec
 # scancode has a lot of dependencies, so it can be disabled for a faster build
 # or when its deps are unavailable.
-%global go_vendor_license_check_disable %{expr:
-    0%{?go_vendor_license_check_disable} || "%{_arch}" == "i386" || %{defined rhel} 
-}
+%if %{defined rhel} || "%{_arch}" == "i386"
+%global go_vendor_license_check_disable 1
+%endif
 ```
