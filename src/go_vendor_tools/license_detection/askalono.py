@@ -109,7 +109,7 @@ def _get_askalono_data(
     ).stdout
     licenses = [
         _filter_path(cast(AskalonoLicenseDict, json.loads(line)))
-        for line in licenses_json.splitlines()
+        for line in sorted(licenses_json.splitlines())
     ]
     return licenses
 

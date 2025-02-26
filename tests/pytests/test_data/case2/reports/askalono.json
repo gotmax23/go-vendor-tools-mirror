@@ -19,11 +19,11 @@
   "detector_name": "askalono",
   "askalono_license_data": [
     {
-      "path": "LICENSE",
+      "path": "LICENSE.docs",
       "result": {
-        "score": 1.0,
+        "score": 0.99690855,
         "license": {
-          "name": "ISC",
+          "name": "CC-BY-SA-4.0",
           "kind": "original",
           "aliases": []
         },
@@ -31,11 +31,11 @@
       }
     },
     {
-      "path": "LICENSE.docs",
+      "path": "LICENSE",
       "result": {
-        "score": 0.99690855,
+        "score": 1.0,
         "license": {
-          "name": "CC-BY-SA-4.0",
+          "name": "ISC",
           "kind": "original",
           "aliases": []
         },
