@@ -60,6 +60,9 @@ def get_scancode_license_data(
         data = cast(
             ScancodeLicenseDict, scancode.api.get_licenses(str(directory / file))
         )
+        data["license_detections"].sort(
+            key=lambda d: d.get("license_expression_spdx", "")
+        )
         data_dicts[str(file)] = data
         simplified_map[file] = data["detected_license_expression_spdx"]
     return data_dicts, simplified_map
