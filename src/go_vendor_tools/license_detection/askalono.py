@@ -111,6 +111,7 @@ def _get_askalono_data(
         _filter_path(cast(AskalonoLicenseDict, json.loads(line)))
         for line in sorted(licenses_json.splitlines())
     ]
+    licenses.sort(key=lambda ld: ld.get("path", ""))
     return licenses
 
 
