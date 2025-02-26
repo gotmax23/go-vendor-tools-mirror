@@ -210,6 +210,7 @@ def get_parser() -> argparse.ArgumentParser:
         "--prompt",
         action=argparse.BooleanOptionalAction,
         help="Whether to prompt to fill in undetected licenses."
+        " Implies --write-config."
         " Default: %(default)s",
     )
     report_parser.add_argument(
@@ -433,7 +434,8 @@ def get_report_write_config_data(
     loaded = load_tomlkit_if_exists(config_path)
     write_config_data = loaded.setdefault("licensing", {})
     write_config_data["detector"] = detector.NAME
-    write_config_data["detector_config"] = detector.detector_config
+    if detector.detector_config:
+        write_config_data["detector_config"] = detector.detector_config
     return new_config_path, loaded
 
 
@@ -496,7 +498,7 @@ def report_command(args: argparse.Namespace) -> None:
     mode: str = args.mode
     verify: str | None = args.verify
     write_json: Path | None = args.write_json
-    write_config: Path | None = args.write_config
+    write_config: bool = args.write_config or args.prompt
     prompt: bool = args.prompt
     config_path: Path | None = args.config_path
     use_archive: bool = args.use_archive
