@@ -64,7 +64,12 @@ test:
       https://github.com/aquasecurity/trivy/releases/download/v0.49.1/trivy_0.49.1_Linux-64bit.rpm
   script:
     - export GO_VENDOR_ARCHIVE_USE_MODULE_PROXY=1
-    - pipx run nox -e test -- --cov
+    - |
+      if [ "${ERROR_ON_MISSING_INTERPRETERS}" = "true" ]; then
+        pipx run nox -e test --error-on-missing-interpreters -- --cov
+      else
+        pipx run nox -e test --no-error-on-missing-interpreters -- --cov
+      fi
     - pipx run nox -e integration
     - >-
       test "$SHOULD_RPMBUILD" = "false" || pipx run nox -e integration-test-build
@@ -88,18 +93,22 @@ test:
           SHOULD_RPMBUILD: "true"
           # https://github.com/WojciechMula/pyahocorasick/issues/199
           NO_SCANCODE: "true"
+          ERROR_ON_MISSING_INTERPRETERS: "true"
         - IMAGE: "registry.fedoraproject.org/fedora:41"
           PACKAGES: "autorestic fzf"
           SHOULD_RPMBUILD: "true"
           NO_SCANCODE: "false"
+          ERROR_ON_MISSING_INTERPRETERS: "true"
         - IMAGE: "registry.fedoraproject.org/fedora:40"
           PACKAGES: "autorestic fzf"
           SHOULD_RPMBUILD: "true"
           NO_SCANCODE: "false"
+          ERROR_ON_MISSING_INTERPRETERS: "true"
         - IMAGE: "quay.io/centos/centos:stream9"
           PACKAGES: "fzf"
           SHOULD_RPMBUILD: "false"
           NO_SCANCODE: "false"
+          ERROR_ON_MISSING_INTERPRETERS: "false"
 
 pages:
   script:
