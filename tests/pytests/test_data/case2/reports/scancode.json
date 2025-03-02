@@ -17,8 +17,8 @@
   ],
   "extra_license_files": [],
   "detector_name": "scancode",
-  "scancode_license_data": [
-    {
+  "scancode_license_data": {
+    "LICENSE": {
       "detected_license_expression": "isc",
       "detected_license_expression_spdx": "ISC",
       "license_detections": [
@@ -68,7 +68,7 @@
       "license_clues": [],
       "percentage_of_license_text": 86.15
     },
-    {
+    "LICENSE.docs": {
       "detected_license_expression": "cc-by-sa-4.0",
       "detected_license_expression_spdx": "CC-BY-SA-4.0",
       "license_detections": [
@@ -97,5 +97,5 @@
       "license_clues": [],
       "percentage_of_license_text": 99.02
     }
-  ]
+  }
 }

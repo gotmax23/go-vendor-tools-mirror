@@ -53,14 +53,17 @@ class ScancodeLicenseDict(TypedDict):
 def get_scancode_license_data(
     directory: Path,
     files: Iterable[Path],
-) -> tuple[list[ScancodeLicenseDict], dict[Path, str]]:
-    data_dicts: list[ScancodeLicenseDict] = []
+) -> tuple[dict[str, ScancodeLicenseDict], dict[Path, str]]:
+    data_dicts: dict[str, ScancodeLicenseDict] = {}
     simplified_map: dict[Path, str] = {}
     for file in files:
         data = cast(
             ScancodeLicenseDict, scancode.api.get_licenses(str(directory / file))
         )
-        data_dicts.append(data)
+        data["license_detections"].sort(
+            key=lambda d: d.get("license_expression_spdx", "")
+        )
+        data_dicts[str(file)] = data
         simplified_map[file] = data["detected_license_expression_spdx"]
     return data_dicts, simplified_map
 
@@ -71,7 +74,7 @@ class ScancodeLicenseData(LicenseData):
     scancode-toolkit-specific LicenseData implementation
     """
 
-    scancode_license_data: list[ScancodeLicenseDict]
+    scancode_license_data: dict[str, ScancodeLicenseDict]
     _combine_licenses = staticmethod(partial(combine_licenses, recursive_simplify=True))
 
 
