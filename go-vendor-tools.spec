@@ -3,6 +3,11 @@
 # License text: https://spdx.org/licenses/MIT
 
 %bcond manpages 1
+# Whether to build the scancode extra
+%bcond scancode %{defined fedora}
+# Only run scancode tests when arch is not i386
+%bcond scancode_tests %[ %{with scancode} && "%{_arch}" != "i386"]
+
 %global forgeurl https://gitlab.com/fedora/sigs/go/go-vendor-tools
 %define tag v%{version_no_tilde %{quote:%nil}}
 
@@ -19,14 +24,17 @@ Source0:        %{forgesource}
 
 BuildArch:      noarch
 
-BuildRequires:  tomcli
 BuildRequires:  python3-devel
+
+# Test dependencies
+BuildRequires:  askalono-cli
+BuildRequires:  trivy
 
 %if %{with manpages}
 BuildRequires:  scdoc
 %endif
 
-Recommends:     (askalono-cli or trivy)
+Recommends:     (askalono-cli or trivy or go-vendor-tools+scancode)
 Recommends:     go-vendor-tools+all
 
 
@@ -55,14 +63,10 @@ Enhances:       go-vendor-tools
 
 %prep
 %autosetup -p1 %{forgesetupargs}
-# Remove scancode-toolkit test dependency.
-# It's not available on s390x and not needed for unit tests.
-tomcli-set pyproject.toml lists delitem \
-    'project.optional-dependencies.test' 'scancode-toolkit.*'
 
 
 %generate_buildrequires
-%pyproject_buildrequires -x all,test
+%pyproject_buildrequires -x all,test%{?with_scancode_tests:,scancode}
 
 
 %build
@@ -109,6 +113,7 @@ install -Dpm 0644 zsh_completions/* -t %{buildroot}%{zsh_completions_dir}/
 
 
 %check
+export MACRO_DIR=%{buildroot}%{_rpmmacrodir}
 %pytest
 
 
@@ -129,7 +134,7 @@ install -Dpm 0644 zsh_completions/* -t %{buildroot}%{zsh_completions_dir}/
 %files doc
 %doc %{_docdir}/go-vendor-tools-doc/
 
-%pyproject_extras_subpkg -n go-vendor-tools all scancode
+%pyproject_extras_subpkg -n go-vendor-tools all %{?with_scancode:scancode}
 
 %changelog
 * Wed Aug 28 2024 Maxwell G <maxwell@gtmx.me> - 0.6.0-1
