@@ -42,6 +42,17 @@ is the name of the main package.
 `NAME` can be overridden when the license files need to be installed into a
 subpackage's license directory by passing `-n`.
 
+#### Example
+
+```spec
+%install
+[...]
+# Install into the main package's license directory
+%go_vendor_license_install
+# Or: Install into subpackage foo's license directory
+%go_vendor_license_install -n %{name}-foo
+```
+
 #### Options
 
 In addition to the shared options:
@@ -72,7 +83,7 @@ This can be customized by passing a custom license expression.
 ``` spec
 %check
 %go_vendor_license_check -c %{S:2}
-# Test a custom license expression
+# Or: Test a custom license expression
 %go_vendor_license_check -c %{S:2} GPL-2.0-or-later AND MIT
 ```
 
