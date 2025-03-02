@@ -100,7 +100,13 @@ def compare_licenses(
     license1: license_expression.LicenseExpression | str,
     license2: str | license_expression.LicenseExpression | str,
     /,
+    allow_invalid: bool = True,
 ) -> bool:
-    return simplify_license(license1, validate=False) == simplify_license(
-        license2, validate=False
-    )
+    try:
+        return simplify_license(license1, validate=False) == simplify_license(
+            license2, validate=False
+        )
+    except license_expression.ExpressionError:
+        if not allow_invalid:
+            raise
+    return False

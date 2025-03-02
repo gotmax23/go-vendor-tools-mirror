@@ -525,13 +525,13 @@ def report_command(args: argparse.Namespace) -> None:
             if ignore_unlicensed_mods
             else get_unlicensed_mods(directory, license_data.license_file_paths)
         )
+        if prompt:
+            license_data = write_and_prompt_report_licenses(license_data, loaded)
         failed = bool(
             (license_data.undetected_licenses and not ignore_undetected)
             or (unlicensed_mods and not ignore_unlicensed_mods)
             or license_data.unmatched_extra_licenses
         )
-        if prompt:
-            license_data = write_and_prompt_report_licenses(license_data, loaded)
         print_licenses(
             license_data,
             unlicensed_mods,

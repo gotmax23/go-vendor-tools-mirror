@@ -129,7 +129,7 @@ install -Dpm 0644 zsh_completions/* -t %{buildroot}%{zsh_completions_dir}/
 %files doc
 %doc %{_docdir}/go-vendor-tools-doc/
 
-%pyproject_extras_subpkg -n go-vendor-tools all
+%pyproject_extras_subpkg -n go-vendor-tools all scancode
 
 %changelog
 * Wed Aug 28 2024 Maxwell G <maxwell@gtmx.me> - 0.6.0-1

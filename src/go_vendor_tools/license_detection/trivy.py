@@ -99,6 +99,7 @@ def _trivy_license_dict_to_license_map(
         # Treat them as undetected license files in that case.
         if not validate_license(name):
             invalid.add(path)
+            continue
         # License files can have multiple matches in trivy
         if path in license_map:
             license_map[path] = str(

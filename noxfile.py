@@ -57,7 +57,7 @@ def git(session: nox.Session, *args, **kwargs):
 def get_test_deps() -> Iterable[str]:
     yield ".[test]"
     if HAS_SCANCODE:
-        yield "scancode-toolkit"
+        yield ".[scancode]"
 
 
 BASE_COVERAGE_COMMAND = ("coverage", "run", "-p", "--source", "go_vendor_tools")
@@ -202,7 +202,14 @@ def codeqa(session: nox.Session):
     install(session, ".[codeqa]")
     session.run("ruff", "check", *session.posargs, *LINT_FILES)
     session.run("shellcheck", *iglob("contrib/*.sh"))
-    session.run("pymarkdownlnt", "scan", *iglob("*.md"), *iglob("doc/*.md"))
+    session.run(
+        # fmt: off
+        "pymarkdownlnt", "scan",
+        # fmt: on
+        *iglob("*.md"),
+        *iglob("doc/*.md"),
+        "doc/man/rpm_macros.md",
+    )
     session.run("reuse", "lint")
 
 
