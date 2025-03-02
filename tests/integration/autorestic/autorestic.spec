@@ -66,7 +66,7 @@ test "$(cat buildrequires)" = "trivy"
 if [ "${NO_SCANCODE-}" != "true" ]; then
     %go_vendor_license_check -c %{S:4}
     diff -u "%{S:3}" "$(pwd)/licenses.list.scancode"
-    test "$(cat buildrequires2)" = "python%{python3_version}dist(scancode-toolkit)"
+    test "$(cat buildrequires2)" = "go-vendor-tools+scancode"
 fi
 
 %if %{with check}

@@ -29,7 +29,6 @@ from go_vendor_tools.license_detection.base import (
     LicenseDetector,
     LicenseDetectorNotAvailableError,
     get_manual_license_entries,
-    python3dist,
     reuse_path_to_license_map,
 )
 from go_vendor_tools.licensing import combine_licenses
@@ -80,7 +79,7 @@ class ScancodeLicenseData(LicenseData):
 
 class ScancodeLicenseDetector(LicenseDetector[ScancodeLicenseData]):
     NAME = "scancode"
-    PACKAGES_NEEDED = (python3dist("scancode-toolkit"),)
+    PACKAGES_NEEDED = ("go-vendor-tools+scancode",)
 
     def __init__(
         self,

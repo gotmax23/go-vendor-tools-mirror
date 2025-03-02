@@ -57,7 +57,7 @@ def git(session: nox.Session, *args, **kwargs):
 def get_test_deps() -> Iterable[str]:
     yield ".[test]"
     if HAS_SCANCODE:
-        yield "scancode-toolkit"
+        yield ".[scancode]"
 
 
 BASE_COVERAGE_COMMAND = ("coverage", "run", "-p", "--source", "go_vendor_tools")
