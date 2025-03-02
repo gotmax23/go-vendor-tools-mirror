@@ -15,7 +15,6 @@ from typing import NamedTuple
 
 PARENT = Path(__file__).resolve().parent.parent.parent
 # e.g. MACRO_DIR=%{buildroot}%{_rpmmacrodir} \
-#      MACRO_LUA_DIR=%{buildroot}%{_rpmluadir} \
 #      pytest
 # MACRO_DIR="" MACRO_LUA_DIR="" to only use system paths
 MACRO_DIR = str(os.environ.get("MACRO_DIR", PARENT / "rpm"))
