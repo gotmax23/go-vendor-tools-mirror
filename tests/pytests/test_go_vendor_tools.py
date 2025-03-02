@@ -8,6 +8,7 @@ import sys
 from io import StringIO
 from pathlib import Path
 from shutil import copy2
+from subprocess import CalledProcessError
 from textwrap import dedent
 
 import pytest
@@ -114,7 +115,7 @@ def test_load_dump_license_data(
     mocker: MockerFixture,
 ) -> None:
     if allowed_detectors and detector not in allowed_detectors:
-        pytest.skip(f"case3 does use {detector}")
+        pytest.skip(f"{case_name} does use {detector}")
 
     # Needed for case3
     mocker.patch("go_vendor_tools.gomod.get_go_module_names", return_value={"abc": ""})
@@ -124,7 +125,19 @@ def test_load_dump_license_data(
     licenses_dir = case_dir / "licenses"
     config = load_config(None)
     detector_obj = detector(cli_config, config["licensing"])
-    data: LicenseData = detector_obj.detect(licenses_dir)
+    try:
+        data: LicenseData = detector_obj.detect(licenses_dir)
+    except Exception as exc:
+        print(exc)
+        if isinstance(exc, CalledProcessError):
+            print("stdout:", exc.stdout)
+            print("stderr:", exc.stderr)
+            if case_name == "case3" and "Found argument '--multiple'" in exc.stderr:
+                # stderr: error: Found argument '--multiple' which wasn't
+                # expected, or isn't valid in this context
+                # For some reason, this only happens on EL 9.
+                pytest.xfail()
+        raise
 
     placeholder_path = Path("/placeholder")
     data.license_file_paths = tuple(
