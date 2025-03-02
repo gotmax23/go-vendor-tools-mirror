@@ -49,6 +49,10 @@
     %{-d:--detector %{-d*}}
     %{-D:--detector-config %{-D*}}
     report expression
-    --verify %{expr:"%{*}" ? "%{__gvt_shescape_backup %{*}}" : "%{__gvt_shescape_backup %{LICENSE}}"}
+    --verify %{expr:
+        "%{*}" ? 
+        "%{__gvt_shescape_backup %{*}}" :
+        "%{__gvt_shescape_backup %{LICENSE}}"
+    }
 }
 %go_vendor_license_check(c:d:D:) %{expand:%[ 0%{?go_vendor_license_check_disable} ? "" : "%%_go_vendor_license_check %**" ]}
