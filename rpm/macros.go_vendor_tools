@@ -37,6 +37,11 @@
     --filelist %{go_vendor_license_filelist}
 }
 
+# Compatibility with shescape that's not available on EL 9.
+# TODO: The compatibility version doesn't properly escape single quotes within
+# the output.
+%__gvt_shescape_backup() %{?shescape:%{shescape:%{*}}}%{!?shescape:'%{*}'}
+
 # Ensure the license expression matches what the go_vendor_licenses tool expects
 %_go_vendor_license_check(c:d:D:) %{shrink:
     %{__go_vendor_license}
@@ -44,6 +49,6 @@
     %{-d:--detector %{-d*}}
     %{-D:--detector-config %{-D*}}
     report expression
-    --verify %{expr: "%{*}" ? "'%{*}'" : "'%{LICENSE}'" }
+    --verify %{expr:"%{*}" ? "%{__gvt_shescape_backup %{*}}" : "%{__gvt_shescape_backup %{LICENSE}}"}
 }
 %go_vendor_license_check(c:d:D:) %{expand:%[ 0%{?go_vendor_license_check_disable} ? "" : "%%_go_vendor_license_check %**" ]}
