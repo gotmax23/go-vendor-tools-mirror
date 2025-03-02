@@ -144,6 +144,8 @@ code_block_line_length = 120
 [tool.pymarkdown.plugins.no-duplicate-heading]
 # NEWS.md deliberately has duplicate headings
 enabled = false
+[tool.pymarkdown.plugins.code-block-style]
+style = "fenced"
 
 
 [tool.coverage.run]

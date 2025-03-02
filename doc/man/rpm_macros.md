@@ -9,7 +9,6 @@ package's directory in `/usr/share/licenses`.
     the `go-vendor-tools.toml` file.
     In the go2rpm specfile template, this file is always included as `Source2`.
 
-
 ## Callable macros
 
 ### Shared options
@@ -28,7 +27,7 @@ Generate requirements needed for the selected license backend.
 
 #### Example
 
-``` rpm
+``` spec
 %generate_buildrequires
 %go_vendor_license_buildrequires -c %{S:2}
 ```
@@ -49,7 +48,6 @@ In addition to the shared options:
 
 - `-n` — name of the subdirectory of `/usr/share/licenses/`. Defaults to `%{NAME}`.
 
-
 ### `%{go_vendor_license_filelist}`
 
 This macro contains a path to the filelist created by
@@ -57,7 +55,7 @@ This macro contains a path to the filelist created by
 
 #### Example
 
-```
+``` spec
 %files -f %{go_vendor_license_filelist}
 ```
 
@@ -69,10 +67,9 @@ By default, the macro will compare the value of `%{LICENSE}`, the value of the
 `License:` tag of the main package.
 This can be customized by passing a custom license expression.
 
-
 #### Example
 
-``` rpm
+``` spec
 %check
 %go_vendor_license_check -c %{S:2}
 # Test a custom license expression
@@ -82,7 +79,6 @@ This can be customized by passing a custom license expression.
 #### Arguments
 
 - `%*` — SPDX license expression. Defaults to `%{LICENSE}`.
-
 
 ## Variable macros
 
@@ -94,7 +90,6 @@ You shouldn't need to touch this.
 ### `%go_vendor_license_check_disable`
 
 !!! info
-
     Added in v0.7.0
 
 Set this macro to `1` to disable `%go_vendor_license_check` (it will expand to
