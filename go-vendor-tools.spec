@@ -114,7 +114,7 @@ install -Dpm 0644 zsh_completions/* -t %{buildroot}%{zsh_completions_dir}/
 
 %check
 export MACRO_DIR=%{buildroot}%{_rpmmacrodir}
-%pytest
+%pytest -vv
 
 
 %files -f %{pyproject_files}
