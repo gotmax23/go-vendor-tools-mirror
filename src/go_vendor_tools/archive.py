@@ -32,7 +32,7 @@ def normalize_file_permissions(st_mode: int) -> int:
 
 def reproducible_filter(member: tarfile.TarInfo) -> tarfile.TarInfo:
     return member.replace(
-        mtime=int(os.environ.get("SOURCE_DATE_EPOCH", 0)),
+        mtime=int(os.environ.get("SOURCE_DATE_EPOCH", "0")),
         mode=normalize_file_permissions(member.mode),
         uid=0,
         gid=0,
