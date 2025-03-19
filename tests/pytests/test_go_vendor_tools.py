@@ -10,6 +10,7 @@ from pathlib import Path
 from shutil import copy2
 from subprocess import CalledProcessError
 from textwrap import dedent
+from typing import Any
 
 import pytest
 from pytest_mock import MockerFixture
@@ -25,6 +26,7 @@ from go_vendor_tools.license_detection.base import (
     get_manual_license_entries,
 )
 from go_vendor_tools.license_detection.load import get_detectors as gd
+from go_vendor_tools.license_detection.scancode import ScancodeLicenseData
 
 if sys.version_info >= (3, 11):
     import tomllib
@@ -114,7 +116,7 @@ def test_load_dump_license_data(
     cli_config: dict[str, str],
     mocker: MockerFixture,
 ) -> None:
-    if allowed_detectors and detector not in allowed_detectors:
+    if allowed_detectors is not None and detector not in allowed_detectors:
         pytest.skip(f"{case_name} does use {detector}")
 
     # Needed for case3
@@ -161,7 +163,32 @@ def test_load_dump_license_data(
     # (expected_report).write_text(json.dumps(jsonable, indent=2))
     with (expected_report).open() as fp:
         gotten_json = json.load(fp)
+    # Compatibility with older scancode
+    if isinstance(data, ScancodeLicenseData):
+        jsonable = _scancode_fix_license_map(jsonable)
     assert gotten_json == jsonable
+
+
+def _scancode_fix_license_map(
+    data: dict[str, Any],
+) -> dict[str, Any]:  # pragma: no cover
+    """
+    Fix scancode license map from old scancode to match the schema of the expected data.
+
+    (In new scancode versions, the key is called license_expression_spdx and in
+    old it's called spdx_license_expression)
+
+    Args:
+        m1:
+            Dictionary with the old schema to modify in place to match the new
+    Returns: m1
+    """
+    for mapping in data["scancode_license_data"].values():
+        for detection_entry in mapping["license_detections"]:
+            for match in detection_entry["matches"]:
+                if exp := match.pop("spdx_license_expression", None):
+                    match["license_expression_spdx"] = exp
+    return data
 
 
 def test_detect_nothing(tmp_path: Path, detector: type[LicenseDetector]) -> None:
