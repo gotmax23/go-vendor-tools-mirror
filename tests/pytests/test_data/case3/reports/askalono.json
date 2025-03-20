@@ -19,42 +19,5 @@
     "/placeholder/vendor/abc/LICENSES/ISC.txt"
   ],
   "extra_license_files": [],
-  "detector_name": "askalono",
-  "askalono_license_data": [
-    {
-      "path": "LICENSE.combined",
-      "result": {
-        "score": 0.0,
-        "license": null,
-        "containing": [
-          {
-            "score": 1.0,
-            "license": {
-              "name": "MIT",
-              "kind": "original",
-              "aliases": []
-            },
-            "line_range": [
-              4,
-              12
-            ]
-          },
-          {
-            "score": 0.9972414,
-            "license": {
-              "name": "GPL-2.0-only",
-              "kind": "original",
-              "aliases": [
-                "GPL-2.0-or-later"
-              ]
-            },
-            "line_range": [
-              13,
-              128
-            ]
-          }
-        ]
-      }
-    }
-  ]
+  "detector_name": "askalono"
 }

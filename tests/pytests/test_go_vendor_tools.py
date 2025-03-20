@@ -25,8 +25,8 @@ from go_vendor_tools.license_detection.base import (
     LicenseDetectorNotAvailableError,
     get_manual_license_entries,
 )
+from go_vendor_tools.license_detection.load import DETECTORS
 from go_vendor_tools.license_detection.load import get_detectors as gd
-from go_vendor_tools.license_detection.scancode import ScancodeLicenseData
 
 if sys.version_info >= (3, 11):
     import tomllib
@@ -160,34 +160,22 @@ def test_load_dump_license_data(
     )
     assert new_data.to_jsonable() == jsonable
 
+    _remove_license_scanner_data(jsonable)
     # (expected_report).write_text(json.dumps(jsonable, indent=2))
     with (expected_report).open() as fp:
-        gotten_json = json.load(fp)
-    # Compatibility with older scancode
-    if isinstance(data, ScancodeLicenseData):
-        jsonable = _scancode_fix_license_map(jsonable)
+        gotten_json = _remove_license_scanner_data(json.load(fp))
     assert gotten_json == jsonable
 
 
-def _scancode_fix_license_map(
-    data: dict[str, Any],
-) -> dict[str, Any]:  # pragma: no cover
+def _remove_license_scanner_data(data: dict[str, Any]) -> dict[str, Any]:
     """
-    Fix scancode license map from old scancode to match the schema of the expected data.
-
-    (In new scancode versions, the key is called license_expression_spdx and in
-    old it's called spdx_license_expression)
-
-    Args:
-        m1:
-            Dictionary with the old schema to modify in place to match the new
-    Returns: m1
+    Remove license-scanner specific data from license data dict, as this data
+    tends to be unstable and change between versions.
+    We only care about the data that's actually produced by g-v-t.
     """
-    for mapping in data["scancode_license_data"].values():
-        for detection_entry in mapping["license_detections"]:
-            for match in detection_entry["matches"]:
-                if exp := match.pop("spdx_license_expression", None):
-                    match["license_expression_spdx"] = exp
+    for name in DETECTORS:
+        key = f"{name}_license_data"
+        data.pop(key, None)
     return data
 
 
