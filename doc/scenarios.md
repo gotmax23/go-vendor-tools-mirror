@@ -2,6 +2,7 @@
 Copyright (C) 2024 Maxwell G <maxwell@gtmx.me>
 SPDX-License-Identifier: MIT
 -->
+
 <!--- pyml disable-num-lines 111 code-block-style-->
 
 # Scenarios
@@ -16,7 +17,7 @@ with go-vendor-tools.
 
 1. Generate the base specfile
 
-    ``` bash
+    ```bash
     go2rpm --profile vendor -d github.com/opencontainers/runc --name runc
     ```
 
@@ -29,8 +30,8 @@ with go-vendor-tools.
     and manually determine the SPDX expression for packages listed as
     incompatible.
 
-2. Open up the specfile in an editor and replace the `License` field with the
-   expression that `go2rpm` outputs.
+1. Open up the specfile in an editor and replace the `License` field with the
+    expression that `go2rpm` outputs.
 
 ## Security updates
 
@@ -39,15 +40,15 @@ fixed in `v1.33.0`. We want to update package `foo.spec` to use the new
 version. The go-vendor-tools configuration is stored in `go-vendor-tools.toml`.
 
 1. Use the `go_vendor_archive override` command to set the dependency override
-   in the configuration file.
+    in the configuration file.
 
-    ``` bash
+    ```bash
     go_vendor_archive override --config go-vendor-tools.toml google.golang.org/protobuf v1.33.0
     ```
 
-2. Use the `go_vendor_archive create` command to re-generate the configuration file.
+1. Use the `go_vendor_archive create` command to re-generate the configuration file.
 
-    ``` bash
+    ```bash
     go_vendor_archive create --config go-vendor-tools.toml foo.spec
     ```
 
@@ -59,17 +60,17 @@ in `go-vendor-tools.toml`.
 
 1. Unpack the source and vendor archives and change into the directory.
 
-    ``` bash
+    ```bash
     fedpkg prep
     cd <UNPACKED ARCHIVE>
     rm -rf _build
     ```
 
-2. Identify the module's license file and determine its SPDX identifier
+1. Identify the module's license file and determine its SPDX identifier
 
     - First, check the module directory for a license file
 
-        ``` bash
+        ```bash
         ls vendor/github.com/google/shlex
         [...]
         COPYING
@@ -78,26 +79,26 @@ in `go-vendor-tools.toml`.
 
     - The SPDX identifier was determined to be `Apache-2.0`.
 
-3. Use the `go_vendor_license explicit` command to add the license entry to the
-   configuration file.
+1. Use the `go_vendor_license explicit` command to add the license entry to the
+    configuration file.
 
-    ``` bash
+    ```bash
     go_vendor_license --config ../go-vendor-tools.toml explicit -f vendor/github.com/google/shlex/COPYING Apache-2.0
     ```
 
-4. The configuration file should now have the following block
+1. The configuration file should now have the following block
 
-    ``` toml
+    ```toml
     [[licensing.licenses]]
     path = "vendor/github.com/google/shlex/COPYING"
     sha256sum = "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
     expression = "Apache-2.0"
     ```
 
-5. You can now rerun the `go_vendor_license report` subcommand to determine the
-   license expression.
+1. You can now rerun the `go_vendor_license report` subcommand to determine the
+    license expression.
 
-    ``` bash
+    ```bash
     go_vendor_license --config ../go-vendor-tools.toml report expression
     ```
 
@@ -109,25 +110,25 @@ Example case: Upstream has released version 1.10.1 of foo.
 go2rpm was used to generate the original specfile using vendored dependencies.
 `go-vendor-tools.toml` is the configuration file for `go_vendor_archive`.
 
-!!!tip
+!!! tip
 
     Consider [re-generating a new specfile with `go2rpm`](#generate-go2rpm)
     instead of updating an existing one to pick up go2rpm template
     improvements.
 
 1. In the project directory containing `foo.spec` and `go-vendor-tools.toml`,
-   update the Version to 1.10.1 in the spec file.
+    update the Version to 1.10.1 in the spec file.
 
-2. Retrieve the new v1.10.1 source archive from upstream.
+1. Retrieve the new v1.10.1 source archive from upstream.
 
-    ``` bash
+    ```bash
     spectool -g foo.spec
     ```
 
-3. Generate the vendor archive from the v1.10.1 source archive.
+1. Generate the vendor archive from the v1.10.1 source archive.
 
-    ``` bash
+    ```bash
     go_vendor_archive create --config go-vendor-tools.toml foo.spec
     ```
 
-4. Upload new sources and continue with your normal package update workflow.
+1. Upload new sources and continue with your normal package update workflow.
