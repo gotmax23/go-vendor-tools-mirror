@@ -15,7 +15,6 @@ from typing import NamedTuple
 
 PARENT = Path(__file__).resolve().parent.parent.parent
 # e.g. MACRO_DIR=%{buildroot}%{_rpmmacrodir} \
-#      MACRO_LUA_DIR=%{buildroot}%{_rpmluadir} \
 #      pytest
 # MACRO_DIR="" MACRO_LUA_DIR="" to only use system paths
 MACRO_DIR = str(os.environ.get("MACRO_DIR", PARENT / "rpm"))
@@ -68,36 +67,42 @@ class Evaluator:
             assert proc.returncode != 0
         else:
             assert proc.returncode == 0, proc.stderr
-        return Result(proc.stdout.strip(), proc.stderr.strip())
+        return Result(proc.stdout, proc.stderr)
 
 
 evaluator = Evaluator()
 
 
 def test_go_vendor_license_check_disabled():
-    assert not evaluator(
-        "%go_vendor_license_check", {"go_vendor_license_check_disable": "1"}
-    ).stdout
+    assert (
+        evaluator(
+            "%go_vendor_license_check", {"go_vendor_license_check_disable": "1"}
+        ).stdout
+        == "\n"
+    )
 
 
 def test_go_vendor_license_check():
     assert (
         evaluator("%go_vendor_license_check", {"LICENSE": "MIT"}).stdout
-    ) == "go_vendor_license report expression --verify 'MIT'"
+    ) == "go_vendor_license report expression --verify 'MIT'\n"
 
 
 def test_go_vendor_license_check_args():
     assert (
-        evaluator(
-            "%go_vendor_license_check GPL-2.0-only BSD-3-Clause", {"LICENSE": "MIT"}
-        ).stdout
-    ) == "go_vendor_license report expression --verify 'GPL-2.0-only BSD-3-Clause'"
+        (
+            evaluator(
+                "%go_vendor_license_check GPL-2.0-only BSD-3-Clause", {"LICENSE": "MIT"}
+            ).stdout
+        )
+        == "go_vendor_license report expression --verify 'GPL-2.0-only BSD-3-Clause'\n"
+    )
 
 
 def test_go_vendor_license_buildrequires():
     assert (
         evaluator("%go_vendor_license_buildrequires").stdout
-        == "go_vendor_license generate_buildrequires"
+        == "go_vendor_license generate_buildrequires\n"
     )
 
 
@@ -107,5 +112,5 @@ def test_go_vendor_license_buildrequires_disabled():
             "%go_vendor_license_buildrequires",
             {"go_vendor_license_check_disable": "1"},
         ).stdout
-        == "go_vendor_license generate_buildrequires --no-check"
+        == "go_vendor_license generate_buildrequires --no-check\n"
     )

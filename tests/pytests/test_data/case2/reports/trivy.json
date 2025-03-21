@@ -13,20 +13,5 @@
     "/placeholder/LICENSE"
   ],
   "extra_license_files": [],
-  "detector_name": "trivy",
-  "trivy_license_data": {
-    "Target": "Loose File License(s)",
-    "Class": "license-file",
-    "Licenses": [
-      {
-        "Severity": "LOW",
-        "Category": "notice",
-        "PkgName": "",
-        "FilePath": "LICENSE",
-        "Name": "ISC",
-        "Confidence": 1,
-        "Link": "https://spdx.org/licenses/ISC.html"
-      }
-    ]
-  }
+  "detector_name": "trivy"
 }

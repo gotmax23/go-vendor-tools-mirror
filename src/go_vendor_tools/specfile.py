@@ -8,7 +8,7 @@ Helpers for working with specfiles
 from __future__ import annotations
 
 from pathlib import Path
-from typing import TYPE_CHECKING, Generic, Protocol, TypeVar
+from typing import TYPE_CHECKING, Protocol, TypeVar
 
 # specfile is opened liked this so downstreams can remove the dependency on
 # specfile and use the other functionality if they so choose
@@ -25,15 +25,16 @@ else:
 
 from go_vendor_tools.exceptions import VendorToolsError
 
-_T = TypeVar("_T")
+_T_co = TypeVar("_T_co", covariant=True)
 
 if TYPE_CHECKING:
     from contextlib import AbstractContextManager
 
     from typing_extensions import Self
 
-    class _ContentContext(Generic[_T], AbstractContextManager[_T], Protocol):
-        content: _T
+    class _ContentContext(AbstractContextManager[_T_co], Protocol[_T_co]):
+        @property
+        def content(self) -> _T_co: ...
 
 
 def _get_section_name(subpackage: str | None = None) -> str:

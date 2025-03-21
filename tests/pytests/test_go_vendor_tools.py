@@ -10,6 +10,7 @@ from pathlib import Path
 from shutil import copy2
 from subprocess import CalledProcessError
 from textwrap import dedent
+from typing import Any
 
 import pytest
 from pytest_mock import MockerFixture
@@ -24,6 +25,7 @@ from go_vendor_tools.license_detection.base import (
     LicenseDetectorNotAvailableError,
     get_manual_license_entries,
 )
+from go_vendor_tools.license_detection.load import DETECTORS
 from go_vendor_tools.license_detection.load import get_detectors as gd
 
 if sys.version_info >= (3, 11):
@@ -114,7 +116,7 @@ def test_load_dump_license_data(
     cli_config: dict[str, str],
     mocker: MockerFixture,
 ) -> None:
-    if allowed_detectors and detector not in allowed_detectors:
+    if allowed_detectors is not None and detector not in allowed_detectors:
         pytest.skip(f"{case_name} does use {detector}")
 
     # Needed for case3
@@ -158,10 +160,23 @@ def test_load_dump_license_data(
     )
     assert new_data.to_jsonable() == jsonable
 
+    _remove_license_scanner_data(jsonable)
     # (expected_report).write_text(json.dumps(jsonable, indent=2))
     with (expected_report).open() as fp:
-        gotten_json = json.load(fp)
+        gotten_json = _remove_license_scanner_data(json.load(fp))
     assert gotten_json == jsonable
+
+
+def _remove_license_scanner_data(data: dict[str, Any]) -> dict[str, Any]:
+    """
+    Remove license-scanner specific data from license data dict, as this data
+    tends to be unstable and change between versions.
+    We only care about the data that's actually produced by g-v-t.
+    """
+    for name in DETECTORS:
+        key = f"{name}_license_data"
+        data.pop(key, None)
+    return data
 
 
 def test_detect_nothing(tmp_path: Path, detector: type[LicenseDetector]) -> None:
