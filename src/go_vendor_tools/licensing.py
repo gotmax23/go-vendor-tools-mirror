@@ -9,12 +9,42 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from functools import lru_cache, partial
-from typing import cast
+from typing import Any, cast
 
 import license_expression
 from boolean.boolean import DualBase
 
-licensing = license_expression.get_spdx_licensing()
+
+def get_fedora_licensing() -> license_expression.Licensing:
+    """
+    Get a Licensing object modifed to prefer the LicenseRef-Fedora-* extensions
+    """
+    license_index = license_expression.get_license_index()
+    public_dict: dict[str, Any] = {
+        "key": "LicenseRef-Fedora-Public-Domain",
+        "aliases": [],
+        "is_exception": False,
+    }
+    lics: list[dict[str, Any]] = [public_dict]
+    for lic in license_index:
+        if lic.get("is_deprecated", False) or not lic.get("spdx_license_key"):
+            continue
+        ld = {
+            "key": lic.get("spdx_license_key", ""),
+            "aliases": lic.get("other_spdx_license_keys", []),
+            "is_exception": lic.get("is_exception", ""),
+        }
+        if ld["key"].startswith("LicenseRef-scancode-public-"):
+            public_dict["aliases"].append(ld["key"])
+            public_dict["aliases"].extend(
+                a for a in ld["aliases"] if a != public_dict["key"]
+            )
+            continue
+        lics.append(ld)
+    return license_expression.load_licensing_from_license_index(lics)
+
+
+licensing = get_fedora_licensing()
 
 
 def combine_licenses(
