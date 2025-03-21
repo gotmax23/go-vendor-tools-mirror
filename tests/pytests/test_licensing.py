@@ -29,6 +29,14 @@ from go_vendor_tools.licensing import (
             "(Apache-2.0 AND (MIT OR Apache-2.0)) AND Apache-2.0",
             "Apache-2.0 AND (Apache-2.0 OR MIT)",
         ),
+        pytest.param(
+            "Licenseref-Scancode-Public-Domain and LicenseRef-Scancode-Public-Domain-Disclaimer",  # noqa: E501
+            "LicenseRef-Fedora-Public-Domain",
+        ),
+        pytest.param(
+            "Licenseref-Scancode-Public-Domain AND LicenseRef-Fedora-Public-Domain",
+            "LicenseRef-Fedora-Public-Domain",
+        ),
     ],
 )
 def test_simplify_license(expression: str, expected: str) -> None:
