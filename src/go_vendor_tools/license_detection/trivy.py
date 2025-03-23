@@ -168,14 +168,17 @@ class TrivyLicenseDetector(LicenseDetector[TrivyLicenseData]):
             exclude_directories=self.license_config["exclude_directories"],
             exclude_files=self.license_config["exclude_files"],
             reuse_roots=reuse_roots,
-            # FIXME(gotmax23): Also include LICENSE_FILE_TYPE and make sure
-            # that find_license_files does not find any license files that
-            # trivy did not detect
-            filetype_info=[NOTICE_FILE_TYPE],
         )
         filtered_license_map |= reuse_path_to_license_map(license_file_lists["reuse"])
         filtered_license_map = dict(
             sorted(filtered_license_map.items(), key=lambda item: item[0])
+        )
+        # Ensure that any license files found by searching the filesystem
+        # manually are detected by trivy
+        undetected.update(
+            file
+            for file in map(Path, license_file_lists["license"])
+            if file not in filtered_license_map
         )
         return TrivyLicenseData(
             directory=Path(directory),

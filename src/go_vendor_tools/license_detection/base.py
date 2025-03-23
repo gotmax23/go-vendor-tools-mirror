@@ -12,7 +12,7 @@ import dataclasses
 import os
 import re
 import sys
-from collections.abc import Collection
+from collections.abc import Collection, Sequence
 from itertools import chain
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, ClassVar, Generic
@@ -167,6 +167,8 @@ class LicenseData:
                 data[key] = {str(key1): value1 for key1, value1 in value.items()}
             elif key in self._LIST_PATH_FIELDS:
                 data[key] = list(map(str, value))
+                if not isinstance(value, Sequence):
+                    data[key].sort()
             elif key == "license_set":
                 data[key] = sorted(value)
             elif key == "license_expression":

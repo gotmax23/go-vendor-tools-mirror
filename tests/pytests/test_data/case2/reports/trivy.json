@@ -3,14 +3,19 @@
   "license_map": {
     "LICENSE": "ISC"
   },
-  "undetected_licenses": [],
+  "undetected_licenses": [
+    "LICENSE.docs",
+    "LICENSE.undetected"
+  ],
   "unmatched_extra_licenses": [],
   "license_set": [
     "ISC"
   ],
   "license_expression": "ISC",
   "license_file_paths": [
-    "/placeholder/LICENSE"
+    "/placeholder/LICENSE",
+    "/placeholder/LICENSE.docs",
+    "/placeholder/LICENSE.undetected"
   ],
   "extra_license_files": [],
   "detector_name": "trivy"

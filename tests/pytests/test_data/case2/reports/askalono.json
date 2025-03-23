@@ -4,7 +4,9 @@
     "LICENSE": "ISC",
     "LICENSE.docs": "CC-BY-SA-4.0"
   },
-  "undetected_licenses": [],
+  "undetected_licenses": [
+    "LICENSE.undetected"
+  ],
   "unmatched_extra_licenses": [],
   "license_set": [
     "CC-BY-SA-4.0",
@@ -13,7 +15,8 @@
   "license_expression": "CC-BY-SA-4.0 AND ISC",
   "license_file_paths": [
     "/placeholder/LICENSE",
-    "/placeholder/LICENSE.docs"
+    "/placeholder/LICENSE.docs",
+    "/placeholder/LICENSE.undetected"
   ],
   "extra_license_files": [],
   "detector_name": "askalono"
