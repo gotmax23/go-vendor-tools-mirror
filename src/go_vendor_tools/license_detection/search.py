@@ -75,7 +75,7 @@ _LICENSE_EXCLUDE_PATTERN_SUBDIR = re.compile(
     flags=re.VERBOSE,
 )
 
-_NOTICE_PATTERN = re.compile(r"^(AUTHORS|NOTICE|PATENTS).*$", flags=re.IGNORECASE)
+_NOTICE_PATTERN = re.compile(r"^(AUTHORS|NOTICE|PATENTS).*$")
 
 
 class LicenseFileTypes(enum.Enum):
