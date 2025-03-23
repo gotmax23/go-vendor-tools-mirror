@@ -5,6 +5,129 @@ SPDX-License-Identifier: MIT
 
 # NEWS
 
+## 0.7.0 - 2025-03-23 <a id='0.7.0'></a>
+
+### Release summary
+
+This is a pretty big release, consisting of several months of work.
+There are no major breaking changes to the CLI or RPM macro interfaces,
+but there are many improvements to the internal code.
+These changes may result in:
+
+- Additional errors due to undetected licenses that need to be manually
+  specified (affects packages using the trivy backend)
+
+- Changes to the generated License expression due to `LICENSE.docs` files in
+  dependencies no longer being included in license detection (mainly affects
+  packages using the askalono backend)
+
+You can fix these errors by running the following command which will prompt for
+any missing licenses and then update the License tag in the specfile if needed
+(using the new `--update-spec` flag).
+
+```bash
+go_vendor_license --config go-vendor-tools.toml --path *.spec report --prompt --update-spec
+```
+
+### Added
+
+**general:**
+
+- Add dependency on `specfile` library.
+  This dependency is technically optional (guarded by a `try:`/`except ImportError:`),
+  so downstreams can patch the dependencies to remove this if need be.
+- Add `scancode` python extra
+
+**docs:**
+
+- Add meta tag for site description
+- Add `go_vendor_license` markdown docs
+- Add manpage for `go_vendor_license`
+- Document RPM macros
+- config: document `pre_commands` and `post_commands`
+- Enable search
+
+**`go_vendor_license`:**
+
+- Add `--update-spec` and `--verify-spec` flags to update or verify `License`
+  tag of an existing specfile.
+  This adds a dependency on `specfile`.
+- Allow running `%go_vendor_license_install` without pulling in license detector
+  backends.
+  This only applies to the `askalono` and `scancode` backends.
+- Implement `%go_vendor_license_check_disable` to disable license checking on a
+  package- or distribution-wide level.
+  This allows cutting out license detector dependencies so specfiles can still
+  build when those are unpackaged (e.g., scancode on EPEL).
+- Add support for REUSE-style `LICENSES` directory to license detection backend
+  code.
+- Add support for askalono `--multiple` flag via [`detector_config`][detector_config].
+  This is not enabled by default, as multiple mode is apparently buggy and
+  causes some previously detected licenses to no longer be detected.
+
+[detector_config]: https://fedora.gitlab.io/sigs/go/go-vendor-tools/config/#detector_config-mapping-of-string-to-string
+
+**packaging:**
+
+- Run full test suite in `%check`
+
+### Changed
+
+**`go_vendor_license`:**
+
+- Use consistent method to find license files for both `scancode` and
+  `askalono`. This may cause some small changes to license expressions detected
+  by the `askalono` backend.
+- Exclude `LICENSE.docs` files from vendored dependencies when detecting
+  licenses.
+  The documentation from dependencies are not included in the compiled binary
+  and thus do not affect the license and should not be included in the
+  calculated expression.
+  This helps avoid situations where CC licenses that are approved for
+  documentation and not code end up in the License tag and cause extra work for
+  packagers.
+- `go_vendor_license_install` now errors when invalid license overrides exist in
+  the configuration file.
+- While the schema for the `--write-json` report is undocumented, note that the
+  `scancode_license_data` key in the scancode license report has changed from a
+  list of dictionaries to a dictionary mapping path names to the scancode
+  license dictionary.
+- trivy: verify all license files found by searching the filesystem that trivy
+  does not detect itself are marked as undetected.
+- trivy: exclude .sh files from license map
+  (https://gitlab.com/fedora/sigs/go/go-vendor-tools/-/issues/65).
+- Require `AUTHORS`, `NOTICE`, and `PATENTS` files to be uppercased.
+  This prevents files like `notice.go` being included in the license detection.
+
+### Fixed
+
+**docs:**
+
+- README: remove incorrect Fedora EPEL reference
+
+**`go_vendor_archive`:**
+
+- archive create: don't leave empty archive file if creation fails
+
+**`go_vendor_license`**:
+
+- `--prompt` should imply `--write-config`.
+  Otherwise, the information from prompting is thrown away.
+- `--verify` (and the newly added `--verify-spec`) no longer error if the existing
+  `License` tag in the specfile cannot be parsed as a valid expression.
+  It just fails verification.
+- `LicenseRef-Scancode-Public-Domain` is now normalized to
+  `LicenseRef-Fedora-Public-Domain`.
+- scancode: properly handle undetected licenses. Previously, scancode would
+  return None for undetected licenses and this would cause tracebacks.
+
+### Removed
+
+**docs:**
+
+- Remove outdated example specfile.
+  This is now covered by go2rpm.
+
 ## 0.6.0 - 2024-08-28 <a id='0.6.0'></a>
 
 ### Added
