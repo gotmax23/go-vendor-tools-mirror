@@ -95,6 +95,9 @@ def _trivy_license_dict_to_license_map(
     for result in data.get("Licenses", []):
         path = Path(result["FilePath"])
         name = result["Name"]
+        # https://gitlab.com/fedora/sigs/go/go-vendor-tools/-/issues/65
+        if path.suffix == ".sh":
+            continue
         # Sometimes trivy returns names that aren't valid SPDX expressions.
         # Treat them as undetected license files in that case.
         if not validate_license(name):
