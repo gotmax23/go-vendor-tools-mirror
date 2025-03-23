@@ -27,7 +27,7 @@ from go_vendor_tools.licensing import combine_licenses
 if TYPE_CHECKING:
     from _typeshed import StrPath
 
-    # Needed for PEP 696
+    # TypeVar from typing_extensions needed for PEP 696
     from typing_extensions import Self, TypeVar
 else:
     from typing import TypeVar
