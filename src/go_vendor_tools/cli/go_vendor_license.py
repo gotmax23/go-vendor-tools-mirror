@@ -103,7 +103,13 @@ def choose_license_detector(
 def _add_json_argument(parser: argparse.ArgumentParser, **kwargs) -> None:
     our_kwargs: dict[str, Any] = {
         "type": Path,
-        "help": "Write license data to a JSON file",
+        "help": dedent(
+            """\
+        Write license data to a JSON file.
+        This data is not yet considered stable and is only intended for
+        go2rpm's internal usage and for testing purposes.
+        """
+        ).replace("\n", " "),
     }
     kwargs = our_kwargs | kwargs
     parser.add_argument("--write-json", **kwargs)
