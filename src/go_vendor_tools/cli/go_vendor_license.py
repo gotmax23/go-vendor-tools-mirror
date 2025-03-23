@@ -15,7 +15,7 @@ from contextlib import ExitStack, contextmanager
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from textwrap import dedent
-from typing import IO, Any, cast
+from typing import IO, Any, NamedTuple, cast
 
 from license_expression import ExpressionError
 from zstarfile import ZSTarfile
@@ -378,23 +378,31 @@ def write_license_json(data: LicenseData, file: Path) -> None:
         json.dump(data.to_jsonable(), fp, indent=2)
 
 
+class _PromptMissingResult(NamedTuple):
+    data: LicenseData
+    entries: MutableSequence[LicenseEntry]
+    excludes: list[str]
+
+
 # TODO(gotmax23): Unit test prompt_missing_licenses and write_config code.
 # This'll require some mocking of the input() stuff.
 def prompt_missing_licenses(
     data: LicenseData,
     entries: MutableSequence[LicenseEntry],
-) -> tuple[LicenseData, MutableSequence[LicenseEntry]]:
+) -> _PromptMissingResult:
+    excludes: list[str] = []
     if not data.undetected_licenses:
-        return data, entries
+        return _PromptMissingResult(data, entries, excludes)
     print("Undetected licenses found! Please enter them manually.")
     undetected_licenses = set(data.undetected_licenses)
     license_map: dict[Path, str] = dict(data.license_map)
     for undetected in sorted(data.undetected_licenses):
         print(f"* Undetected license: {data.directory / undetected}")
-        expression_str = input("Enter SPDX expression (or IGNORE): ")
-        if expression_str == "IGNORE":
+        expression_str = input("Enter SPDX expression (or EXCLUDE): ")
+        if expression_str == "EXCLUDE":
             undetected_licenses.remove(undetected)
-            print("Ignoring...")
+            excludes.append(str(undetected))
+            print("Adding file to licensing.exclude_files...")
             continue
         expression: str = (
             str(simplify_license(expression_str)) if expression_str else ""
@@ -409,9 +417,10 @@ def prompt_missing_licenses(
         replace_entry(entries, entry_dict, undetected)
         undetected_licenses.remove(undetected)
     assert not undetected_licenses
-    return (
+    return _PromptMissingResult(
         data.replace(undetected_licenses=undetected_licenses, license_map=license_map),
         entries,
+        excludes,
     )
 
 
@@ -455,7 +464,14 @@ def write_and_prompt_report_licenses(
         .setdefault("licenses", tomlkit.aot() if HAS_TOMLKIT else [])
     )
     # fmt: on
-    license_data, _ = prompt_missing_licenses(license_data, license_config_list)
+    license_data, _, exclude_files = prompt_missing_licenses(
+        license_data, license_config_list
+    )
+    if exclude_files:
+        exclude_files_toml = write_config_data["licensing"].setdefault(  # type: ignore[union-attr]
+            "exclude_files", []
+        )
+        exclude_files_toml.extend(exclude_files)
     return license_data
 
 
