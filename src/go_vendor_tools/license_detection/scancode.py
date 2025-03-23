@@ -11,7 +11,7 @@ from collections.abc import Iterable
 from dataclasses import dataclass
 from functools import partial
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, TypedDict, cast
+from typing import TYPE_CHECKING, Any, NamedTuple, TypedDict, cast
 
 from go_vendor_tools.gomod import get_go_module_dirs
 from go_vendor_tools.license_detection.search import find_license_files
@@ -49,12 +49,19 @@ class ScancodeLicenseDict(TypedDict):
     percentage_of_license_text: float
 
 
+class ScancodeResult(NamedTuple):
+    scancode_license_data: dict[str, ScancodeLicenseDict]
+    simplified_map: dict[Path, str]
+    undetected: set[Path]
+
+
 def get_scancode_license_data(
     directory: Path,
     files: Iterable[Path],
-) -> tuple[dict[str, ScancodeLicenseDict], dict[Path, str]]:
+) -> ScancodeResult:
     data_dicts: dict[str, ScancodeLicenseDict] = {}
     simplified_map: dict[Path, str] = {}
+    undetected: set[Path] = set()
     for file in files:
         data = cast(
             ScancodeLicenseDict, scancode.api.get_licenses(str(directory / file))
@@ -63,8 +70,12 @@ def get_scancode_license_data(
             key=lambda d: d.get("license_expression_spdx", "")
         )
         data_dicts[str(file)] = data
-        simplified_map[file] = data["detected_license_expression_spdx"]
-    return data_dicts, simplified_map
+
+        if data["detected_license_expression_spdx"] is None:
+            undetected.add(file)
+        else:
+            simplified_map[file] = data["detected_license_expression_spdx"]
+    return ScancodeResult(data_dicts, simplified_map, undetected)
 
 
 @dataclass()
@@ -109,7 +120,7 @@ class ScancodeLicenseDetector(LicenseDetector[ScancodeLicenseData]):
             exclude_files=self.license_config["exclude_files"],
             reuse_roots=reuse_roots,
         )
-        data, license_map = get_scancode_license_data(
+        data, license_map, undetected = get_scancode_license_data(
             directory, map(Path, license_file_lists["license"])
         )
         manual_license_map, manual_unmatched = get_manual_license_entries(
@@ -120,7 +131,7 @@ class ScancodeLicenseDetector(LicenseDetector[ScancodeLicenseData]):
         return ScancodeLicenseData(
             directory=directory,
             license_map=license_map,
-            undetected_licenses=set(),
+            undetected_licenses=undetected,
             unmatched_extra_licenses=manual_unmatched,
             scancode_license_data=data,
             # FIXME(gotmax): Change the design of LicenseData to not require full paths
