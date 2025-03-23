@@ -32,6 +32,7 @@ from .base import (
     LicenseDetectorNotAvailableError,
     filter_license_map,
     get_manual_license_entries,
+    is_unwanted_path,
 )
 
 if TYPE_CHECKING:
@@ -88,15 +89,22 @@ def _license_data_to_trivy_license_dict(data: dict[str, Any]) -> TrivyLicenseDic
 
 
 def _trivy_license_dict_to_license_map(
-    data: TrivyLicenseDict,
+    data: TrivyLicenseDict, config: LicenseConfig
 ) -> tuple[dict[Path, str], set[Path]]:
     license_map: dict[Path, str] = {}
     invalid: set[Path] = set()
     for result in data.get("Licenses", []):
         path = Path(result["FilePath"])
         name = result["Name"]
-        # https://gitlab.com/fedora/sigs/go/go-vendor-tools/-/issues/65
-        if path.suffix == ".sh":
+        if (
+            # https://gitlab.com/fedora/sigs/go/go-vendor-tools/-/issues/65
+            path.suffix == ".sh"
+            or is_unwanted_path(
+                path,
+                exclude_directories=config["exclude_directories"],
+                exclude_files=config["exclude_files"],
+            )
+        ):
             continue
         # Sometimes trivy returns names that aren't valid SPDX expressions.
         # Treat them as undetected license files in that case.
@@ -151,17 +159,15 @@ class TrivyLicenseDetector(LicenseDetector[TrivyLicenseData]):
 
         data = _load_license_data(self.path, directory)
         licenses = _license_data_to_trivy_license_dict(data)
-        license_map, undetected = _trivy_license_dict_to_license_map(licenses)
+        license_map, undetected = _trivy_license_dict_to_license_map(
+            licenses, self.license_config
+        )
 
         manual_license_map, manual_unmatched = get_manual_license_entries(
             self.license_config["licenses"], directory
         )
+        undetected -= manual_license_map.keys()
         license_map |= manual_license_map
-        filtered_license_map = filter_license_map(
-            license_map,
-            self.license_config["exclude_directories"],
-            self.license_config["exclude_files"],
-        )
         license_file_lists = find_license_files(
             directory,
             relative_paths=True,
@@ -169,20 +175,18 @@ class TrivyLicenseDetector(LicenseDetector[TrivyLicenseData]):
             exclude_files=self.license_config["exclude_files"],
             reuse_roots=reuse_roots,
         )
-        filtered_license_map |= reuse_path_to_license_map(license_file_lists["reuse"])
-        filtered_license_map = dict(
-            sorted(filtered_license_map.items(), key=lambda item: item[0])
-        )
+        license_map |= reuse_path_to_license_map(license_file_lists["reuse"])
+        license_map = dict(sorted(license_map.items(), key=lambda item: item[0]))
         # Ensure that any license files found by searching the filesystem
         # manually are detected by trivy
         undetected.update(
             file
             for file in map(Path, license_file_lists["license"])
-            if file not in filtered_license_map
+            if file not in license_map
         )
         return TrivyLicenseData(
             directory=Path(directory),
-            license_map=filtered_license_map,
+            license_map=license_map,
             undetected_licenses=undetected,
             unmatched_extra_licenses=manual_unmatched,
             trivy_license_data=licenses,
@@ -200,7 +204,9 @@ class TrivyLicenseDetector(LicenseDetector[TrivyLicenseData]):
 
         data = _load_license_data(self.path, directory)
         licenses = _license_data_to_trivy_license_dict(data)
-        license_map, undetected = _trivy_license_dict_to_license_map(licenses)
+        license_map, undetected = _trivy_license_dict_to_license_map(
+            licenses, self.license_config
+        )
         filtered_license_map = filter_license_map(
             license_map,
             self.license_config["exclude_directories"],

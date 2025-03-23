@@ -61,26 +61,26 @@ def get_manual_license_entries(
 def is_unwanted_path(
     path: Path,
     exclude_directories: Collection[StrPath],
-    exclude_files: Collection[StrPath],
+    exclude_files: Collection[str],
 ) -> bool:
     return (
         # Hardcoded exception
         "testdata" in path.parts
-        or str(path) in map(str, exclude_files)
+        or str(path) in exclude_files
         or any(path.is_relative_to(directory) for directory in exclude_directories)
     )
 
 
 def filter_license_map(
     license_map: dict[Path, str],
-    exclude_directories: Collection[StrPath],
-    exclude_files: Collection[StrPath],
+    exclude_directories: Collection[str],
+    exclude_files: Collection[str],
 ) -> dict[Path, str]:
     """
     Filter licenses files from unwanted paths
     """
     exclude_directories = set(exclude_directories)
-    exclude_files = {Path(file) for file in exclude_files}
+    exclude_files = set(exclude_files)
     return {
         path: exp
         for path, exp in license_map.items()
