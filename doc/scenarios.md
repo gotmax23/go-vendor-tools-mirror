@@ -25,13 +25,23 @@ with go-vendor-tools.
     downloaded upstream source archive, and the vendor tarball generated with
     `go_vendor_archive`.
     `go2rpm` will also output a license report and a cumulative SPDX expression
-    generated with `go_vendor_license`.
+    generated with `go_vendor_license` and then update the License tag in the specfile.
     It is the packager's responsibility to perform a basic check of the output
-    and manually determine the SPDX expression for packages listed as
-    incompatible.
+    and ensure adherence to the Fedora Licensing Guidelines.
 
-1. Open up the specfile in an editor and replace the `License` field with the
-    expression that `go2rpm` outputs.
+1. Fill in missing license expressions.
+    The `go2rpm` command above will prompt the packager to fill in any missing
+    license expressions and then update the generated `go-vendor-tools.toml` file.
+    For each license file that the license detector failed to match,
+    the packager can either enter the license expression or enter `EXCLUDE` to
+    add an entry to `go-vendor-tools.toml` to exclude that file from license
+    detection.
+
+    !!! note
+        The `EXCLUDE` option was added in v0.7.0.
+
+1. Ensure that the final license only includes licenses allowed under the Fedora
+   Licensing Guidelines.
 
 ## Security updates
 
@@ -111,7 +121,6 @@ go2rpm was used to generate the original specfile using vendored dependencies.
 `go-vendor-tools.toml` is the configuration file for `go_vendor_archive`.
 
 !!! tip
-
     Consider [re-generating a new specfile with `go2rpm`](#generate-go2rpm)
     instead of updating an existing one to pick up go2rpm template
     improvements.
