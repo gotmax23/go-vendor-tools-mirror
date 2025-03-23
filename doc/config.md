@@ -48,13 +48,15 @@ Key-value pairs that are passed to the detector backend.
 
 - `multiple` — run `askalono detect` using the `--multiple` flag to allow
   license files that contain more than one license text within it.
-  It is recommended to enable this option, but it is disabled by default for
-  backwards compatibility purposes.
+  This is disabled by default, as `--multiple` causes some licenses that are
+  detected without `--multiple` to no longer be detected.
 
     ``` toml
     [licensing.detector_config]
     multiple = "true"
     ```
+
+    or
 
     ``` bash
     go_vendor_archive --detector-config multiple=true
