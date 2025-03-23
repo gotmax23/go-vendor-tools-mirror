@@ -158,8 +158,7 @@ def find_license_files(
             if filepath in exclude_files:
                 continue
             if in_reuse_dir:
-                if os.path.splitext(file)[1] == ".txt":
-                    licenses["reuse"].append(filepath if relative_paths else fullpath)
+                licenses["reuse"].append(filepath if relative_paths else fullpath)
             else:
                 for ft in filetype_info:
                     if ft.regex.fullmatch(file) and (
