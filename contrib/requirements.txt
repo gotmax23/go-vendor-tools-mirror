@@ -2,7 +2,5 @@
 # SPDX-License-Identifier: MIT
 
 click
-# This is needed for the PackageQuery.intersection method
-# TODO(anyone): Remove git snapshot once a new version is released.
-fedrq @ git+https://git.sr.ht/~gotmax23/fedrq@257fe8e2cdb7e39d49e0c3e3cd5b2326ccdffa95
+fedrq >= 1.5.0
 libdnf5-shim
