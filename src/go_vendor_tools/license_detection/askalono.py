@@ -11,7 +11,7 @@ import dataclasses
 import json
 import shutil
 import subprocess
-from collections.abc import Callable, Collection
+from collections.abc import Callable, Iterable
 from pathlib import Path
 from typing import TYPE_CHECKING, TypedDict, cast
 
@@ -85,7 +85,7 @@ def _filter_path(data: AskalonoLicenseDict) -> AskalonoLicenseDict:
 
 
 def _get_askalono_data(
-    directory: StrPath, relpaths: Collection[StrPath], multiple: bool = False
+    directory: StrPath, relpaths: Iterable[StrPath], multiple: bool = False
 ) -> list[AskalonoLicenseDict]:
     stdin = "\n".join(map(str, relpaths))
     cmd = [
@@ -115,9 +115,13 @@ def _get_askalono_data(
     return licenses
 
 
-def _get_relative(base_dir: Path, file: str | Path) -> Path:
+def _get_relative(base_dir: Path | None, file: str | Path) -> Path:
     file = Path(file)
-    return file.relative_to(base_dir) if file.is_absolute() else file
+    return (
+        file.relative_to(base_dir)
+        if base_dir is not None and file.is_absolute()
+        else file
+    )
 
 
 def _get_license_name(data: AskalonoLicenseDict, check: bool) -> str | None:
@@ -142,7 +146,7 @@ def _get_license_name(data: AskalonoLicenseDict, check: bool) -> str | None:
 
 def _filter_license_data(
     data: list[AskalonoLicenseDict],
-    directory: Path,
+    directory: Path | None,
 ) -> tuple[list[AskalonoLicenseDict], set[Path]]:
 
     undetected_licenses: set[Path] = set()
@@ -157,7 +161,7 @@ def _filter_license_data(
 
 
 def _get_simplified_license_map(
-    directory: Path,
+    directory: Path | None,
     filtered_license_data: list[AskalonoLicenseDict],
     extra_license_mapping: dict[Path, str] | None = None,
 ) -> dict[Path, str]:
@@ -264,3 +268,21 @@ class AskalonoLicenseDetector(LicenseDetector[AskalonoLicenseData]):
             extra_license_files=tuple(map(Path, license_file_lists["notice"])),
             detector_name=self.NAME,
         )
+
+    def detect_files(
+        self, files: Iterable[Path], directory: Path | None = None
+    ) -> tuple[dict[Path, str], set[Path]]:
+        if self.find_only:
+            raise ValueError(
+                "This cannot be called when class was initalized with find_only=True"
+            )
+        askalono_license_data = _get_askalono_data(
+            directory if directory is not None else "/",
+            files,
+            str_to_bool(self.detector_config.get("multiple"), CONFIG_MULTIPLE_DEFAULT),
+        )
+        filtered_license_data, undetected = _filter_license_data(
+            askalono_license_data, directory
+        )
+        license_map = _get_simplified_license_map(directory, filtered_license_data, {})
+        return license_map, undetected

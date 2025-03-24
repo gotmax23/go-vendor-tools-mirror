@@ -27,6 +27,7 @@ from go_vendor_tools.license_detection.base import (
 )
 from go_vendor_tools.license_detection.load import DETECTORS
 from go_vendor_tools.license_detection.load import get_detectors as gd
+from go_vendor_tools.license_detection.trivy import TrivyLicenseDetector
 
 if sys.version_info >= (3, 11):
     import tomllib
@@ -323,3 +324,46 @@ def test_generate_buildrequires_no_check_trivy(capsys: pytest.CaptureFixture):
     out, err = capsys.readouterr()
     assert not err
     assert out == "trivy\n"
+
+
+def test_detect_files(detector: type[LicenseDetector]) -> None:
+    if detector is TrivyLicenseDetector:
+        pytest.skip("trivy is not supported")
+    config = load_config(None)
+    detector_obj = detector({}, config["licensing"])
+    case1 = TEST_DATA / "case1/licenses"
+    files = [
+        case1 / "LICENSE.BSD3",
+        case1 / "LICENSE.MIT",
+        TEST_DATA / "case2/licenses/LICENSE.undetected",
+    ]
+    files = [path.relative_to(TEST_DATA) for path in files]
+    mapping, undetected = detector_obj.detect_files(files, TEST_DATA)
+    expected_mapping = {
+        Path("case1/licenses/LICENSE.BSD3"): "BSD-3-Clause",
+        Path("case1/licenses/LICENSE.MIT"): "MIT",
+    }
+    expected_undetected = {Path("case2/licenses/LICENSE.undetected")}
+    assert mapping == expected_mapping
+    assert undetected == expected_undetected
+
+
+def test_detect_files_absolute(detector: type[LicenseDetector]) -> None:
+    if detector is TrivyLicenseDetector:
+        pytest.skip("trivy is not supported")
+    config = load_config(None)
+    detector_obj = detector({}, config["licensing"])
+    case1 = TEST_DATA / "case1/licenses"
+    files = [
+        case1 / "LICENSE.BSD3",
+        case1 / "LICENSE.MIT",
+        TEST_DATA / "case2/licenses/LICENSE.undetected",
+    ]
+    mapping, undetected = detector_obj.detect_files(files)
+    expected_mapping = {
+        files[0]: "BSD-3-Clause",
+        files[1]: "MIT",
+    }
+    expected_undetected = {files[2]}
+    assert mapping == expected_mapping
+    assert undetected == expected_undetected
