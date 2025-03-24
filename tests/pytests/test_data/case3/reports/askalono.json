@@ -6,7 +6,7 @@
     "vendor/abc/LICENSES/ISC.txt": "ISC"
   },
   "undetected_licenses": [],
-  "unmatched_extra_licenses": [],
+  "unmatched_manual_licenses": [],
   "license_set": [
     "BSD-3-Clause",
     "GPL-2.0-only AND MIT",

@@ -346,13 +346,13 @@ def print_licenses(
     if (
         results.undetected_licenses
         or unlicensed_mods
-        or results.unmatched_extra_licenses
+        or results.unmatched_manual_licenses
     ):
         if mode != "expression":
             print()
         if show_undetected:
             red_if_true(
-                results.undetected_licenses,
+                sorted(results.undetected_licenses),
                 "The following license files were found "
                 "but the correct license identifier couldn't be determined:",
             )
@@ -362,7 +362,7 @@ def print_licenses(
                 "The following modules are missing license files:",
             )
         red_if_true(
-            results.unmatched_extra_licenses,
+            results.unmatched_manual_licenses,
             "The following license files that were specified in the configuration"
             " have changed:",
         )
@@ -552,7 +552,7 @@ def report_command(args: argparse.Namespace) -> None:
         failed = bool(
             (license_data.undetected_licenses and not ignore_undetected)
             or (unlicensed_mods and not ignore_unlicensed_mods)
-            or license_data.unmatched_extra_licenses
+            or license_data.unmatched_manual_licenses
         )
         print_licenses(
             license_data,

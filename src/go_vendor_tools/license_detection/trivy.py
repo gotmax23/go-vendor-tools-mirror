@@ -62,7 +62,7 @@ def run_read_json(command: Sequence[StrPath]) -> Any:
     return json.loads(proc.stdout)
 
 
-@dataclasses.dataclass()
+@dataclasses.dataclass(frozen=True)
 class TrivyLicenseData(LicenseData):
     trivy_license_data: TrivyLicenseDict
 
@@ -187,13 +187,10 @@ class TrivyLicenseDetector(LicenseDetector[TrivyLicenseData]):
         return TrivyLicenseData(
             directory=Path(directory),
             license_map=license_map,
-            undetected_licenses=undetected,
-            unmatched_extra_licenses=manual_unmatched,
+            undetected_licenses=frozenset(undetected),
+            unmatched_manual_licenses=manual_unmatched,
             trivy_license_data=licenses,
-            # FIXME(gotmax): Change the design of LicenseData to not require full paths
-            extra_license_files=[
-                Path(directory, file) for file in license_file_lists["notice"]
-            ],
+            extra_license_files=tuple(map(Path, license_file_lists["notice"])),
             detector_name=self.NAME,
         )
 

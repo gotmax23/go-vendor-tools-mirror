@@ -12,7 +12,7 @@ import dataclasses
 import os
 import re
 import sys
-from collections.abc import Collection, Sequence
+from collections.abc import Collection, Mapping, Sequence
 from itertools import chain
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, ClassVar, Generic
@@ -39,7 +39,7 @@ EXTRA_LICENSE_FILE_REGEX = re.compile(
 
 def get_manual_license_entries(
     licenses: list[LicenseEntry], directory: StrPath
-) -> tuple[dict[Path, str], list[Path]]:
+) -> tuple[dict[Path, str], tuple[Path, ...]]:
     results: dict[Path, str] = {}
     not_matched: list[Path] = []
     seen: set[Path] = set()
@@ -55,7 +55,7 @@ def get_manual_license_entries(
             results[relpath] = lic["expression"]
         else:
             not_matched.append(relpath)
-    return results, not_matched
+    return results, tuple(not_matched)
 
 
 def is_unwanted_path(
@@ -102,11 +102,14 @@ def reuse_path_to_license_map(files: Collection[StrPath]) -> dict[Path, str]:
     return result
 
 
-@dataclasses.dataclass()
+@dataclasses.dataclass(frozen=True)
 class LicenseData:
     """
     Generic class representing detected license data.
     Can be subclassed by detector implementations to add additional fields.
+    Attributes marked with (Generated fields) are calculated during class init
+    and are not passed as values.
+    The class is a frozen dataclass and is meant to be (pseudo) immutable.
 
     Attributes:
         directory:
@@ -115,49 +118,70 @@ class LicenseData:
             Mapping of relative paths to license (within `directory`) to str
             SPDX license expressions
         undetected_licenses:
-            License files that the license detector implementation failed to
-            detect
-        license_set:
-            Set of unique detected license expressions
-        license_expression:
-            Cumulative `license_expression.LicenseExpression` SPDX expression
-        license_files_paths:
-            Full paths to all detected license files
+            Relative paths of license files that the license detector
+            implementation failed to detect
+        unmatched_manaul_licenses:
+            Relative paths of invalid manually specified license entries
         extra_license_files:
-            Extra files (e.g., AUTHORS or NOTICE files) that we should include
-            in the distribution but not run through the license detector
+            Relative paths to extra files (e.g., AUTHORS or NOTICE files) that
+            we should include in the distribution but not run through the
+            license detector
+        detector_name:
+            Name of the license detector
+        license_set:
+            (Generated field) Set of unique detected license expressions
+        license_expression:
+            (Generated field) Cumulative `license_expression.LicenseExpression`
+            SPDX expression
+        license_files_paths:
+            Absolute paths to all detected license files
     """
 
     directory: Path
-    license_map: dict[Path, str]
-    undetected_licenses: Collection[Path]
-    unmatched_extra_licenses: Collection[Path]
-    license_set: set[str] = dataclasses.field(init=False)
-    license_expression: str | None = dataclasses.field(init=False)
-    license_file_paths: Collection[Path] = dataclasses.field(init=False)
-    extra_license_files: list[Path]
+    license_map: Mapping[Path, str]
+    undetected_licenses: frozenset[Path]
+    unmatched_manual_licenses: tuple[Path, ...]
+    extra_license_files: tuple[Path, ...]
     detector_name: str
+
+    # Generated fields
+    license_set: frozenset[str] = dataclasses.field(init=False, compare=False)
+    license_expression: str = dataclasses.field(init=False, compare=False)
+    license_file_paths: tuple[Path, ...] = dataclasses.field(init=False, compare=False)
+
+    # Helper for *_jsonable() methods
     _LIST_PATH_FIELDS: ClassVar = (
         "undetected_licenses",
-        "unmatched_extra_licenses",
+        "unmatched_manual_licenses",
         "license_file_paths",
         "extra_license_files",
     )
+
+    # Implement replace() method
     replace = dataclasses.replace
 
     def __post_init__(self) -> None:
-        self.license_set = set(self.license_map.values())
-        self.license_expression = (
-            self._combine_licenses(*self.license_set) if self.license_map else None
+        # Use object.__setattr__ because this is a frozen dataclass.
+        object.__setattr__(self, "license_set", frozenset(self.license_map.values()))
+        object.__setattr__(
+            self,
+            "license_expression",
+            self._combine_licenses(*self.license_set) if self.license_map else None,
         )
-        self.license_file_paths = tuple(
-            self.directory / lic
-            for lic in chain(self.license_map, self.undetected_licenses)
+        object.__setattr__(
+            self,
+            "license_file_paths",
+            tuple(
+                sorted(
+                    self.directory / lic
+                    for lic in chain(self.license_map, self.undetected_licenses)
+                ),
+            ),
         )
 
     _combine_licenses = staticmethod(combine_licenses)
 
-    # TODO(gotmax23): Consider cattrs or pydantic
+    # This would be a good task for pydantic, but we want to keep dependencies slim.
     def to_jsonable(self) -> dict[str, Any]:
         data = dataclasses.asdict(self)
         for key, value in data.items():
@@ -187,7 +211,7 @@ class LicenseData:
             elif key == "license_map":
                 newdata[key] = {Path(key1): value1 for key1, value1 in value.items()}
             elif key in cls._LIST_PATH_FIELDS:
-                func = set if key == "undetected_licenses" else sorted
+                func = set if key == "undetected_licenses" else tuple
                 newdata[key] = func(map(Path, value))
             else:
                 newdata[key] = value
@@ -256,10 +280,17 @@ class LicenseDetector(Generic[_LicenseDataT_co], metaclass=abc.ABCMeta):
 
     @property
     def find_only(self):
+        """
+        Whether find_only mode is enabled.
+        """
         return self._find_only
 
     @abc.abstractmethod
-    def detect(self, directory: StrPath) -> _LicenseDataT_co: ...
+    def detect(self, directory: StrPath) -> _LicenseDataT_co:
+        """
+        Scan a directory for license data
+        """
+
     def find_license_files(self, directory: StrPath) -> list[Path]:
         """
         Default implementation of find_license_files.
