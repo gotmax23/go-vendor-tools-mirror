@@ -188,11 +188,13 @@ def all_(session: nox.Session):
     session.notify("coverage")
 
 
-@nox.session(venv_backend="none", requires=LINT_SESSIONS)
+@nox.session(venv_backend="none")
 def lint(session: nox.Session):
     """
     Run formatters, codeqa, and typing sessions
     """
+    for notify in LINT_SESSIONS:
+        session.notify(notify)
 
 
 @nox.session
