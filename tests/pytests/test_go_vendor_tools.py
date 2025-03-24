@@ -98,7 +98,7 @@ def test_get_extra_licenses_error(test_data: Path) -> None:
     )
     expected_map = {Path("LICENSE.BSD3"): "BSD-3-Clause"}
     assert matched == expected_map
-    assert missing == [Path("LICENSE.MIT")]
+    assert missing == (Path("LICENSE.MIT"),)
 
 
 @pytest.mark.parametrize(
@@ -125,7 +125,7 @@ def test_load_dump_license_data(
     case_dir = test_data / case_name
     expected_report = case_dir / "reports" / f"{detector.NAME}.json"
     licenses_dir = case_dir / "licenses"
-    config = load_config(None)
+    config = load_config(case_dir / "go-vendor-tools.toml", allow_missing=True)
     detector_obj = detector(cli_config, config["licensing"])
     try:
         data: LicenseData = detector_obj.detect(licenses_dir)
@@ -142,22 +142,10 @@ def test_load_dump_license_data(
         raise
 
     placeholder_path = Path("/placeholder")
-    data.license_file_paths = tuple(
-        sorted(
-            placeholder_path / path.relative_to(data.directory)
-            for path in data.license_file_paths
-        )
-    )
-    data.directory = placeholder_path
+    data = data.replace(directory=placeholder_path)
 
     jsonable = data.to_jsonable()
     new_data = type(data).from_jsonable(jsonable)
-    new_data.license_file_paths = tuple(
-        sorted(
-            placeholder_path / path.relative_to(data.directory)
-            for path in data.license_file_paths
-        )
-    )
     assert new_data.to_jsonable() == jsonable
 
     _remove_license_scanner_data(jsonable)
@@ -262,15 +250,17 @@ def test_print_licenses_all(capsys: pytest.CaptureFixture) -> None:
             Path("LICENSE.md"): "MIT",
             Path("vendor/xyz/COPYING"): "GPL-3.0-only",
         },
-        undetected_licenses=[
-            Path("LICENSE.undetected"),
-            Path("vendor/123/COPYING.123"),
-        ],
-        unmatched_extra_licenses=[
+        undetected_licenses=frozenset(
+            {
+                Path("LICENSE.undetected"),
+                Path("vendor/123/COPYING.123"),
+            }
+        ),
+        unmatched_manual_licenses=(
             Path("LICENSE-Custom"),
             Path("vendor/custom/LICENSE"),
-        ],
-        extra_license_files=[],
+        ),
+        extra_license_files=(),
         detector_name="",
     )
     go_vendor_license.print_licenses(

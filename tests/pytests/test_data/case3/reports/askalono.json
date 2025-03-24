@@ -6,7 +6,9 @@
     "vendor/abc/LICENSES/ISC.txt": "ISC"
   },
   "undetected_licenses": [],
-  "unmatched_extra_licenses": [],
+  "unmatched_manual_licenses": [],
+  "extra_license_files": [],
+  "detector_name": "askalono",
   "license_set": [
     "BSD-3-Clause",
     "GPL-2.0-only AND MIT",
@@ -17,7 +19,5 @@
     "/placeholder/LICENSE.combined",
     "/placeholder/LICENSES/BSD-3-Clause.txt",
     "/placeholder/vendor/abc/LICENSES/ISC.txt"
-  ],
-  "extra_license_files": [],
-  "detector_name": "askalono"
+  ]
 }

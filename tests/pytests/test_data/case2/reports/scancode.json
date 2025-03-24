@@ -2,22 +2,29 @@
   "directory": "/placeholder",
   "license_map": {
     "LICENSE": "ISC",
-    "LICENSE.docs": "CC-BY-SA-4.0"
+    "LICENSE.docs": "CC-BY-SA-4.0",
+    "LICENSE.manual": "GPL-2.0-or-later"
   },
   "undetected_licenses": [
+    "LICENSE.manual-invalid",
     "LICENSE.undetected"
   ],
-  "unmatched_extra_licenses": [],
+  "unmatched_manual_licenses": [
+    "LICENSE.manual-invalid"
+  ],
+  "extra_license_files": [],
+  "detector_name": "scancode",
   "license_set": [
     "CC-BY-SA-4.0",
+    "GPL-2.0-or-later",
     "ISC"
   ],
-  "license_expression": "CC-BY-SA-4.0 AND ISC",
+  "license_expression": "CC-BY-SA-4.0 AND GPL-2.0-or-later AND ISC",
   "license_file_paths": [
     "/placeholder/LICENSE",
     "/placeholder/LICENSE.docs",
+    "/placeholder/LICENSE.manual",
+    "/placeholder/LICENSE.manual-invalid",
     "/placeholder/LICENSE.undetected"
-  ],
-  "extra_license_files": [],
-  "detector_name": "scancode"
+  ]
 }

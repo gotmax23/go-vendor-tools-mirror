@@ -78,7 +78,7 @@ def get_scancode_license_data(
     return ScancodeResult(data_dicts, simplified_map, undetected)
 
 
-@dataclass()
+@dataclass(frozen=True)
 class ScancodeLicenseData(LicenseData):
     """
     scancode-toolkit-specific LicenseData implementation
@@ -126,17 +126,15 @@ class ScancodeLicenseDetector(LicenseDetector[ScancodeLicenseData]):
         manual_license_map, manual_unmatched = get_manual_license_entries(
             self.license_config["licenses"], directory
         )
+        undetected -= manual_license_map.keys()
         license_map |= manual_license_map
         license_map |= reuse_path_to_license_map(license_file_lists["reuse"])
         return ScancodeLicenseData(
             directory=directory,
             license_map=license_map,
-            undetected_licenses=undetected,
-            unmatched_extra_licenses=manual_unmatched,
+            undetected_licenses=frozenset(undetected),
+            unmatched_manual_licenses=manual_unmatched,
             scancode_license_data=data,
-            # FIXME(gotmax): Change the design of LicenseData to not require full paths
-            extra_license_files=[
-                Path(directory, file) for file in license_file_lists["notice"]
-            ],
+            extra_license_files=tuple(map(Path, license_file_lists["notice"])),
             detector_name=self.NAME,
         )

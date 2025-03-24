@@ -1,0 +1,8 @@
+[[licensing.licenses]]
+path = "LICENSE.manual"
+sha256sum = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+expression = "GPL-2.0-or-later"
+[[licensing.licenses]]
+path = "LICENSE.manual-invalid"
+sha256sum = "invalid"
+expression = "invalid"
