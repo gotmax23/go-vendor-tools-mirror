@@ -126,6 +126,7 @@ class ScancodeLicenseDetector(LicenseDetector[ScancodeLicenseData]):
         manual_license_map, manual_unmatched = get_manual_license_entries(
             self.license_config["licenses"], directory
         )
+        undetected -= manual_license_map.keys()
         license_map |= manual_license_map
         license_map |= reuse_path_to_license_map(license_file_lists["reuse"])
         return ScancodeLicenseData(

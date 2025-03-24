@@ -1,22 +1,29 @@
 {
   "directory": "/placeholder",
   "license_map": {
-    "LICENSE": "ISC"
+    "LICENSE": "ISC",
+    "LICENSE.manual": "GPL-2.0-or-later"
   },
   "undetected_licenses": [
     "LICENSE.docs",
+    "LICENSE.manual-invalid",
     "LICENSE.undetected"
   ],
-  "unmatched_manual_licenses": [],
+  "unmatched_manual_licenses": [
+    "LICENSE.manual-invalid"
+  ],
+  "extra_license_files": [],
+  "detector_name": "trivy",
   "license_set": [
+    "GPL-2.0-or-later",
     "ISC"
   ],
-  "license_expression": "ISC",
+  "license_expression": "GPL-2.0-or-later AND ISC",
   "license_file_paths": [
     "/placeholder/LICENSE",
     "/placeholder/LICENSE.docs",
+    "/placeholder/LICENSE.manual",
+    "/placeholder/LICENSE.manual-invalid",
     "/placeholder/LICENSE.undetected"
-  ],
-  "extra_license_files": [],
-  "detector_name": "trivy"
+  ]
 }

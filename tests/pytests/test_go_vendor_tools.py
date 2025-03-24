@@ -125,7 +125,7 @@ def test_load_dump_license_data(
     case_dir = test_data / case_name
     expected_report = case_dir / "reports" / f"{detector.NAME}.json"
     licenses_dir = case_dir / "licenses"
-    config = load_config(None)
+    config = load_config(case_dir / "go-vendor-tools.toml", allow_missing=True)
     detector_obj = detector(cli_config, config["licensing"])
     try:
         data: LicenseData = detector_obj.detect(licenses_dir)
