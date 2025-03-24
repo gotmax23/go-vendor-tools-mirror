@@ -1,4 +1,5 @@
 {
-  "exclude": ["tests/integration/**", ".nox/**", ".old/**", "fedora/**"],
-  "typeCheckingMode": "basic",
+    "exclude": ["tests/integration/**", ".nox/**", ".old/**", "fedora/**"],
+    "typeCheckingMode": "standard",
+    "pythonVersion": "3.9"
 }

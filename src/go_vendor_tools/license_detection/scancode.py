@@ -138,3 +138,14 @@ class ScancodeLicenseDetector(LicenseDetector[ScancodeLicenseData]):
             extra_license_files=tuple(map(Path, license_file_lists["notice"])),
             detector_name=self.NAME,
         )
+
+    def detect_files(
+        self, files: Iterable[Path], directory: Path | None = None
+    ) -> tuple[dict[Path, str], set[Path]]:
+        if self.find_only:
+            raise ValueError(
+                "This cannot be called when class was initalized with find_only=True"
+            )
+        return get_scancode_license_data(
+            directory if directory is not None else Path("/"), files
+        )[1:]

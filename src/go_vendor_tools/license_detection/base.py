@@ -12,7 +12,7 @@ import dataclasses
 import os
 import re
 import sys
-from collections.abc import Collection, Mapping, Sequence
+from collections.abc import Collection, Iterable, Mapping, Sequence
 from itertools import chain
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, ClassVar, Generic
@@ -289,6 +289,22 @@ class LicenseDetector(Generic[_LicenseDataT_co], metaclass=abc.ABCMeta):
     def detect(self, directory: StrPath) -> _LicenseDataT_co:
         """
         Scan a directory for license data
+        """
+
+    @abc.abstractmethod
+    def detect_files(
+        self, files: Iterable[Path], directory: Path | None = None
+    ) -> tuple[dict[Path, str], set[Path]]:
+        """
+        Given a list of license files, return a mapping of paths to license expressions.
+
+        Args:
+            files: List files
+            directory:
+                Directory to which paths are relative or None to treat as
+                absolute paths.
+
+        Returns: (License mapping, undetected files)
         """
 
     def find_license_files(self, directory: StrPath) -> list[Path]:

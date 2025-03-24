@@ -11,7 +11,7 @@ import dataclasses
 import json
 import shutil
 import subprocess
-from collections.abc import Sequence
+from collections.abc import Iterable, Sequence
 from itertools import chain
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Literal, TypedDict, cast
@@ -233,3 +233,8 @@ class TrivyLicenseDetector(LicenseDetector[TrivyLicenseData]):
             *map(Path, chain.from_iterable(license_file_lists.values())),
         }
         return sorted(files)
+
+    def detect_files(
+        self, files: Iterable[Path], directory: Path | None = None
+    ) -> tuple[dict[Path, str], set[Path]]:
+        raise NotImplementedError("The trivy backend does not support detect_files.")
