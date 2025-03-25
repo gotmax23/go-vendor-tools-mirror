@@ -261,6 +261,7 @@ def get_parser() -> argparse.ArgumentParser:
         we will first try to use the other backend to detect licenses that the
         primary backend could not detect before prompting the user.
         Implies --write-config.
+        This option is always ignored when the primary detector is scancode.
         """,
         ),
         default="off",
