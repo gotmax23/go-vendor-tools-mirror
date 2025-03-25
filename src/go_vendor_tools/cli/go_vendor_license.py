@@ -79,6 +79,7 @@ def split_kv_options(kv_config: list[str]) -> dict[str, str]:
     return results
 
 
+# TODO: Unit tests
 def choose_license_detector(
     choice: str | None,
     license_config: LicenseConfig,
@@ -431,7 +432,7 @@ class _PromptMissingResult(NamedTuple):
 
 # TODO(gotmax23): Unit test prompt_missing_licenses and write_config code.
 # This'll require some mocking of the input() stuff.
-def prompt_missing_licenses(
+def prompt_missing_licenses(  # pragma: no cover
     data: LicenseData,
     entries: MutableSequence[LicenseEntry],
     autofill_detector: LicenseDetector | None,
