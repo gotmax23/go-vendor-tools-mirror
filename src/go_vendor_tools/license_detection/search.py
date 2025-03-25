@@ -51,6 +51,7 @@ _LICENSE_GLOBS: Sequence[str] = (
     "OFL-*[0-9]*",
     # Additional
     "Li[cs]ense",
+    "Li[cs]ense.*",
 )
 # _LICENSE_PATTERNS =
 _LICENSE_PATTERN = re.compile(

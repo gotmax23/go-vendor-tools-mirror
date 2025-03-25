@@ -9,7 +9,6 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 from dataclasses import dataclass
-from functools import partial
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, NamedTuple, TypedDict, cast
 
@@ -31,7 +30,6 @@ from go_vendor_tools.license_detection.base import (
     get_manual_license_entries,
     reuse_path_to_license_map,
 )
-from go_vendor_tools.licensing import combine_licenses
 
 if TYPE_CHECKING:
     from _typeshed import StrPath
@@ -85,7 +83,6 @@ class ScancodeLicenseData(LicenseData):
     """
 
     scancode_license_data: dict[str, ScancodeLicenseDict]
-    _combine_licenses = staticmethod(partial(combine_licenses, recursive_simplify=True))
 
 
 class ScancodeLicenseDetector(LicenseDetector[ScancodeLicenseData]):
