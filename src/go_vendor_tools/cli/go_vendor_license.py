@@ -84,32 +84,62 @@ def choose_license_detector(
     license_config: LicenseConfig,
     kv_config: list[str] | None,
     find_only: bool = False,
-) -> LicenseDetector:
+    autofill: str = "off",
+) -> tuple[LicenseDetector, LicenseDetector | None]:
+    """
+    Returns: (Primary detector, detector to use for autofill)
+    """
     kv_config = kv_config or []
     cli_config = license_config["detector_config"] | split_kv_options(kv_config)
     available, missing = get_detectors(cli_config, license_config, find_only=find_only)
+    detector_obj: LicenseDetector
+    autofill_detector_obj: LicenseDetector | None = None
     if choice:
         if choice in missing:
             sys.exit(f"Failed to get detector {choice!r}: {missing[choice]}")
-        return available[choice]
-    if not available:
+        detector_obj = available.pop(choice)
+    elif not available:
         print("Failed to load license detectors:", file=sys.stderr)
         for detector, err in missing.items():
             print(f"! {detector}: {err}")
         sys.exit(1)
-    return next(iter(available.values()))
+    else:
+        # Respect order of keys in available
+        detector_obj = available.pop(next(iter(available)))
+
+    # NOTE: The CLI code should generally avoid special casing for different backends,
+    # but the autofill functionality is a bit special.
+    if autofill in {"off", detector_obj.NAME} or detector_obj.NAME == "scancode":
+        # Don't autofill if turned off, set to the detector we're already using
+        # or if scancode is chosen, which won't benefit from autofilling.
+        pass
+    elif autofill == "auto":
+        # Trivy does not support detect_files()
+        available.pop("trivy", None)
+        if available:
+            # Prefer scancode
+            available.pop("scancode", next(iter(available)))
+    elif autofill in available:
+        autofill_detector_obj = available.pop(autofill)
+    else:
+        print(f"Invalid value for --prompt-autofill: {autofill}")
+    return detector_obj, autofill_detector_obj
+
+
+def _fmt_oneline_help(text: str) -> str:
+    return dedent(text).strip().replace("\n", " ")
 
 
 def _add_json_argument(parser: argparse.ArgumentParser, **kwargs) -> None:
     our_kwargs: dict[str, Any] = {
         "type": Path,
-        "help": dedent(
+        "help": _fmt_oneline_help(
             """\
         Write license data to a JSON file.
         This data is not yet considered stable and is only intended for
         go2rpm's internal usage and for testing purposes.
         """
-        ).replace("\n", " "),
+        ),
     }
     kwargs = our_kwargs | kwargs
     parser.add_argument("--write-json", **kwargs)
@@ -220,6 +250,20 @@ def get_parser() -> argparse.ArgumentParser:
         " Default: %(default)s",
     )
     report_parser.add_argument(
+        "--prompt-autofill",
+        help=_fmt_oneline_help(
+            """
+        Give the name of another license detector to use to fill in licenses.
+        If this backend is available and --prompt is passed,
+        we will first try to use the other backend to detect licenses that the
+        primary backend could not detect before prompting the user.
+        Defaults to "auto" which automatically finds a backend, but can be set
+        explicitly or set to "off" to disable.
+        """,
+        ),
+        default="auto",
+    )
+    report_parser.add_argument(
         "mode",
         nargs="?",
         type=str,
@@ -297,11 +341,12 @@ def parseargs(argv: list[str] | None = None) -> argparse.Namespace:
         if not args.detector_name:
             args.detector_name = args.config["detector"]
     if args.subcommand in ("report", "install"):
-        args.detector = choose_license_detector(
+        args.detector, args.autofill_detector = choose_license_detector(
             args.detector_name,
             args.config,
             args.detector_config,
             args.detector_find_only,
+            getattr(args, "prompt_autofill", "off"),
         )
         # TODO(anyone): Replace the print if/when we implement more granular logging
         print("Using detector:", args.detector.NAME, file=sys.stderr)
@@ -389,14 +434,35 @@ class _PromptMissingResult(NamedTuple):
 def prompt_missing_licenses(
     data: LicenseData,
     entries: MutableSequence[LicenseEntry],
+    autofill_detector: LicenseDetector | None,
 ) -> _PromptMissingResult:
     excludes: list[str] = []
     if not data.undetected_licenses:
         return _PromptMissingResult(data, entries, excludes)
-    print("Undetected licenses found! Please enter them manually.")
     undetected_licenses = set(data.undetected_licenses)
+    unmatched_manual_licenses = set(data.unmatched_manual_licenses)
     license_map: dict[Path, str] = dict(data.license_map)
-    for undetected in sorted(data.undetected_licenses):
+    if autofill_detector:
+        name = autofill_detector.NAME
+        print(f"The {name} backend will be used to autofill missing licenses")
+        extra_license_map, _ = autofill_detector.detect_files(
+            data.undetected_licenses, data.directory
+        )
+        if extra_license_map:
+            license_map.update(extra_license_map)
+            undetected_licenses -= extra_license_map.keys()
+            unmatched_manual_licenses -= extra_license_map.keys()
+            for undetected, expression in extra_license_map.items():
+                entry_dict = LicenseEntry(
+                    path=str(undetected),
+                    sha256sum=get_hash(data.directory / undetected),
+                    expression=expression,
+                )
+                replace_entry(entries, entry_dict, undetected)
+            print(f"Autofilled {len(extra_license_map)} manual license entries")
+    if undetected_licenses:
+        print("Undetected licenses found! Please enter them manually.")
+    for undetected in sorted(undetected_licenses):
         print(f"* Undetected license: {data.directory / undetected}")
         expression_str = input("Enter SPDX expression (or EXCLUDE): ")
         if expression_str == "EXCLUDE":
@@ -404,9 +470,7 @@ def prompt_missing_licenses(
             excludes.append(str(undetected))
             print("Adding file to licensing.exclude_files...")
             continue
-        expression: str = (
-            str(simplify_license(expression_str)) if expression_str else ""
-        )
+        expression = str(simplify_license(expression_str)) if expression_str else ""
         print(f"Expression simplified to {expression!r}")
         license_map[undetected] = expression
         entry_dict = LicenseEntry(
@@ -416,9 +480,14 @@ def prompt_missing_licenses(
         )
         replace_entry(entries, entry_dict, undetected)
         undetected_licenses.remove(undetected)
+        unmatched_manual_licenses.discard(undetected)
     assert not undetected_licenses
     return _PromptMissingResult(
-        data.replace(undetected_licenses=undetected_licenses, license_map=license_map),
+        data.replace(
+            undetected_licenses=frozenset(undetected_licenses),
+            license_map=license_map,
+            unmatched_manual_licenses=tuple(unmatched_manual_licenses),
+        ),
         entries,
         excludes,
     )
@@ -455,7 +524,9 @@ def get_report_write_config_data(
 
 
 def write_and_prompt_report_licenses(
-    license_data: LicenseData, write_config_data: tomlkit.TOMLDocument
+    license_data: LicenseData,
+    write_config_data: tomlkit.TOMLDocument,
+    autofill_detector: LicenseDetector | None,
 ) -> LicenseData:
     # fmt: off
     license_config_list = (
@@ -465,7 +536,7 @@ def write_and_prompt_report_licenses(
     )
     # fmt: on
     license_data, _, exclude_files = prompt_missing_licenses(
-        license_data, license_config_list
+        license_data, license_config_list, autofill_detector
     )
     if exclude_files:
         exclude_files_toml = write_config_data["licensing"].setdefault(  # type: ignore[union-attr]
@@ -514,6 +585,7 @@ def handle_alternative_sources_and_spec(
 
 def report_command(args: argparse.Namespace) -> None:
     detector: LicenseDetector = args.detector
+    autofill_detector: LicenseDetector | None = args.autofill_detector
     paths: Sequence[Path] = args.directory
     ignore_undetected: bool = args.ignore_undetected
     ignore_unlicensed_mods: bool = args.ignore_unlicensed_mods
@@ -548,7 +620,9 @@ def report_command(args: argparse.Namespace) -> None:
             else get_unlicensed_mods(directory, license_data.license_file_paths)
         )
         if prompt:
-            license_data = write_and_prompt_report_licenses(license_data, loaded)
+            license_data = write_and_prompt_report_licenses(
+                license_data, loaded, autofill_detector
+            )
         failed = bool(
             (license_data.undetected_licenses and not ignore_undetected)
             or (unlicensed_mods and not ignore_unlicensed_mods)
