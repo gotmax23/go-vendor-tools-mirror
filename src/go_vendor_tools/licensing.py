@@ -51,7 +51,7 @@ def combine_licenses(
     *expressions: str | license_expression.LicenseExpression | None,
     validate=True,
     strict=True,
-    recursive_simplify: bool = False,
+    recursive_simplify: bool = True,
 ) -> str:
     """
     Combine SPDX license expressions with AND

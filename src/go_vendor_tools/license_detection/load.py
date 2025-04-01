@@ -15,9 +15,8 @@ from .trivy import TrivyLicenseDetector
 
 DETECTORS: dict[str, type[LicenseDetector]] = {
     TrivyLicenseDetector.NAME: TrivyLicenseDetector,
-    AskalonoLicenseDetector.NAME: AskalonoLicenseDetector,
-    # TODO(gotmax23): Make scancode the default
     ScancodeLicenseDetector.NAME: ScancodeLicenseDetector,
+    AskalonoLicenseDetector.NAME: AskalonoLicenseDetector,
 }
 
 

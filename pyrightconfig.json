@@ -1,5 +1,6 @@
 {
     "exclude": ["tests/integration/**", ".nox/**", ".old/**", "fedora/**"],
     "typeCheckingMode": "standard",
-    "pythonVersion": "3.9"
+    "pythonVersion": "3.10",
+    "reportPossiblyUnboundVariable": "information"
 }
