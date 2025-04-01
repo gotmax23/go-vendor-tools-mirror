@@ -26,7 +26,6 @@ from go_vendor_tools.license_detection.base import (
     get_manual_license_entries,
 )
 from go_vendor_tools.license_detection.load import DETECTORS
-from go_vendor_tools.license_detection.load import get_detectors as gd
 from go_vendor_tools.license_detection.trivy import TrivyLicenseDetector
 
 if sys.version_info >= (3, 11):
@@ -39,20 +38,6 @@ TEST_DATA = HERE / "test_data"
 
 CONFIG1 = load_config(TEST_DATA / "case1" / "config.toml")
 CONFIG1_BROKEN = load_config(TEST_DATA / "case1" / "config-broken.toml")
-
-
-def get_available_detectors() -> list[type[LicenseDetector]]:
-    # TODO(anyone): Allow enforcing "strict mode" if any detectors are missing
-    # This can be a env var and then enabled in the noxfile.
-    available, missing = gd({}, CONFIG1["licensing"])
-    # HACK: We initialize the classes using a test config to check if they are
-    # available and then return the base class so that it can be reinitialized
-    return [type(d) for d in available.values()]
-
-
-@pytest.fixture(name="detector", params=get_available_detectors())
-def get_detectors(request) -> type[LicenseDetector]:
-    return request.param
 
 
 def test_license_explicit(test_data: Path, tmp_path: Path) -> None:

@@ -433,7 +433,7 @@ class _PromptMissingResult(NamedTuple):
 
 # TODO(gotmax23): Unit test prompt_missing_licenses and write_config code.
 # This'll require some mocking of the input() stuff.
-def get_missing_licenses(  # pragma: no cover
+def get_missing_licenses(
     data: LicenseData,
     entries: MutableSequence[LicenseEntry],
     autofill_detector: LicenseDetector | None,
