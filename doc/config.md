@@ -29,9 +29,23 @@ All fields are optional.
 Explicitly choose a license detector.
 Currently supported detectors are:
 
-1. trivy
-2. askalono
-3. scancode (uses the `scancode-toolkit` Python library)
+1. askalono — the simplest backend.
+   askalono fails to recognize license files containing multiple license texts
+   and other complex cases, but its output can be supplemented with
+   [manual license entries](#licensing--licenses).
+   askalono is very slim and takes up less space than the other backends,
+   speeding up package builds.
+   askalono will support packages in ELN once #3 is implemented.
+   For packages with many dependencies, consider scancode to avoid having to
+   maintain a large number of manual license entries.
+2. scancode — the most powerful backend.
+   Uses the `scancode-toolkit` Python library.
+   scancode pulls in a lot of dependencies, but it is very thorough and can
+   detect more complex cases.
+   scancode will support packages in ELN once #3 is implemented.
+3. trivy — another option.
+   trivy is sometimes better at detecting complex licenses than askalono.
+   Note that this backend will not be compatible with ELN.
 
 If no detector is specified, `go_vendor_license` will attempt to load the first
 available license detector from first to last in the above list.
@@ -62,7 +76,7 @@ Key-value pairs that are passed to the detector backend.
     go_vendor_archive --detector-config multiple=true
     ```
 
-#### `licenses` (list of license entry tables)
+#### `licenses` (list of license entry tables) {: #licensing--licenses}
 
 License detectors are not perfect.
 The `detector.licenses` list allows packagers to manually specify license files
