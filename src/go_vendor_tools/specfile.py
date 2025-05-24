@@ -8,7 +8,7 @@ Helpers for working with specfiles
 from __future__ import annotations
 
 from pathlib import Path
-from typing import TYPE_CHECKING, Protocol, TypeVar
+from typing import TYPE_CHECKING, Protocol, TypeVar, cast
 
 # specfile is opened liked this so downstreams can remove the dependency on
 # specfile and use the other functionality if they so choose
@@ -122,7 +122,7 @@ class VendorSpecfile:
         Raises:
             VendorToolsError: If Source0 and/or Source1 don't exist
         """
-        spec_path = self.spec.path
+        spec_path = cast(Path, self.spec.path)
         directory = directory or spec_path.resolve().parent
         se = VendorToolsError(f"Source0 and Source1 must be specified in {spec_path}")
         try:
