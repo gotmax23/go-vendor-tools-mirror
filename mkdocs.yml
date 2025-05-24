@@ -49,7 +49,7 @@ nav:
   - news.md
   - contributing.md
   - Reference:
-    - "go_vendor_archive": man/go_vendor_license.md
+    - "go_vendor_license": man/go_vendor_license.md
     - "go_vendor_archive_create(1)": man/go_vendor_archive_create1.md
     - "go_vendor_archive_override(1)": man/go_vendor_archive_override1.md
     # Covered by other docs
