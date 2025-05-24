@@ -5,7 +5,7 @@
 %bcond manpages 1
 # Whether to build the scancode extra
 %bcond scancode %{defined fedora}
-# Only run scancode tests when arch is not i386
+# Only run scancode tests (and install scancode at buildtime) when arch is not i386
 %bcond scancode_tests %[ %{with scancode} && "%{_arch}" != "i386"]
 
 %global forgeurl https://gitlab.com/fedora/sigs/go/go-vendor-tools
@@ -34,7 +34,10 @@ BuildRequires:  trivy
 BuildRequires:  scdoc
 %endif
 
-Recommends:     (askalono-cli or trivy or go-vendor-tools+scancode)
+# First choice backend
+Recommends:     askalono-cli
+# Used by default for go_vendor_license report --autofill
+Recommends:     go-vendor-tools+scancode
 Recommends:     go-vendor-tools+all
 
 
