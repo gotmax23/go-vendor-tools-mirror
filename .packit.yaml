@@ -7,7 +7,6 @@ srpm_build_deps:
   - git-core
   - pipx
   - rpmdevtools
-  - wait-for-copr
   - /usr/bin/unshare
 packages:
   # Main package
