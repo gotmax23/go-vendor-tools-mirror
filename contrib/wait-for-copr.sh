@@ -10,6 +10,6 @@ if [ -z "${COPR_OWNER-}" ]; then
 fi
 
 evr="$(pipx run fclogr dev-entries --evr-only)"
-wait-for-copr \
+pipx run --spec "wait-for-copr @ git+https://github.com/packit/wait-for-copr" wait-for-copr \
     --owner "${COPR_OWNER}" --project "${COPR_PROJECT}" \
     go-vendor-tools "${evr}"
