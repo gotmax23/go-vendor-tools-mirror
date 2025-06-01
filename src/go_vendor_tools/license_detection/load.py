@@ -14,9 +14,9 @@ from .scancode import ScancodeLicenseDetector
 from .trivy import TrivyLicenseDetector
 
 DETECTORS: dict[str, type[LicenseDetector]] = {
-    TrivyLicenseDetector.NAME: TrivyLicenseDetector,
-    ScancodeLicenseDetector.NAME: ScancodeLicenseDetector,
     AskalonoLicenseDetector.NAME: AskalonoLicenseDetector,
+    ScancodeLicenseDetector.NAME: ScancodeLicenseDetector,
+    TrivyLicenseDetector.NAME: TrivyLicenseDetector,
 }
 
 
