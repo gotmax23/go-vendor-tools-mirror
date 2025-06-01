@@ -119,7 +119,9 @@ def choose_license_detector(
         available.pop("trivy", None)
         if available:
             # Prefer scancode
-            available.pop("scancode", next(iter(available)))
+            autofill_detector_obj = available.pop(
+                "scancode", next(iter(available.values()))
+            )
     elif autofill in available:
         autofill_detector_obj = available.pop(autofill)
     else:
@@ -349,7 +351,7 @@ def parseargs(argv: list[str] | None = None) -> argparse.Namespace:
             args.config,
             args.detector_config,
             args.detector_find_only,
-            getattr(args, "prompt_autofill", "off"),
+            getattr(args, "autofill", "off"),
         )
         # TODO(anyone): Replace the print if/when we implement more granular logging
         print("Using detector:", args.detector.NAME, file=sys.stderr)
