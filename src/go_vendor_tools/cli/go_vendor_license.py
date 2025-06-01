@@ -29,7 +29,7 @@ from go_vendor_tools.cli.utils import (
     need_tomlkit,
     tomlkit_dump,
 )
-from go_vendor_tools.config.base import load_config
+from go_vendor_tools.config.base import BaseConfig, load_config
 from go_vendor_tools.config.licenses import (
     LicenseConfig,
     LicenseEntry,
@@ -341,6 +341,7 @@ def parseargs(argv: list[str] | None = None) -> argparse.Namespace:
             args.config_path, allow_missing=getattr(args, "write_config", False)
         )
         args.config = loaded["licensing"]
+        args.global_config = loaded
         if not args.detector_name:
             args.detector_name = args.config["detector"]
     if args.subcommand in ("report", "install"):
@@ -619,6 +620,7 @@ def report_command(args: argparse.Namespace) -> None:
     subpackage_name: str | None = args.subpackage_name
     verify_spec: bool = args.verify_spec
     update_spec: bool = args.update_spec
+    global_config: BaseConfig = args.global_config
     del args
 
     if write_config:
@@ -628,6 +630,7 @@ def report_command(args: argparse.Namespace) -> None:
         directory,
         spec,
     ):
+        # go_mod_dir = directory / (global_config["general"]["go_mod_dir"] or "./")
         if (verify_spec or update_spec) and not spec:
             raise VendorToolsError(
                 "--path must be a path to a specfile"
@@ -637,7 +640,11 @@ def report_command(args: argparse.Namespace) -> None:
         unlicensed_mods = (
             set()
             if ignore_unlicensed_mods
-            else get_unlicensed_mods(directory, license_data.license_file_paths)
+            else get_unlicensed_mods(
+                directory,
+                license_data.license_file_paths,
+                global_config["general"]["go_mod_dir"],
+            )
         )
         if prompt:
             license_data = fill_missing_licenses(

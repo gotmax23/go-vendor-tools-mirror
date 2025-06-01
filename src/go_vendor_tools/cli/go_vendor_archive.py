@@ -237,6 +237,8 @@ def create_archive(args: CreateArchiveArgs) -> None:
             cwd = Path(stack.enter_context(tempfile.TemporaryDirectory()))
             shutil.unpack_archive(args.path, cwd)
             cwd /= next(cwd.iterdir())
+            if n := args.config["general"]["go_mod_dir"]:
+                cwd /= n
         env = os.environ | GO_PROXY_ENV if args.use_module_proxy else None
         runner = partial(subprocess.run, cwd=cwd, check=True, env=env)
         pre_commands = chain(
