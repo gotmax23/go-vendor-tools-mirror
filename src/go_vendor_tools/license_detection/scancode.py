@@ -65,7 +65,7 @@ def get_scancode_license_data(
             ScancodeLicenseDict, scancode.api.get_licenses(str(directory / file))
         )
         data["license_detections"].sort(
-            key=lambda d: d.get("license_expression_spdx", "")
+            key=lambda d: d.get("license_expression_spdx") or ""
         )
         data_dicts[str(file)] = data
 
