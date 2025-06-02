@@ -139,6 +139,7 @@ enabled = false
 [tool.pymarkdown.plugins.no-inline-html]
 enabled = false
 [tool.pymarkdown.plugins.line-length]
+line_length = 90
 # Code blocks can be a little longer than regular text
 code_block_line_length = 120
 [tool.pymarkdown.plugins.no-duplicate-heading]
