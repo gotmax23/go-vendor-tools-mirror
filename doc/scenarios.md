@@ -62,6 +62,29 @@ version. The go-vendor-tools configuration is stored in `go-vendor-tools.toml`.
     go_vendor_archive create --config go-vendor-tools.toml foo.spec
     ```
 
+In case the dependency does not have an available tag or a suitable released
+version, a specific commit can be used. To find the correct pseudo-version
+string for a specific commit, you can first update the module within a git
+clone of the project that is being packaged:
+
+    ```bash
+    go get github.com/mattn/go-localereader@2491eb6
+    ```
+
+This command will update the `go.mod` file. Inspect the `go.mod` file for
+an entry similar to `require github.com/mattn/go-localereader v0.0.2-0.20220822084749-2491eb6c1c75`.
+This pseudo-version string `v0.0.2-0.20220822084749-2491eb6c1c75` is what is needed.
+
+1. Use this pseudo-version with the `go_vendor_archive override` command to
+   set the dependency override in the configuration file:
+
+    ```bash
+    go_vendor_archive override --config go-vendor-tools.toml github.com/mattn/go-localereader v0.0.2-0.20220822084749-2491eb6c1c75
+    ```
+
+1. To complete the update, follow the `go_vendor_archive create` step
+   (step 2) as described in the "Security updates" example above.
+
 ## Manually detecting licenses {: #manually-detecting-licenses}
 
 Example case: `go_vendor_license report` fails to detect a license
