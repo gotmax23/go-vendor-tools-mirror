@@ -1,5 +1,2 @@
-# Copyright (C) 2024 Maxwell G <maxwell@gtmx.me>
-# SPDX-License-Identifier: MIT
-
-SHA512 (autorestic-1.7.11.tar.gz) = 6c989c328131a2d01d7e70bbe6e75947b1c62f63c53c96b9ac646a2863649dc6265fc9b484d5da7ffe07a0a45794bc6b9fbedbfbb33dcc1072e411e9e18d9155
-SHA512 (autorestic-1.7.11-vendor.tar.xz) = 3f12bad5ce1dababc17af84731d8dedf68aaaaa639fe1c7e8d79e1456b572c7cbd6239e6225ebc83bfeb2774a6d056fc017a65b945cae54cb0bbf5af67d1a452
+6c989c328131a2d01d7e70bbe6e75947b1c62f63c53c96b9ac646a2863649dc6265fc9b484d5da7ffe07a0a45794bc6b9fbedbfbb33dcc1072e411e9e18d9155  autorestic-1.7.11.tar.gz
+1aa30d28ba1350d8235aa710dc66badd51e6dfe749ed7519a5ad370080e3bdafeb445aae85e14a9b9198e286f3a5e6b0d0b38088156135b1078e715078b21616  autorestic-1.7.11-vendor.tar.xz
