@@ -53,9 +53,11 @@ if TYPE_CHECKING:
 
 DEFAULT_OUTPUT = "vendor.tar.bz2"
 ARCHIVE_FILES = (Path("go.mod"), Path("go.sum"), Path("vendor/"))
-GO_WORK_ARCHIVE_FILES = (Path("go.work"), Path("go.work.sum"), Path("vendor/"))
+GO_WORK_ARCHIVE_FILES = (Path("go.work"), Path("go.work.sum"), *ARCHIVE_FILES)
 OPTIONAL_FILES = frozenset({Path("go.sum")})
-GO_WORK_OPTIONAL_FILES = frozenset({Path("go.work.sum")})
+GO_WORK_OPTIONAL_FILES = frozenset(
+    {Path("go.work.sum"), Path("go.mod"), *OPTIONAL_FILES}
+)
 GO_PROXY_ENV = {
     "GOPROXY": "https://proxy.golang.org,direct",
     "GOSUMDB": "sum.golang.org",
