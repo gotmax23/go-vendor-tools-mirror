@@ -7,12 +7,11 @@ scancode-toolkit-based license detector backend
 
 from __future__ import annotations
 
-from collections.abc import Iterable
+from collections.abc import Collection, Iterable
 from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, NamedTuple, TypedDict, cast
 
-from go_vendor_tools.gomod import get_go_module_dirs
 from go_vendor_tools.license_detection.search import find_license_files
 
 try:
@@ -103,13 +102,12 @@ class ScancodeLicenseDetector(LicenseDetector[ScancodeLicenseData]):
         self.detector_config = detector_config
         self.license_config = license_config
 
-    def detect(self, directory: StrPath):
+    def detect(self, directory: StrPath, reuse_roots: Collection[StrPath] = ()):
         if self.find_only:
             raise ValueError(
                 "This cannot be called when class was initalized with find_only=True"
             )
         directory = Path(directory)
-        reuse_roots = get_go_module_dirs(Path(directory), relative_paths=True)
         license_file_lists = find_license_files(
             directory,
             relative_paths=True,

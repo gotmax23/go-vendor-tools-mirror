@@ -11,7 +11,7 @@ import dataclasses
 import json
 import shutil
 import subprocess
-from collections.abc import Callable, Iterable
+from collections.abc import Callable, Collection, Iterable
 from pathlib import Path
 from typing import TYPE_CHECKING, TypedDict, cast
 
@@ -21,7 +21,6 @@ from go_vendor_tools.config.utils import str_to_bool
 from go_vendor_tools.exceptions import LicenseError
 
 from ..config.licenses import LicenseConfig
-from ..gomod import get_go_module_dirs
 from ..licensing import combine_licenses
 from .base import (
     LicenseData,
@@ -214,7 +213,9 @@ class AskalonoLicenseDetector(LicenseDetector[AskalonoLicenseData]):
         self.detector_config = detector_config
         self.license_config = license_config
 
-    def detect(self, directory: StrPath) -> AskalonoLicenseData:
+    def detect(
+        self, directory: StrPath, reuse_roots: Collection[StrPath] = ()
+    ) -> AskalonoLicenseData:
         if self.find_only:
             raise ValueError(
                 "This cannot be called when class was initalized with find_only=True"
@@ -222,7 +223,6 @@ class AskalonoLicenseDetector(LicenseDetector[AskalonoLicenseData]):
         gitignore = Path(directory, ".gitignore")
         if gitignore.is_file():
             _remove_line(gitignore, lambda line: line.startswith("vendor"))
-        reuse_roots = get_go_module_dirs(Path(directory), relative_paths=True)
         license_file_lists = find_license_files(
             directory=directory,
             relative_paths=True,

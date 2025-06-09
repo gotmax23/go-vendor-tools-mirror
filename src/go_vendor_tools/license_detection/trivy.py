@@ -11,14 +11,13 @@ import dataclasses
 import json
 import shutil
 import subprocess
-from collections.abc import Iterable, Sequence
+from collections.abc import Collection, Iterable, Sequence
 from itertools import chain
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Literal, TypedDict, cast
 
 from go_vendor_tools.config.licenses import LicenseConfig
 from go_vendor_tools.exceptions import LicenseError
-from go_vendor_tools.gomod import get_go_module_dirs
 from go_vendor_tools.license_detection.base import reuse_path_to_license_map
 from go_vendor_tools.license_detection.search import (
     NOTICE_FILE_TYPE,
@@ -152,11 +151,9 @@ class TrivyLicenseDetector(LicenseDetector[TrivyLicenseData]):
 
     # TODO(anyone): Consider splitting into separate functions
     # https://gitlab.com/gotmax23/go-vendor-tools/-/issues/23
-    def detect(self, directory: StrPath) -> TrivyLicenseData:
-        # FIXME(gotmax23): Don't call get_go_module_dirs() here. Don't assume the file
-        # exists.
-        reuse_roots = get_go_module_dirs(Path(directory), relative_paths=True)
-
+    def detect(
+        self, directory: StrPath, reuse_roots: Collection[StrPath] = ()
+    ) -> TrivyLicenseData:
         data = _load_license_data(self.path, directory)
         licenses = _license_data_to_trivy_license_dict(data)
         license_map, undetected = _trivy_license_dict_to_license_map(
@@ -194,11 +191,9 @@ class TrivyLicenseDetector(LicenseDetector[TrivyLicenseData]):
             detector_name=self.NAME,
         )
 
-    def find_license_files(self, directory: StrPath) -> list[Path]:
-        # FIXME(gotmax23): Don't call get_go_module_dirs() here. Don't assume the file
-        # exists.
-        reuse_roots = get_go_module_dirs(Path(directory), relative_paths=True)
-
+    def find_license_files(
+        self, directory: StrPath, reuse_roots: Collection[StrPath] = ()
+    ) -> list[Path]:
         data = _load_license_data(self.path, directory)
         licenses = _license_data_to_trivy_license_dict(data)
         license_map, undetected = _trivy_license_dict_to_license_map(
