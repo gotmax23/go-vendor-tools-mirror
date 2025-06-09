@@ -13,7 +13,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Iterable, Sequence
 from contextlib import ExitStack
 from functools import partial
 from itertools import chain
@@ -26,7 +26,9 @@ from zstarfile.extra import open_write_compressed
 from go_vendor_tools import __version__
 from go_vendor_tools.archive import add_files_to_archive
 from go_vendor_tools.cli.utils import catch_vendor_tools_error
-from go_vendor_tools.config.archive import get_go_dependency_update_commands
+from go_vendor_tools.config.archive import (
+    get_go_dependency_update_commands,
+)
 from go_vendor_tools.config.base import BaseConfig, load_config
 from go_vendor_tools.exceptions import ArchiveError
 from go_vendor_tools.specfile import VendorSpecfile
@@ -115,6 +117,11 @@ class CreateArchiveArgs:
             need_tomlkit("--write-config")
             if not kwargs["config_path"]:
                 raise ArchiveError("--write-config requires --config to be set")
+        if kwargs["config"]["general"]["go_mod_dir"] and kwargs["use_top_level_dir"]:
+            raise ArchiveError(
+                "archive->use_top_level_dir and general->go_mod_dir"
+                " config options are incompatible"
+            )
         return CreateArchiveArgs(**kwargs, _explicitly_passed=_explicitly_passed)
 
     def write_config_opts(self) -> None:
@@ -219,7 +226,14 @@ def _create_archive_read_from_specfile(args: CreateArchiveArgs) -> None:
         )
 
 
+def paths_with_go_mod_dir(paths: Iterable[Path], go_mod_dir: str | None) -> list[Path]:
+    if not go_mod_dir:
+        return list(paths)
+    return [go_mod_dir / path for path in paths]
+
+
 def create_archive(args: CreateArchiveArgs) -> None:
+    go_mod_dir = args.config["general"]["go_mod_dir"]
     _already_checked_is_file = False
     cwd = args.path
     if args.path.suffix == ".spec":
@@ -237,6 +251,10 @@ def create_archive(args: CreateArchiveArgs) -> None:
             cwd = Path(stack.enter_context(tempfile.TemporaryDirectory()))
             shutil.unpack_archive(args.path, cwd)
             cwd /= next(cwd.iterdir())
+        root_cwd = cwd
+        # TODO: test go_mod_dir support
+        if go_mod_dir:
+            cwd /= go_mod_dir
         env = os.environ | GO_PROXY_ENV if args.use_module_proxy else None
         runner = partial(subprocess.run, cwd=cwd, check=True, env=env)
         pre_commands = chain(
@@ -273,11 +291,14 @@ def create_archive(args: CreateArchiveArgs) -> None:
         print("Creating archive...")
         add_files_to_archive(
             tf,
-            Path(cwd),
-            ARCHIVE_FILES if not use_go_work else GO_WORK_ARCHIVE_FILES,
+            root_cwd,
+            paths_with_go_mod_dir(
+                ARCHIVE_FILES if not use_go_work else GO_WORK_ARCHIVE_FILES, go_mod_dir
+            ),
             top_level_dir=args.use_top_level_dir,
-            optional_files=(
-                OPTIONAL_FILES if not use_go_work else GO_WORK_OPTIONAL_FILES
+            optional_files=paths_with_go_mod_dir(
+                OPTIONAL_FILES if not use_go_work else GO_WORK_OPTIONAL_FILES,
+                go_mod_dir,
             ),
         )
         if args.write_config:
