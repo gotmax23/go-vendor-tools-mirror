@@ -19,7 +19,6 @@ from typing import TYPE_CHECKING, Any, ClassVar, Generic
 
 from go_vendor_tools.config.licenses import LicenseConfig, LicenseEntry
 from go_vendor_tools.exceptions import LicenseError
-from go_vendor_tools.gomod import get_go_module_dirs
 from go_vendor_tools.hashing import verify_hash
 from go_vendor_tools.license_detection.search import find_license_files
 from go_vendor_tools.licensing import combine_licenses
@@ -286,9 +285,15 @@ class LicenseDetector(Generic[_LicenseDataT_co], metaclass=abc.ABCMeta):
         return self._find_only
 
     @abc.abstractmethod
-    def detect(self, directory: StrPath) -> _LicenseDataT_co:
+    def detect(
+        self, directory: StrPath, reuse_roots: Collection[StrPath] = ...
+    ) -> _LicenseDataT_co:
         """
         Scan a directory for license data
+
+        Args:
+            directory: Directory
+            reuse_roots: Directories to search for REUSE-style LICENSES directory
         """
 
     @abc.abstractmethod
@@ -307,15 +312,19 @@ class LicenseDetector(Generic[_LicenseDataT_co], metaclass=abc.ABCMeta):
         Returns: (License mapping, undetected files)
         """
 
-    def find_license_files(self, directory: StrPath) -> list[Path]:
+    def find_license_files(
+        self, directory: StrPath, reuse_roots: Collection[StrPath] = ()
+    ) -> list[Path]:
         """
         Default implementation of find_license_files.
 
+        Args:
+            directory: Directory
+            reuse_roots: Directories to search for REUSE-style LICENSES directory
         Raises:
             LicenseError:
                 Invalid manual license config entries are present in the license config
         """
-        reuse_roots = get_go_module_dirs(Path(directory), relative_paths=True)
         license_file_lists = find_license_files(
             directory,
             relative_paths=True,

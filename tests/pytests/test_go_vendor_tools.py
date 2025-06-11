@@ -114,7 +114,7 @@ def test_load_dump_license_data(
     config = load_config(case_dir / "go-vendor-tools.toml", allow_missing=True)
     detector_obj = detector(cli_config, config["licensing"])
     try:
-        data: LicenseData = detector_obj.detect(licenses_dir)
+        data: LicenseData = detector_obj.detect(licenses_dir, ("vendor/abc",))
     except Exception as exc:
         print(exc)
         if isinstance(exc, CalledProcessError):

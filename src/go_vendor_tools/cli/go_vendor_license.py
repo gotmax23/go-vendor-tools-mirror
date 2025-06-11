@@ -29,14 +29,18 @@ from go_vendor_tools.cli.utils import (
     need_tomlkit,
     tomlkit_dump,
 )
-from go_vendor_tools.config.base import load_config
+from go_vendor_tools.config.base import BaseConfig, load_config
 from go_vendor_tools.config.licenses import (
     LicenseConfig,
     LicenseEntry,
     create_license_config,
 )
 from go_vendor_tools.exceptions import VendorToolsError
-from go_vendor_tools.gomod import get_unlicensed_mods
+from go_vendor_tools.gomod import (
+    get_go_module_dirs,
+    get_go_module_names,
+    get_unlicensed_mods,
+)
 from go_vendor_tools.hashing import get_hash
 from go_vendor_tools.license_detection.base import LicenseData, LicenseDetector
 from go_vendor_tools.license_detection.load import DETECTORS, get_detectors
@@ -343,6 +347,7 @@ def parseargs(argv: list[str] | None = None) -> argparse.Namespace:
             args.config_path, allow_missing=getattr(args, "write_config", False)
         )
         args.config = loaded["licensing"]
+        args.global_config = loaded
         if not args.detector_name:
             args.detector_name = args.config["detector"]
     if args.subcommand in ("report", "install"):
@@ -570,8 +575,30 @@ def fill_missing_licenses(
 
 @contextmanager
 def handle_alternative_sources_and_spec(
-    directories: Sequence[Path], is_archive: bool, subpackage_name: str | None
+    directories: Sequence[Path],
+    is_archive: bool,
+    subpackage_name: str | None,
+    go_mod_dir: str | None = None,
 ) -> Iterator[tuple[Path, VendorSpecfile | None]]:
+    """
+    Unpack sources and return unpacked directory and optionally, a
+    VendorSpecfile instance
+
+    Args:
+        directories:
+            List of paths (archives, directories, or a single specfile) to unpack
+        is_archive:
+            Whether to treat `directories` as archives.
+            This is ignored when a specfile is passed.
+        subpackage_name:
+            subpackage_name to pass to VendorSpecfile
+        go_mod_dir:
+            If go_mod_dir is set in the g-v-t configuration, this affects the
+            behavior of source unpacking
+    Yields:
+        (Path to directory, VendorSpecfile instance if `directories` is a
+         single specfile)
+    """
     with ExitStack() as es:
         spec: VendorSpecfile | None = None
         directories = list(directories)
@@ -598,7 +625,11 @@ def handle_alternative_sources_and_spec(
                 with ZSTarfile.open(directory) as tar:
                     toplevel = get_toplevel_directory(tar)
                     print(f"Extracting {directory}", file=sys.stderr)
-                    tar.extractall(tmp if toplevel else tmp / first_toplevel)
+                    tar.extractall(
+                        tmp
+                        if (toplevel and toplevel != go_mod_dir)
+                        else tmp / first_toplevel
+                    )
             yield tmp / first_toplevel, spec
 
         else:
@@ -621,25 +652,42 @@ def report_command(args: argparse.Namespace) -> None:
     subpackage_name: str | None = args.subpackage_name
     verify_spec: bool = args.verify_spec
     update_spec: bool = args.update_spec
+    global_config: BaseConfig = args.global_config
     del args
+    go_mod_dir = global_config["general"]["go_mod_dir"]
 
     if write_config:
         config_path, loaded = get_report_write_config_data(config_path, detector)
 
-    with handle_alternative_sources_and_spec(paths, use_archive, subpackage_name) as (
-        directory,
-        spec,
-    ):
+    with handle_alternative_sources_and_spec(
+        paths, use_archive, subpackage_name, go_mod_dir
+    ) as (directory, spec):
         if (verify_spec or update_spec) and not spec:
             raise VendorToolsError(
                 "--path must be a path to a specfile"
                 " if --verify-spec or --update-spec is passed"
             )
-        license_data: LicenseData = detector.detect(directory)
+        go_module_names = get_go_module_names(
+            directory / (go_mod_dir or "."),
+            allow_missing=False,
+        )
+        license_data: LicenseData = detector.detect(
+            directory,
+            get_go_module_dirs(
+                directory,
+                relative_paths=True,
+                go_mod_dir=go_mod_dir,
+                go_module_names=go_module_names,
+            ),
+        )
         unlicensed_mods = (
             set()
             if ignore_unlicensed_mods
-            else get_unlicensed_mods(directory, license_data.license_file_paths)
+            else get_unlicensed_mods(
+                directory,
+                license_data.license_file_paths,
+                go_mod_dir,
+            )
         )
         if prompt:
             license_data = fill_missing_licenses(
@@ -731,9 +779,14 @@ def install_command(args: argparse.Namespace) -> None:
     install_destdir: Path = args.install_destdir
     install_directory: Path = args.install_directory
     install_filelist: Path = args.install_filelist
+    global_config: BaseConfig = args.global_config
     del args
+    go_mod_dir = global_config["general"]["go_mod_dir"]
 
-    license_files = detector.find_license_files(directory)
+    license_files = detector.find_license_files(
+        directory,
+        get_go_module_dirs(directory, relative_paths=True, go_mod_dir=go_mod_dir),
+    )
     copy_licenses(
         directory,
         license_files,

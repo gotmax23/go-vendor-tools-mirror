@@ -1,6 +1,13 @@
 # Copyright (C) 2024 Maxwell G <maxwell@gtmx.me>
 # SPDX-License-Identifier: MIT
 
+[archive]
+post_commands = [
+    # Install fake REUSE license file for testing
+    ["mkdir", "vendor/github.com/blang/semver/v4/LICENSES"],
+    ["touch", "vendor/github.com/blang/semver/v4/LICENSES/GPL-3.0-or-later.txt"]
+]
+
 [licensing]
 detector = "trivy"
 

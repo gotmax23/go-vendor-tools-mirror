@@ -29,10 +29,21 @@ def get_go_module_names(directory: Path, allow_missing: bool = True) -> dict[str
     return results
 
 
-def get_go_module_dirs(directory: Path, relative_paths: bool = False) -> list[Path]:
+# TODO: Test go_mod_dirs support
+def get_go_module_dirs(
+    directory: Path,
+    relative_paths: bool = False,
+    go_mod_dir: str | None = None,
+    go_module_names: Collection[str] | None = None,
+) -> list[Path]:
+    go_mod_dir = go_mod_dir or "."
     results: list[Path] = []
-    for ipath in get_go_module_names(directory):
-        moddir = directory / "vendor" / ipath
+    for ipath in (
+        go_module_names
+        if go_module_names is not None
+        else get_go_module_names(directory)
+    ):
+        moddir = directory / go_mod_dir / "vendor" / ipath
         if moddir.is_dir():
             results.append(
                 moddir.relative_to(directory) if relative_paths else moddir.resolve()
@@ -40,7 +51,12 @@ def get_go_module_dirs(directory: Path, relative_paths: bool = False) -> list[Pa
     return results
 
 
-def get_unlicensed_mods(directory: Path, license_paths: Collection[Path]) -> set[Path]:
+def get_unlicensed_mods(
+    directory: Path,
+    license_paths: Collection[Path],
+    go_mod_dir: str | None = None,
+    go_module_names: Collection[str] | None = None,
+) -> set[Path]:
     resolved_dir = directory.resolve()
     licensed_dirs = {
         (
@@ -50,5 +66,10 @@ def get_unlicensed_mods(directory: Path, license_paths: Collection[Path]) -> set
         )
         for path in (p.resolve() for p in license_paths)
     }
-    all_dirs = {*get_go_module_dirs(directory), directory.resolve()}
+    all_dirs = {
+        *get_go_module_dirs(
+            directory, go_mod_dir=go_mod_dir, go_module_names=go_module_names
+        ),
+        directory.resolve(),
+    }
     return all_dirs - licensed_dirs

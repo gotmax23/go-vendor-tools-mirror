@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, TypedDict, cast
 
 from go_vendor_tools.config.archive import ArchiveConfig, create_archive_config
+from go_vendor_tools.config.general import GeneralConfig, create_general_config
 
 from .licenses import LicenseConfig, create_license_config
 
@@ -26,12 +27,14 @@ if TYPE_CHECKING:
 
 
 class BaseConfig(TypedDict):
+    general: GeneralConfig
     licensing: LicenseConfig
     archive: ArchiveConfig
 
 
 def create_base_config(data: dict[str, Any] | None = None) -> BaseConfig:
     data = {} if data is None else data.copy()
+    data["general"] = create_general_config(data.get("general"))
     data["licensing"] = create_license_config(data.get("licensing"))
     data["archive"] = create_archive_config(data.get("archive"))
     return cast(BaseConfig, data)
