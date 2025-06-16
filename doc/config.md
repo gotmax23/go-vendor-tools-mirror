@@ -18,6 +18,17 @@ so it is up to the user to explicitly pass `--config go-vendor-tools.toml`.
 The following sections outline the configuration options.
 All fields are optional.
 
+### `general`
+
+#### `go_mod_dir` (string)
+
+!!! note
+    This is an experimental option added in v0.8.0.
+
+When the directory containing go.mod (and thus the Go sources) are located
+in a subdirectory of the archive, use this option to specify a relative path to
+this directory from the root of the source archive.
+
 ### `licensing`
 
 `go_vendor_license`'s configuration is stored under the `licensing` table.

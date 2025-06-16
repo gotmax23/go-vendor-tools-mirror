@@ -4,7 +4,7 @@
 
 %bcond manpages 1
 # Whether to build the scancode extra
-%bcond scancode %{defined fedora}
+%bcond scancode %[ %{defined fedora} && v"0%{?python3_version}" < v"3.14" ]
 # Only run scancode tests (and install scancode at buildtime) when arch is not i386
 %bcond scancode_tests %[ %{with scancode} && "%{_arch}" != "i386"]
 

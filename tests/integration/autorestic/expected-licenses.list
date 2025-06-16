@@ -4,6 +4,7 @@
 %license %dir /usr/share/licenses/test-autorestic/vendor/github.com/blang
 %license %dir /usr/share/licenses/test-autorestic/vendor/github.com/blang/semver
 %license %dir /usr/share/licenses/test-autorestic/vendor/github.com/blang/semver/v4
+%license %dir /usr/share/licenses/test-autorestic/vendor/github.com/blang/semver/v4/LICENSES
 %license %dir /usr/share/licenses/test-autorestic/vendor/github.com/buger
 %license %dir /usr/share/licenses/test-autorestic/vendor/github.com/buger/goterm
 %license %dir /usr/share/licenses/test-autorestic/vendor/github.com/fatih
@@ -48,6 +49,7 @@
 %license %dir /usr/share/licenses/test-autorestic/vendor/gopkg.in/yaml.v3
 %license /usr/share/licenses/test-autorestic/LICENSE
 %license /usr/share/licenses/test-autorestic/vendor/github.com/blang/semver/v4/LICENSE
+%license /usr/share/licenses/test-autorestic/vendor/github.com/blang/semver/v4/LICENSES/GPL-3.0-or-later.txt
 %license /usr/share/licenses/test-autorestic/vendor/github.com/buger/goterm/LICENSE
 %license /usr/share/licenses/test-autorestic/vendor/github.com/fatih/color/LICENSE.md
 %license /usr/share/licenses/test-autorestic/vendor/github.com/fsnotify/fsnotify/AUTHORS
