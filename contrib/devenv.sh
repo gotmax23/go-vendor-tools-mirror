@@ -3,4 +3,4 @@
 # SPDX-License-Identifier: MIT
 set -euo pipefail
 
-uv pip install -e '.[all,dev]' -e '../go2rpm[all]' scancode-toolkit ipython
+uv pip install -e '.[all,dev]' -e '../go2rpm[all]' scancode-toolkit ipython fedrq libdnf5-shim
