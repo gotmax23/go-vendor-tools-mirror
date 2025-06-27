@@ -7,11 +7,12 @@ Shared CLI utilities
 
 from __future__ import annotations
 
+import os
 import sys
 from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 try:
     import tomlkit
@@ -43,6 +44,15 @@ def load_tomlkit_if_exists(path: Path | None) -> tomlkit.TOMLDocument:
     else:
         loaded = tomlkit.document()
     return loaded
+
+
+def color_default(environ: dict[str, str] | None = None) -> bool | None:
+    environ = cast(dict[str, str], os.environ if environ is None else environ)
+    if environ.get("FORCE_COLOR"):
+        return True
+    if environ.get("NO_COLOR"):
+        return False
+    return None
 
 
 @contextmanager

@@ -25,6 +25,7 @@ from go_vendor_tools.archive import get_toplevel_directory
 from go_vendor_tools.cli.utils import (
     HAS_TOMLKIT,
     catch_vendor_tools_error,
+    color_default,
     load_tomlkit_if_exists,
     need_tomlkit,
     tomlkit_dump,
@@ -183,7 +184,7 @@ def get_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--color",
         action=argparse.BooleanOptionalAction,
-        default=False if os.environ.get("NO_COLOR") else None,
+        default=color_default(),
         help="Whether to use colored output."
         " Defaults to True if output is a TTY and $NO_COLOR is not defined.",
     )

@@ -352,3 +352,10 @@ def test_detect_files_absolute(detector: type[LicenseDetector]) -> None:
     expected_undetected = {files[2]}
     assert mapping == expected_mapping
     assert undetected == expected_undetected
+
+
+def test_color_default() -> None:
+    assert utils.color_default() is None
+    assert utils.color_default({"NO_COLOR": "", "FORCE_COLOR": ""}) is None
+    assert utils.color_default({"NO_COLOR": "1"}) is False
+    assert utils.color_default({"FORCE_COLOR": "1"}) is True
