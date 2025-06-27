@@ -131,8 +131,8 @@ def _get_license_name(data: AskalonoLicenseDict, check: bool) -> str | None:
         try:
             name = combine_licenses(
                 *(entry["license"]["name"] for entry in con),
-                validate=check,
-                strict=check,
+                validate=False,
+                strict=False,
             )
         except ExpressionError as exc:  # pragma: no cover
             raise LicenseError(
