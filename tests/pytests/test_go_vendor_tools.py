@@ -135,7 +135,8 @@ def test_load_dump_license_data(
     assert new_data.to_jsonable() == jsonable
 
     _remove_license_scanner_data(jsonable)
-    # (expected_report).write_text(json.dumps(jsonable, indent=2))
+    # NOTE: Uncomment this line to regenerate the test fixtures
+    # (expected_report).write_text(json.dumps(jsonable, indent=2) + "\n")
     with (expected_report).open() as fp:
         gotten_json = _remove_license_scanner_data(json.load(fp))
     assert gotten_json == jsonable
