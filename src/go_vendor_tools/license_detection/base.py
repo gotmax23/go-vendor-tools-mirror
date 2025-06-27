@@ -13,6 +13,7 @@ import os
 import re
 import sys
 from collections.abc import Collection, Iterable, Mapping, Sequence
+from functools import partial
 from itertools import chain
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, ClassVar, Generic
@@ -21,7 +22,7 @@ from go_vendor_tools.config.licenses import LicenseConfig, LicenseEntry
 from go_vendor_tools.exceptions import LicenseError
 from go_vendor_tools.hashing import verify_hash
 from go_vendor_tools.license_detection.search import find_license_files
-from go_vendor_tools.licensing import combine_licenses
+from go_vendor_tools.licensing import combine_licenses, get_unknown_license_keys
 
 if TYPE_CHECKING:
     from _typeshed import StrPath
@@ -133,7 +134,12 @@ class LicenseData:
             (Generated field) Cumulative `license_expression.LicenseExpression`
             SPDX expression
         license_files_paths:
-            Absolute paths to all detected license files
+            (Generated field) Absolute paths to all detected license files
+        unknown_license_keys:
+            (Generated field) Unknown license keys in the license_expression.
+        is_valid_license:
+            (Generated field) Whether license is unknown (i.e., no
+            unknown_license_keys)
     """
 
     directory: Path
@@ -147,6 +153,8 @@ class LicenseData:
     license_set: frozenset[str] = dataclasses.field(init=False, compare=False)
     license_expression: str = dataclasses.field(init=False, compare=False)
     license_file_paths: tuple[Path, ...] = dataclasses.field(init=False, compare=False)
+    unknown_license_keys: list[str] = dataclasses.field(init=False, compare=False)
+    is_valid_license: bool = dataclasses.field(init=False, compare=False)
 
     # Helper for *_jsonable() methods
     _LIST_PATH_FIELDS: ClassVar = (
@@ -177,8 +185,16 @@ class LicenseData:
                 ),
             ),
         )
+        object.__setattr__(
+            self,
+            "unknown_license_keys",
+            get_unknown_license_keys(self.license_expression),
+        )
+        object.__setattr__(self, "is_valid_license", not self.unknown_license_keys)
 
-    _combine_licenses = staticmethod(combine_licenses)
+    _combine_licenses = staticmethod(
+        partial(combine_licenses, validate=False, strict=False)
+    )
 
     # This would be a good task for pydantic, but we want to keep dependencies slim.
     def to_jsonable(self) -> dict[str, Any]:

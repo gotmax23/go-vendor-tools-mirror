@@ -19,5 +19,7 @@
     "/placeholder/LICENSE.combined",
     "/placeholder/LICENSES/BSD-3-Clause.txt",
     "/placeholder/vendor/abc/LICENSES/ISC.txt"
-  ]
+  ],
+  "unknown_license_keys": [],
+  "is_valid_license": true
 }

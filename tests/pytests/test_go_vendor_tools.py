@@ -235,6 +235,7 @@ def test_print_licenses_all(capsys: pytest.CaptureFixture) -> None:
         directory=directory,
         license_map={
             Path("LICENSE.md"): "MIT",
+            Path("LICENSE.unknown"): "Unknown",
             Path("vendor/xyz/COPYING"): "GPL-3.0-only",
         },
         undetected_licenses=frozenset(
@@ -265,6 +266,7 @@ def test_print_licenses_all(capsys: pytest.CaptureFixture) -> None:
     assert not err
     expected = """\
     LICENSE.md: MIT
+    LICENSE.unknown: Unknown
     vendor/xyz/COPYING: GPL-3.0-only
 
     The following license files were found but the correct license identifier couldn't be determined:
@@ -277,7 +279,10 @@ def test_print_licenses_all(capsys: pytest.CaptureFixture) -> None:
     - LICENSE-Custom
     - vendor/custom/LICENSE
 
-    GPL-3.0-only AND MIT
+    GPL-3.0-only AND MIT AND Unknown
+
+    The following license keys are NOT RECOGNIZED:
+    - Unknown
     """  # noqa: E501
     assert out == dedent(expected)
 

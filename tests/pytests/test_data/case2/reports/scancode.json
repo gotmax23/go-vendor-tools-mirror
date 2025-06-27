@@ -26,5 +26,7 @@
     "/placeholder/LICENSE.manual",
     "/placeholder/LICENSE.manual-invalid",
     "/placeholder/LICENSE.undetected"
-  ]
+  ],
+  "unknown_license_keys": [],
+  "is_valid_license": true
 }
