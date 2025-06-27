@@ -7,7 +7,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 import shutil
 import sys
 from collections.abc import Collection, Iterable, Iterator, MutableSequence, Sequence
@@ -17,7 +16,7 @@ from tempfile import TemporaryDirectory
 from textwrap import dedent
 from typing import IO, Any, NamedTuple, cast
 
-from license_expression import ExpressionError, is_valid_license_key
+from license_expression import ExpressionError
 from zstarfile import ZSTarfile
 
 from go_vendor_tools import __version__
