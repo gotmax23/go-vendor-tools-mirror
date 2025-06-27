@@ -85,18 +85,15 @@ def test_go_vendor_license_check_disabled():
 def test_go_vendor_license_check():
     assert (
         evaluator("%go_vendor_license_check", {"LICENSE": "MIT"}).stdout
-    ) == "go_vendor_license report expression --verify 'MIT'\n"
+    ) == "go_vendor_license report all --verify 'MIT'\n"
 
 
 def test_go_vendor_license_check_args():
     assert (
-        (
-            evaluator(
-                "%go_vendor_license_check GPL-2.0-only BSD-3-Clause", {"LICENSE": "MIT"}
-            ).stdout
-        )
-        == "go_vendor_license report expression --verify 'GPL-2.0-only BSD-3-Clause'\n"
-    )
+        evaluator(
+            "%go_vendor_license_check GPL-2.0-only BSD-3-Clause", {"LICENSE": "MIT"}
+        ).stdout
+    ) == "go_vendor_license report all --verify 'GPL-2.0-only BSD-3-Clause'\n"
 
 
 def test_go_vendor_license_buildrequires():

@@ -50,7 +50,7 @@
     %{-c:--config %{-c*}}
     %{-d:--detector %{-d*}}
     %{-D:--detector-config %{-D*}}
-    report expression
+    report all
     --verify %{expr:
         "%{*}" ? 
         "%{__gvt_shescape_backup %{*}}" :
