@@ -26,6 +26,8 @@
 #   -D : Specify detector settings as KEY=VALUE pairs.
 #        See the go_vendor_license docs for supported options.
 #        Separate KEY=VALUE pairs with ";" to pass multiple options.
+# TODO(gotmax23): Consider adding support for --ignore-* options (the short flags),
+# but we want to discourage packagers from disabling license checks.
 %go_vendor_license_install(c:n:d:D:) %{shrink:
     %{__go_vendor_license}
     %{-c:--config %{-c*}}
@@ -48,7 +50,7 @@
     %{-c:--config %{-c*}}
     %{-d:--detector %{-d*}}
     %{-D:--detector-config %{-D*}}
-    report expression
+    report all
     --verify %{expr:
         "%{*}" ? 
         "%{__gvt_shescape_backup %{*}}" :

@@ -7,7 +7,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 import shutil
 import sys
 from collections.abc import Collection, Iterable, Iterator, MutableSequence, Sequence
@@ -25,6 +24,7 @@ from go_vendor_tools.archive import get_toplevel_directory
 from go_vendor_tools.cli.utils import (
     HAS_TOMLKIT,
     catch_vendor_tools_error,
+    color_default,
     load_tomlkit_if_exists,
     need_tomlkit,
     tomlkit_dump,
@@ -183,7 +183,7 @@ def get_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--color",
         action=argparse.BooleanOptionalAction,
-        default=False if os.environ.get("NO_COLOR") else None,
+        default=color_default(),
         help="Whether to use colored output."
         " Defaults to True if output is a TTY and $NO_COLOR is not defined.",
     )
@@ -225,6 +225,18 @@ def get_parser() -> argparse.ArgumentParser:
         "--ignore-unlicensed-mods",
         action="store_true",
         help="Whether to show Go modules without licenses in the output",
+    )
+    report_parser.add_argument(
+        "-U",
+        "--ignore-unknown-licenses",
+        action="store_true",
+        help=_fmt_oneline_help(
+            """
+        Whether to ignore invalid license expressions unknown to
+        go-vendor-tools, whether they are specified manually in the config or
+        emitted by a license backend.
+        """
+        ),
     )
     report_parser.add_argument(
         "--subpackage-name",
@@ -421,11 +433,13 @@ def print_licenses(
             "The following license files that were specified in the configuration"
             " have changed:",
         )
-    if mode == "list":
-        return
-    if mode != "expression":
+    if mode in ("all", "expression"):
         print()
     print(results.license_expression)
+    red_if_true(
+        results.unknown_license_keys,
+        "\nThe following license keys are NOT RECOGNIZED:",
+    )
 
 
 def write_license_json(data: LicenseData, file: Path) -> None:
@@ -642,6 +656,7 @@ def report_command(args: argparse.Namespace) -> None:
     paths: Sequence[Path] = args.directory
     ignore_undetected: bool = args.ignore_undetected
     ignore_unlicensed_mods: bool = args.ignore_unlicensed_mods
+    ignore_unknown_licenses: bool = args.ignore_unknown_licenses
     mode: str = args.mode
     verify: str | None = args.verify
     write_json: Path | None = args.write_json
@@ -669,7 +684,7 @@ def report_command(args: argparse.Namespace) -> None:
             )
         go_module_names = get_go_module_names(
             directory / (go_mod_dir or "."),
-            allow_missing=False,
+            allow_missing=True,  # Allow this to be missing for now
         )
         license_data: LicenseData = detector.detect(
             directory,
@@ -694,7 +709,8 @@ def report_command(args: argparse.Namespace) -> None:
                 license_data, loaded, autofill_detector, prompt
             )
         failed = bool(
-            (license_data.undetected_licenses and not ignore_undetected)
+            (not ignore_unknown_licenses and not license_data.is_valid_license)
+            or (license_data.undetected_licenses and not ignore_undetected)
             or (unlicensed_mods and not ignore_unlicensed_mods)
             or license_data.unmatched_manual_licenses
         )

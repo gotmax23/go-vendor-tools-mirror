@@ -135,7 +135,8 @@ def test_load_dump_license_data(
     assert new_data.to_jsonable() == jsonable
 
     _remove_license_scanner_data(jsonable)
-    # (expected_report).write_text(json.dumps(jsonable, indent=2))
+    # NOTE: Uncomment this line to regenerate the test fixtures
+    # (expected_report).write_text(json.dumps(jsonable, indent=2) + "\n")
     with (expected_report).open() as fp:
         gotten_json = _remove_license_scanner_data(json.load(fp))
     assert gotten_json == jsonable
@@ -234,6 +235,7 @@ def test_print_licenses_all(capsys: pytest.CaptureFixture) -> None:
         directory=directory,
         license_map={
             Path("LICENSE.md"): "MIT",
+            Path("LICENSE.unknown"): "Unknown",
             Path("vendor/xyz/COPYING"): "GPL-3.0-only",
         },
         undetected_licenses=frozenset(
@@ -264,6 +266,7 @@ def test_print_licenses_all(capsys: pytest.CaptureFixture) -> None:
     assert not err
     expected = """\
     LICENSE.md: MIT
+    LICENSE.unknown: Unknown
     vendor/xyz/COPYING: GPL-3.0-only
 
     The following license files were found but the correct license identifier couldn't be determined:
@@ -276,7 +279,10 @@ def test_print_licenses_all(capsys: pytest.CaptureFixture) -> None:
     - LICENSE-Custom
     - vendor/custom/LICENSE
 
-    GPL-3.0-only AND MIT
+    GPL-3.0-only AND MIT AND Unknown
+
+    The following license keys are NOT RECOGNIZED:
+    - Unknown
     """  # noqa: E501
     assert out == dedent(expected)
 
@@ -352,3 +358,10 @@ def test_detect_files_absolute(detector: type[LicenseDetector]) -> None:
     expected_undetected = {files[2]}
     assert mapping == expected_mapping
     assert undetected == expected_undetected
+
+
+def test_color_default() -> None:
+    assert utils.color_default() is None
+    assert utils.color_default({"NO_COLOR": "", "FORCE_COLOR": ""}) is None
+    assert utils.color_default({"NO_COLOR": "1"}) is False
+    assert utils.color_default({"FORCE_COLOR": "1"}) is True

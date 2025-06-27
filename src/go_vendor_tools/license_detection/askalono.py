@@ -123,7 +123,10 @@ def _get_relative(base_dir: Path | None, file: str | Path) -> Path:
     )
 
 
-def _get_license_name(data: AskalonoLicenseDict, check: bool) -> str | None:
+def _get_license_name(
+    data: AskalonoLicenseDict,
+    check: bool,  # noqa: ARG001
+) -> str | None:
     name: str | None = None
     if "result" not in data:
         pass
@@ -131,8 +134,14 @@ def _get_license_name(data: AskalonoLicenseDict, check: bool) -> str | None:
         try:
             name = combine_licenses(
                 *(entry["license"]["name"] for entry in con),
-                validate=check,
-                strict=check,
+                # NOTE(gotmax): Always disable this for now.
+                # Later code checks for invalid license expressions and reports
+                # failures in a nicer way, even if it looses the context of
+                # where the errors were found.
+                validate=False,
+                strict=False,
+                # validate=check,
+                # strict=check,
             )
         except ExpressionError as exc:  # pragma: no cover
             raise LicenseError(

@@ -141,7 +141,7 @@ def get_lines(refresh: bool = False) -> list[str]:
     """
     if refresh:
         sys.modules.pop("go_vendor_tools.cli.go_vendor_license", None)
-    from go_vendor_tools.cli.go_vendor_license import get_parser
+    from go_vendor_tools.cli.go_vendor_license import get_parser  # noqa: PLC0415
 
     parser = get_parser()
     return format_command(parser)
