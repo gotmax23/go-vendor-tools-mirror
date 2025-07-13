@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import dataclasses
+import sys
 from collections.abc import Generator, Iterable
 from enum import Enum, auto
 from pathlib import Path
@@ -63,11 +64,14 @@ def generator(directory: Path) -> TestGenType:
 
     assert_call(
         (yield),
-        p("The test_autofill backend will be used to autofill missing licenses"),
+        p(
+            "The test_autofill backend will be used to autofill missing licenses",
+            file=sys.stderr,
+        ),
     )
     yield None
 
-    assert_call((yield), p("Autofilled 1 manual license entries"))
+    assert_call((yield), p("Autofilled 1 manual license entries", file=sys.stderr))
     yield None
 
     assert_call((yield), p("Undetected licenses found! Please enter them manually."))

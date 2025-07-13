@@ -472,7 +472,10 @@ def get_missing_licenses(
     license_map: dict[Path, str] = dict(data.license_map)
     if autofill_detector:
         name = autofill_detector.NAME
-        print(f"The {name} backend will be used to autofill missing licenses")
+        print(
+            f"The {name} backend will be used to autofill missing licenses",
+            file=sys.stderr,
+        )
         extra_license_map, _ = autofill_detector.detect_files(
             data.undetected_licenses, data.directory
         )
@@ -487,7 +490,10 @@ def get_missing_licenses(
                     expression=expression,
                 )
                 replace_entry(entries, entry_dict, undetected)
-            print(f"Autofilled {len(extra_license_map)} manual license entries")
+            print(
+                f"Autofilled {len(extra_license_map)} manual license entries",
+                file=sys.stderr,
+            )
     if prompt and undetected_licenses:
         print("Undetected licenses found! Please enter them manually.")
         for undetected in sorted(undetected_licenses):
