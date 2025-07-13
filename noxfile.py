@@ -93,7 +93,7 @@ def coverage_run(session: nox.Session) -> Iterator[dict[str, str | None]]:
 # General
 
 
-@nox.session(python=["3.9", "3.10", "3.11", "3.12"])
+@nox.session(python=["3.9", "3.10", "3.11", "3.12", "3.13"])
 def test(session: nox.Session):
     packages: list[str] = [*get_test_deps()]
     env: dict[str, str] = {}
