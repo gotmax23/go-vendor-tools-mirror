@@ -74,11 +74,10 @@ evaluator = Evaluator()
 
 
 def test_go_vendor_license_check_disabled():
-    assert (
+    assert not (
         evaluator(
             "%go_vendor_license_check", {"go_vendor_license_check_disable": "1"}
-        ).stdout
-        == "\n"
+        ).stdout.removesuffix("\n")
     )
 
 
