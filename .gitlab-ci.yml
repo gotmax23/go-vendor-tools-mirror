@@ -106,7 +106,7 @@ test:
           NO_SCANCODE: "false"
           ERROR_ON_MISSING_INTERPRETERS: "false"
         - IMAGE: "quay.io/centos/centos:stream10"
-          PACKAGES: "fzf"
+          PACKAGES: "autorestic fzf"
           SHOULD_RPMBUILD: "true"
           NO_SCANCODE: "false"
           ERROR_ON_MISSING_INTERPRETERS: "false"
