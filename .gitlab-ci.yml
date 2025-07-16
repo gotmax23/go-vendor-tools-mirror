@@ -45,8 +45,10 @@ test:
       rpm-build
       rpmdevtools
       /usr/bin/unshare
+    # Only test alternative Python interpreters on one release to avoid
+    # resource wastage
     - >-
-      test "$SHOULD_RPMBUILD" = "false" ||
+      test "$ERROR_ON_MISSING_INTERPRETERS" = "false" ||
       sudo dnf install
       --setopt=install_weak_deps=0 -y
       python3.9
@@ -54,7 +56,6 @@ test:
       python3.11-devel
       python3.12-devel
       python3.13-devel
-
   script:
     - export GO_VENDOR_ARCHIVE_USE_MODULE_PROXY=1
     - |
@@ -86,7 +87,7 @@ test:
           SHOULD_RPMBUILD: "true"
           # https://github.com/WojciechMula/pyahocorasick/issues/199
           NO_SCANCODE: "true"
-          ERROR_ON_MISSING_INTERPRETERS: "true"
+          ERROR_ON_MISSING_INTERPRETERS: "false"
         - IMAGE: "registry.fedoraproject.org/fedora:42"
           PACKAGES: "autorestic fzf"
           SHOULD_RPMBUILD: "true"
@@ -96,7 +97,7 @@ test:
           PACKAGES: "autorestic fzf"
           SHOULD_RPMBUILD: "true"
           NO_SCANCODE: "false"
-          ERROR_ON_MISSING_INTERPRETERS: "true"
+          ERROR_ON_MISSING_INTERPRETERS: "false"
         - IMAGE: "quay.io/centos/centos:stream9"
           PACKAGES: "fzf"
           SHOULD_RPMBUILD: "true"
