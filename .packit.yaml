@@ -54,6 +54,14 @@ jobs:
         # Extra dependencies (trivy, python-zstarfile) not packaged in Fedora
         additional_repos:
           - "copr://@go-sig/go-vendor-tools-dev"
+      epel-9-x86_64:
+        # Extra dependencies (trivy, python-zstarfile) not packaged in Fedora
+        additional_repos:
+          - "copr://@go-sig/go-vendor-tools-dev"
+      epel-10-x86_64:
+        # Extra dependencies (trivy, python-zstarfile) not packaged in Fedora
+        additional_repos:
+          - "copr://@go-sig/go-vendor-tools-dev"
     trigger: pull_request
 
   - job: copr_build
@@ -63,7 +71,11 @@ jobs:
       - fzf
     targets:
       - fedora-all-x86_64
-      - fedora-all-aarch64
+      - fedora-all-x86_64
+      - epel-10-aarch64
+      - epel-10-aarch64
+      - epel-9-aarch64
+      - epel-9-aarch64
     owner: "@go-sig"
     project: go-vendor-tools-dev
     trigger: commit

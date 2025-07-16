@@ -106,7 +106,12 @@ test:
           ERROR_ON_MISSING_INTERPRETERS: "true"
         - IMAGE: "quay.io/centos/centos:stream9"
           PACKAGES: "fzf"
-          SHOULD_RPMBUILD: "false"
+          SHOULD_RPMBUILD: "true"
+          NO_SCANCODE: "false"
+          ERROR_ON_MISSING_INTERPRETERS: "false"
+        - IMAGE: "quay.io/centos/centos:stream10"
+          PACKAGES: "fzf"
+          SHOULD_RPMBUILD: "true"
           NO_SCANCODE: "false"
           ERROR_ON_MISSING_INTERPRETERS: "false"
 
