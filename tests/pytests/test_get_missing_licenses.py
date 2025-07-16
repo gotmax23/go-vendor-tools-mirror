@@ -23,7 +23,7 @@ class CallAction(Enum):
     INPUT = auto()
 
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass
 class Call:
     action: CallAction
     args: tuple[object, ...]

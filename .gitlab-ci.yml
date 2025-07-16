@@ -26,16 +26,11 @@ test:
         sudo dnf install -y epel-release /usr/bin/unzip wget
         crb enable
         sudo dnf install --setopt=install_weak_deps=0 -y epel-rpm-macros
-        sudo dnf install -y koji-tool
-        koji-tool install -y go-rpm-macros-epel --all
-        wget https://github.com/jpeddicord/askalono/releases/download/0.4.6/askalono-Linux.zip
-        unzip askalono-Linux.zip
-        chmod a+x askalono
-        sudo mv askalono /usr/bin/askalono
-        sudo chmod a+x /usr/bin/askalono
+        sudo dnf install --enablerepo=epel-testing -y trivy
       else
-        sudo dnf install --setopt=install_weak_deps=0 -y askalono-cli
+        sudo dnf install -y trivy
       fi
+      sudo dnf install --setopt=install_weak_deps=0 -y askalono-cli
     - >-
       sudo dnf install
       --setopt=install_weak_deps=0 -y
@@ -50,18 +45,17 @@ test:
       rpm-build
       rpmdevtools
       /usr/bin/unshare
+    # Only test alternative Python interpreters on one release to avoid
+    # resource wastage
     - >-
-      test "$SHOULD_RPMBUILD" = "false" ||
+      test "$ERROR_ON_MISSING_INTERPRETERS" = "false" ||
       sudo dnf install
       --setopt=install_weak_deps=0 -y
       python3.9
       python3.10-devel
       python3.11-devel
       python3.12-devel
-
-    - >-
-      sudo dnf install -y
-      https://github.com/aquasecurity/trivy/releases/download/v0.49.1/trivy_0.49.1_Linux-64bit.rpm
+      python3.13-devel
   script:
     - export GO_VENDOR_ARCHIVE_USE_MODULE_PROXY=1
     - |
@@ -93,20 +87,25 @@ test:
           SHOULD_RPMBUILD: "true"
           # https://github.com/WojciechMula/pyahocorasick/issues/199
           NO_SCANCODE: "true"
+          ERROR_ON_MISSING_INTERPRETERS: "false"
+        - IMAGE: "registry.fedoraproject.org/fedora:42"
+          PACKAGES: "autorestic fzf"
+          SHOULD_RPMBUILD: "true"
+          NO_SCANCODE: "false"
           ERROR_ON_MISSING_INTERPRETERS: "true"
         - IMAGE: "registry.fedoraproject.org/fedora:41"
           PACKAGES: "autorestic fzf"
           SHOULD_RPMBUILD: "true"
           NO_SCANCODE: "false"
-          ERROR_ON_MISSING_INTERPRETERS: "true"
-        - IMAGE: "registry.fedoraproject.org/fedora:40"
-          PACKAGES: "autorestic fzf"
-          SHOULD_RPMBUILD: "true"
-          NO_SCANCODE: "false"
-          ERROR_ON_MISSING_INTERPRETERS: "true"
+          ERROR_ON_MISSING_INTERPRETERS: "false"
         - IMAGE: "quay.io/centos/centos:stream9"
           PACKAGES: "fzf"
-          SHOULD_RPMBUILD: "false"
+          SHOULD_RPMBUILD: "true"
+          NO_SCANCODE: "false"
+          ERROR_ON_MISSING_INTERPRETERS: "false"
+        - IMAGE: "quay.io/centos/centos:stream10"
+          PACKAGES: "fzf"
+          SHOULD_RPMBUILD: "true"
           NO_SCANCODE: "false"
           ERROR_ON_MISSING_INTERPRETERS: "false"
 
