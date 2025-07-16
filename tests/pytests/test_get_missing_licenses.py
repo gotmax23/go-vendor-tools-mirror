@@ -2,7 +2,6 @@
 # SPDX-License-Identifier: MIT
 from __future__ import annotations
 
-import dataclasses
 import sys
 from collections.abc import Generator, Iterable
 from enum import Enum, auto
@@ -15,7 +14,7 @@ from go_vendor_tools.cli import go_vendor_license
 from go_vendor_tools.license_detection.base import LicenseData
 
 if TYPE_CHECKING:
-    from typing_extensions import Self
+    from typing_extensions import Self, TypeAlias
 
 
 class CallAction(Enum):
@@ -23,11 +22,36 @@ class CallAction(Enum):
     INPUT = auto()
 
 
-@dataclasses.dataclass
-class Call:
+# TODO(gotmax23): WHY DOES THIS NOT WORK ON EPEL 9 BUT ONLY SOMETIMES?
+# git blame this comment for the error message.
+# @dataclasses.dataclass
+class Call:  # noqa: PLW1641
     action: CallAction
     args: tuple[object, ...]
     kwargs: dict[str, Any]
+
+    # Implement the methods manually instead...
+    def __init__(
+        self, action: CallAction, args: tuple[object, ...], kwargs: dict[str, Any]
+    ) -> None:
+        self.action = action
+        self.args = args
+        self.kwargs = kwargs
+
+    def __repr__(self) -> str:
+        action = self.action
+        args = self.args
+        kwargs = self.kwargs
+        return f"{type(self).__name__}({action=}, {args=}, {kwargs=})"
+
+    def __eq__(self, other: object, /) -> bool:
+        if not isinstance(other, type(self)):
+            return NotImplemented
+        return (
+            self.action == other.action
+            and self.args == other.args
+            and self.kwargs == other.kwargs
+        )
 
     @classmethod
     def print(cls, *args, **kwargs) -> Self:
@@ -38,7 +62,7 @@ class Call:
         return cls(CallAction.INPUT, args, kwargs)
 
 
-TestGenType = Generator[Any, Call, None]
+TestGenType: TypeAlias = "Generator[Any, Call, None]"
 
 
 class AssertCall:
