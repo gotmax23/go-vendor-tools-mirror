@@ -58,6 +58,7 @@ test:
       python3.10-devel
       python3.11-devel
       python3.12-devel
+      python3.13-devel
 
     - >-
       sudo dnf install -y
