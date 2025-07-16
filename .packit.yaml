@@ -54,10 +54,10 @@ jobs:
         # Extra dependencies (trivy, python-zstarfile) not packaged in Fedora
         additional_repos:
           - "copr://@go-sig/go-vendor-tools-dev"
-      epel-9-x86_64:
-        # Extra dependencies (trivy, python-zstarfile) not packaged in Fedora
-        additional_repos:
-          - "copr://@go-sig/go-vendor-tools-dev"
+      # epel-9-x86_64:
+      #   # Extra dependencies (trivy, python-zstarfile) not packaged in Fedora
+      #   additional_repos:
+      #     - "copr://@go-sig/go-vendor-tools-dev"
       epel-10-x86_64:
         # Extra dependencies (trivy, python-zstarfile) not packaged in Fedora
         additional_repos:
