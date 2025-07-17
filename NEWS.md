@@ -5,6 +5,32 @@ SPDX-License-Identifier: MIT
 
 # NEWS
 
+## 0.8.0 - 2025-07-17 <a id='0.8.0'></a>
+
+### Added
+
+- **Add support for EPEL 9 and EPEL 10**
+- Add support for non-root level go.mod paths (#60)
+- archive: include go.mod and go.sum in go.work mode
+- license: include `Li[cs]ense.*` glob when scanning for license files
+- license: simplify manual license expressions from configuration
+- license: implement [`--autofill` functionality][autofill]
+- license: support `$NO_COLOR` and `$FORCE_COLOR` standards
+
+[autofill]: https://fedora.gitlab.io/sigs/go/go-vendor-tools/man/go_vendor_license/#options_1
+
+### Changed
+
+- rpm: include full license breakdown in macro
+- license: askalono is the new default backend and scancode-toolkit is used to autofill
+  licenses that askalono couldn't detect (when `--autofill` is enabled, which
+  will be the new default in go2rpm).
+
+### Fixed
+
+- license: improve handling of invalid license keys to print a proper error
+  instead of raising an unhandled exception
+
 ## 0.7.0 - 2025-03-23 <a id='0.7.0'></a>
 
 ### Release summary
