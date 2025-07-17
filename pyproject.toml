@@ -147,6 +147,9 @@ code_block_line_length = 120
 enabled = false
 [tool.pymarkdown.plugins.code-block-style]
 style = "fenced"
+# False positives
+[tool.pymarkdown.plugins.no-emphasis-as-heading]
+enabled = false
 
 
 [tool.coverage.run]
