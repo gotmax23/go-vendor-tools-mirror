@@ -1,0 +1,6 @@
+# Copyright (C) 2025 Maxwell G <maxwell@gtmx.me>
+# SPDX-License-Identifier: MIT
+
+# NOTE(gotmax23): This is pulled in by scancode.
+# Newer versions of pyicu don't build on Fedora and no wheels are available.
+pyicu ~= 2.14.0

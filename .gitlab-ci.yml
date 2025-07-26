@@ -34,9 +34,11 @@ test:
     - >-
       sudo dnf install
       --setopt=install_weak_deps=0 -y
+      gcc-c++
       git-core
       go-rpm-macros
       golang-bin
+      libicu-devel
       libxml2-devel
       libxslt-devel
       pipx

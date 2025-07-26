@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from go_vendor_tools.config.base import load_config
+from go_vendor_tools.config.base import BaseConfig, load_config
 from go_vendor_tools.license_detection.base import LicenseDetector
 from go_vendor_tools.license_detection.load import get_detectors as gd
 
@@ -19,6 +19,16 @@ CONFIG1 = load_config(TEST_DATA / "case1" / "config.toml")
 @pytest.fixture
 def test_data() -> Path:
     return TEST_DATA
+
+
+@pytest.fixture
+def config1(test_data: Path) -> BaseConfig:
+    return load_config(test_data / "case1" / "config.toml")
+
+
+@pytest.fixture
+def config1_broken(test_data: Path) -> BaseConfig:
+    return load_config(test_data / "case1" / "config-broken.toml")
 
 
 def get_available_detectors() -> list[type[LicenseDetector]]:
