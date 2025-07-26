@@ -82,10 +82,10 @@ mkdir -p bash_completions fish_completions zsh_completions
 for bin in go_vendor_archive go_vendor_license; do
     register-python-argcomplete --shell bash "${bin}" > "bash_completions/${bin}"
     register-python-argcomplete --shell fish "${bin}" > "fish_completions/${bin}.fish"
-    # Compatibility with old argcomplete versions
+    # Compatibility with old argcomplete versions that don't direcrly support zsh
     if ! (register-python-argcomplete --shell zsh "${bin}" > "zsh_completions/_${bin}"); then
         echo "#compdef ${bin}" > "zsh_completions/_${bin}"
-        echo -e "autoload -Uz bashcompinit\nbashcompinit" > "zsh_completions/_${bin}"
+        echo -e "autoload -Uz bashcompinit\nbashcompinit" >> "zsh_completions/_${bin}"
         cat "bash_completions/${bin}" >> "zsh_completions/_${bin}"
     fi
 done
@@ -93,8 +93,7 @@ done
 
 %install
 %pyproject_install
-# TODO(anyone): Use -l flag once supported by EL 9.
-%pyproject_save_files go_vendor_tools
+%pyproject_save_files go_vendor_tools -l
 
 # Install RPM macros
 install -Dpm 0644 rpm/macros.go_vendor_tools -t %{buildroot}%{_rpmmacrodir}
@@ -123,7 +122,6 @@ export MACRO_DIR=%{buildroot}%{_rpmmacrodir}
 %files -f %{pyproject_files}
 # Install top-level markdown files
 %doc *.md
-%license LICENSES/*
 %{_bindir}/go_vendor*
 %{bash_completions_dir}/go_vendor_*
 %{fish_completions_dir}/go_vendor_*.fish
@@ -134,10 +132,13 @@ export MACRO_DIR=%{buildroot}%{_rpmmacrodir}
 %{_mandir}/man5/go*.5*
 %endif
 
+
 %files doc
 %doc %{_docdir}/go-vendor-tools-doc/
 
+
 %pyproject_extras_subpkg -n go-vendor-tools all %{?with_scancode:scancode}
+
 
 %changelog
 * Thu Jul 17 2025 Maxwell G <maxwell@gtmx.me> - 0.8.0-1
