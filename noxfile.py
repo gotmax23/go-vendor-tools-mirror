@@ -47,7 +47,7 @@ nox.options.error_on_external_run = True
 def install(session: nox.Session, *args, editable=False, **kwargs):
     if editable and ALLOW_EDITABLE:
         args = ("-e", *args)
-    session.install(*args, **kwargs)
+    session.install(*args, "-c", "constraints.txt", **kwargs)
 
 
 def git(session: nox.Session, *args, **kwargs):
