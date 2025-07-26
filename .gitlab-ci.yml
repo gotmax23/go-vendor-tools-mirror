@@ -37,6 +37,7 @@ test:
       git-core
       go-rpm-macros
       golang-bin
+      libicu-devel
       libxml2-devel
       libxslt-devel
       pipx
