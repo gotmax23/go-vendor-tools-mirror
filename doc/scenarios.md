@@ -27,7 +27,9 @@ with go-vendor-tools.
     `go2rpm` will also output a license report and a cumulative SPDX expression
     generated with `go_vendor_license` and then update the License tag in the specfile.
     It is the packager's responsibility to perform a basic check of the output
-    and ensure adherence to the Fedora Licensing Guidelines.
+    and ensure adherence to the Fedora Licensing Guidelines,
+    including ensuring that all keys in the `License` tag are allowed licenses
+    in Fedora.
 
 1. Fill in missing license expressions.
     The `go2rpm` command above will prompt the packager to fill in any missing
@@ -140,4 +142,32 @@ go2rpm was used to generate the original specfile using vendored dependencies.
     go_vendor_archive create --config go-vendor-tools.toml foo.spec
     ```
 
-1. Upload new sources and continue with your normal package update workflow.
+1. Verify the license expression in the specfile.
+
+    ```bash
+    go_vendor_license --config go-vendor-tools.toml \
+        report --update-spec --prompt --autofill=auto foo.spec 
+    ```
+
+    This command will perform a license scan, prompt for any licenses the
+    selected license backend cannot detect, and autofill any that can be
+    automatically detected using a secondary license backend.
+    Make sure to double check any changes and ensure that all keys in the
+    `License` tag are allowed licenses in Fedora.
+
+    Alternatively, you may use the `--verify-spec` argument to fail
+    if there have been any changes from the `License` tag specified in the
+    specfile.
+    This approach is recommended when using Packit or another automated
+    mechanism to update packages.
+
+    ```bash
+    go_vendor_license --config go-vendor-tools.toml report --verify-spec foo.spec
+    ```
+
+    This command will error out if the detected license expression has changed
+    so that the package maintainer can double check the changes and update the
+    `License:` tag in the specfile.
+
+1. Continue with your normal package update workflow, preform a test build, and
+   upload the new sources to the lookaside cache.
