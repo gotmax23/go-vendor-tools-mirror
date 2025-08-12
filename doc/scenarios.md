@@ -45,7 +45,7 @@ with go-vendor-tools.
 1. Ensure that the final license only includes licenses allowed under the Fedora
    Licensing Guidelines.
 
-## Security updates
+## Security updates {: #security-updates}
 
 Example case: CVE-2024-24786 was released in `google.golang.org/protobuf` and
 fixed in `v1.33.0`. We want to update package `foo.spec` to use the new
@@ -116,7 +116,7 @@ in `go-vendor-tools.toml`.
 
     Fill the outputted license expression into the specfile's `License:` field.
 
-## Manually update specfile for new upstream version
+## Manually update specfile for new upstream version {: #manual-update}
 
 Example case: Upstream has released version 1.10.1 of foo.
 go2rpm was used to generate the original specfile using vendored dependencies.
