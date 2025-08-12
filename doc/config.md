@@ -18,9 +18,9 @@ so it is up to the user to explicitly pass `--config go-vendor-tools.toml`.
 The following sections outline the configuration options.
 All fields are optional.
 
-### `general`
+### `general` {: #general}
 
-#### `go_mod_dir` (string)
+#### `go_mod_dir` (string) {: #general--go_mod_dir}
 
 !!! note
     This is an experimental option added in v0.8.0.
@@ -29,11 +29,11 @@ When the directory containing go.mod (and thus the Go sources) are located
 in a subdirectory of the archive, use this option to specify a relative path to
 this directory from the root of the source archive.
 
-### `licensing`
+### `licensing` {: #licensing}
 
 `go_vendor_license`'s configuration is stored under the `licensing` table.
 
-#### `detector` (string)
+#### `detector` (string) {: #licensing--detector}
 
 > **Environment variable**: `GO_VENDOR_LICENSE_DETECTOR`
 
@@ -63,7 +63,7 @@ available license detector from first to last in the above list.
 `go_vendor_license` will error if neither `trivy`, `askalono`, nor
 `scancode-toolkit` is installed.
 
-#### `detector_config` (mapping of string to string)
+#### `detector_config` (mapping of string to string) {: #licensing--detector_config}
 
 > **CLI flag**: `--detector-config`
 
@@ -102,19 +102,19 @@ to include in the license calculation.
 
 See [*Manually detecting licenses*](./scenarios.md#manually-detecting-licenses).
 
-#### `exclude_files` (list of strings)
+#### `exclude_files` (list of strings) {: #licensing--exclude_files }
 
 List of license file paths to exclude from the licensing calculation
 
-#### `exclude_directories` (list of strings)
+#### `exclude_directories` (list of strings) {: #licensing--exclude_directories }
 
 List of directories to ignore when scanning for license files
 
-### `archive`
+### `archive` {: #archive }
 
 The configuration for `go_vendor_archive` is stored under the `archive` table.
 
-#### `use_module_proxy` (boolean)
+#### `use_module_proxy` (boolean) {: #archive--use_module_proxy }
 
 > **Default**: `true`
 >
@@ -124,7 +124,7 @@ Whether to use the Google Go module proxy to download modules.
 Downloading modules manually is quite slow, so—unless you have privacy
 concerns—using the module proxy is recommended.
 
-#### `pre_commands` (list of list of strings)
+#### `pre_commands` (list of list of strings) {: #archive--pre_commands }
 
 Commands to run in the temporary source tree used to create the archive before
 downloading the vendored dependencies.
@@ -140,7 +140,7 @@ pre_commands = [
 ]
 ```
 
-#### `post_commands` (list of list of strings)
+#### `post_commands` (list of list of strings) {: #archive--post_commands }
 
 Commands to run after downloading the vendored dependencies.
 Changes made to the `vendor` directory will be reflected in the final vendor
@@ -164,18 +164,18 @@ post_commands = [
 ]
 ```
 
-#### `tidy` (boolean)
+#### `tidy` (boolean) {: #archive--tidy }
 
 > **Default**: `true`
 
 Whether to run `go tidy` before `go mod vendor` when creating the archive.
 You should leave this enabled.
 
-#### `dependency_overrides` (string mapping)
+#### `dependency_overrides` (string mapping) {: #archive--dependency_overrides }
 
 See [*Security updates*](./scenarios.md#security-updates).
 
-#### `compression_type` (string)
+#### `compression_type` (string) {: #archive--compression_type }
 
 > **CLI flag**: `--compression`
 
@@ -183,7 +183,7 @@ Compression type, such as `tar` (uncompressed), `gz`, `bz2`, or `zstd`.
 By default, the compression type is detected based on the extension of
 `--output` passed on the CLI.
 
-#### compresslevel (int)
+#### compresslevel (int) {: #archive--compresslevel }
 
 > **Environment variable**: `GO_VENDOR_ARCHIVE_COMPRESSLEVEL`
 >
