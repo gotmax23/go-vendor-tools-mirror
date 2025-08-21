@@ -40,6 +40,13 @@ Recommends:     askalono-cli
 Recommends:     go-vendor-tools+scancode
 Recommends:     go-vendor-tools+all
 
+# NOTE(gotmax23): Remove this for now.
+# Packages should still explicitly require go-rpm-macros, and the license
+# scanning in this package could potentially be useful outside of the Go ecosystem,
+# so it might be nice to avoid dependning on go-rpm-macros in this package.
+# Buildflags from go-rpm-macros are used by %%gocheck2 defined in this package.
+# Requires:       go-rpm-macros
+
 
 %global common_description %{expand:
 go-vendor-tools provides tools and macros for handling Go library vendoring in
@@ -79,7 +86,7 @@ Enhances:       go-vendor-tools
 %endif
 
 mkdir -p bash_completions fish_completions zsh_completions
-for bin in go_vendor_archive go_vendor_license; do
+for bin in go_vendor_archive go_vendor_license gocheck2; do
     register-python-argcomplete --shell bash "${bin}" > "bash_completions/${bin}"
     register-python-argcomplete --shell fish "${bin}" > "fish_completions/${bin}.fish"
     # Compatibility with old argcomplete versions that don't direcrly support zsh
@@ -97,6 +104,7 @@ done
 
 # Install RPM macros
 install -Dpm 0644 rpm/macros.go_vendor_tools -t %{buildroot}%{_rpmmacrodir}
+install -Dpm 0644 rpm/macros.gocheck2 -t %{buildroot}%{_rpmmacrodir}
 
 # Install documentation
 mkdir -p %{buildroot}%{_docdir}/go-vendor-tools-doc
@@ -122,10 +130,12 @@ export MACRO_DIR=%{buildroot}%{_rpmmacrodir}
 %files -f %{pyproject_files}
 # Install top-level markdown files
 %doc *.md
+%{_bindir}/gocheck2
 %{_bindir}/go_vendor*
-%{bash_completions_dir}/go_vendor_*
-%{fish_completions_dir}/go_vendor_*.fish
-%{zsh_completions_dir}/_go_vendor_*
+%{bash_completions_dir}/go*
+%{fish_completions_dir}/go*.fish
+%{zsh_completions_dir}/_go*
+%{_rpmmacrodir}/macros.gocheck2
 %{_rpmmacrodir}/macros.go_vendor_tools
 %if %{with manpages}
 %{_mandir}/man1/go*.1*
