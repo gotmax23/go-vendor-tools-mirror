@@ -4,4 +4,4 @@
 # Path to gocheck2 helper
 %__gocheck2_path gocheck2
 
-%gocheck2(-) %{__gvt_shescape_backup GOCHECK2_GOIPATH=%{?goipath}} %__gocheck2_path %**
+%gocheck2(-) %__gocheck2_path %**
