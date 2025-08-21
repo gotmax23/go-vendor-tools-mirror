@@ -37,6 +37,7 @@ requires-python = ">=3.9"
 [project.scripts]
 go_vendor_archive = "go_vendor_tools.cli.go_vendor_archive:main"
 go_vendor_license = "go_vendor_tools.cli.go_vendor_license:main"
+gocheck2 = "go_vendor_tools.cli.gocheck2:main"
 
 [project.optional-dependencies]
 # User-facing
