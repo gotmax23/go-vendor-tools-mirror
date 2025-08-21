@@ -35,8 +35,7 @@ def get_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "-i",
         "--goipath",
-        default=os.environ.get("GOCHECK2_GOIPATH"),
-        help="Go import path. Defaults to %%goipath.",
+        help="Go import path. Reads from go.mod by default.",
     )
     parser.add_argument("-I", "--ignore", nargs="*", help="Ignore individual tests")
     parser.add_argument(
@@ -99,7 +98,7 @@ def parseargs() -> Args:
         if goipath is None:
             sys.exit(
                 "Failed to determine the Go import path.\n"
-                "Set %goipath in the specfile, pass -i to %gocheck2,"
+                "Set %goipath in the specfile"
                 " or make sure this project has a go.mod file."
             )
         ns.goipath = goipath
