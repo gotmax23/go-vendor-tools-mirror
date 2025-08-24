@@ -72,6 +72,11 @@ COVERAGE_COMMANDS = SimpleNamespace(
         "-m",
         "go_vendor_tools.cli.go_vendor_license",
     ),
+    gocheck2=(
+        *BASE_COVERAGE_COMMAND,
+        "-m",
+        "go_vendor_tools.cli.gocheck2",
+    ),
 )
 
 
@@ -110,7 +115,7 @@ def test(session: nox.Session):
 @nox.session
 def integration(session: nox.Session) -> None:
     install(session, *get_test_deps(), "coverage[toml]", editable=True)
-    packages_env = session.env.get("PACKAGES")
+    packages_env = os.environ.get("PACKAGES")
     packages = shlex.split(packages_env) if packages_env else INTEGRATION_PACKAGES
     script_dir = Path("contrib").resolve()
     with (
@@ -138,10 +143,11 @@ def integration(session: nox.Session) -> None:
 @nox.session(name="integration-test-build")
 def integration_test_build(session: nox.Session):
     install(session, *get_test_deps(), "coverage[toml]", editable=True)
-    packages_env = session.env.get("PACKAGES")
+    packages_env = os.environ.get("PACKAGES")
     packages = shlex.split(packages_env) if packages_env else INTEGRATION_PACKAGES
     with coverage_run(session) as cov_env:
         coverage_command = shlex.join(COVERAGE_COMMANDS.go_vendor_license)
+        gocheck2_coverage_command = shlex.join(COVERAGE_COMMANDS.gocheck2)
         assert coverage_command[0]
         rpm_eval = Path("rpmeval.sh").resolve()
         for package in packages:
@@ -152,6 +158,7 @@ def integration_test_build(session: nox.Session):
                     "-x",
                     str(rpm_eval),
                     "-D", f"__go_vendor_license {coverage_command}",
+                    "-D", f"__gocheck2 {gocheck2_coverage_command}",
                     "-D", f"_specdir {Path.cwd()}",
                     "-D", f"_sourcedir {Path.cwd()}",
                     "--nodeps",

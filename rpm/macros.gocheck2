@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: MIT
 
 # Path to gocheck2 helper
-%__gocheck2_path gocheck2
+%__gocheck2 gocheck2
 
 # This macro is considered INTERNAL. Contact the Go SIG if you think you need to change it.
 # Using the gotestflags macro and the GO_* environment variables are the
@@ -14,4 +14,4 @@
 EOF\
 )"
 
-%gocheck2(-) GOCHECK2_GOTEST_FLAGS=%{_gocheck2_gotest_flags_shescaped} %__gocheck2_path %**
+%gocheck2(-) GOCHECK2_GOTEST_FLAGS=%{_gocheck2_gotest_flags_shescaped} %__gocheck2 %**
