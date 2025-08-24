@@ -35,13 +35,20 @@ eprint = partial(print, file=sys.stderr)
 
 def get_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__, prog="%gocheck2")
+    # NOTE: See the comment about determining the primary goipath in the main function.
+    # Allowing to pass custom paths complicates this.
+    # Therefore, we might consider removing this argument before the final release.
     parser.add_argument(
         "-p",
         "--path",
-        help="Relative paths that include go.mod packages",
+        action="append",
+        help="Relative paths that include go.mod packages."
+        " This flag is SUBJECT TO CHANGE."
+        " It is recommended to cd to the correct directory before running"
+        " %%gocheck2 and not use this option.",
     )
     parser.add_argument(
-        "-f",
+        "-F",
         "--no-follow",
         help="Don't search for Go submodules (i.e., go.mod files in subdirectories)",
         action="store_false",
@@ -51,14 +58,14 @@ def get_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "-d",
         "--directory",
-        nargs="*",
+        action="append",
         help="Exclude the files contained in DIRECTORY non-recursively."
         " This accepts either an import path or a subdirectory of %%goipath.",
     )
     parser.add_argument(
         "-t",
         "--tree",
-        nargs="*",
+        action="append",
         help="Exclude the files contained in DIRECTORY recursively."
         " This accepts either an import path or a subdirectory of %%goipath.",
     )
@@ -70,7 +77,7 @@ def get_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("extra_args", nargs="*")
     if HAS_ARGCOMPLETE:
-        argcomplete.autocomplete( # pyright: ignore[reportPossiblyUnboundVariable]
+        argcomplete.autocomplete(  # pyright: ignore[reportPossiblyUnboundVariable]
             parser
         )
     return parser
@@ -84,8 +91,8 @@ def parseargs() -> Args:
                 sys.exit(f"Invalid absolute path: {path!r}. Paths must be relative!")
     return Args(
         paths=ns.path or ["."],
-        ignore_dirs=ns.directory or [],
-        ignore_trees=ns.tree or [],
+        ignore_dirs=set(ns.directory) if ns.directory else set(),
+        ignore_trees=set(ns.tree) if ns.tree else set(),
         list_only=ns.list,
         extra_args=ns.extra_args or [],
         follow=ns.follow,
@@ -102,8 +109,8 @@ class Args:
         extra_args: Extra arguments to pass to go test.
     """
 
-    ignore_dirs: list[str]
-    ignore_trees: list[str]
+    ignore_dirs: set[str]
+    ignore_trees: set[str]
     list_only: bool
     # ignored_tests: list[str]
     extra_args: list[str]
@@ -112,41 +119,59 @@ class Args:
     test_paths_seen: set[str] = dataclasses.field(init=False, default_factory=set)
 
 
-def is_relative_to(path: str | Path, start: str | Path) -> bool:
-    try:
-        rel = os.path.relpath(path, start)
-    except ValueError:
+@dataclasses.dataclass(frozen=True)
+class GoModResult:
+    gomod: str
+    directory: str
+    goipath: str
+
+
+def dir_okay(args: Args, path: str, goipath: str | None = None) -> bool:
+    """
+    Check if a directory is ignored.
+
+    Returns: True if okay to test and false if ignored
+    """
+    path = path.removeprefix("./")
+    paths = {path}
+    if goipath and (stripped := path.removeprefix(goipath + "/")) != path:
+        paths.add(stripped)
+    if paths & args.ignore_dirs:
         return False
-    return not rel.startswith("../")
+    for p in paths:
+        p += "/"
+        for tree in args.ignore_trees:
+            if p.startswith(tree + "/"):
+                return False
+    return True
 
 
-def find_go_mods(args: Args) -> list[str]:
-    visited: set[str] = set()
-    gomods: list[str] = []
+def find_go_mods(args: Args) -> list[GoModResult]:
+    gomods: list[GoModResult] = []
     if args.follow:
         for path in args.paths:
             for root, dirnames, files in os.walk(path):
                 for dirname in list(dirnames):
                     dirpath = os.path.join(root, dirname)
-                    if dirpath in visited:
-                        continue
-                    visited.add(dirpath)
-                    if dirpath in args.ignore_dirs or any(
-                        is_relative_to(dirpath, ignore_tree)
-                        for ignore_tree in args.ignore_trees
-                    ):
+                    if not dir_okay(args, dirpath):
                         dirnames.remove(dirname)
                         continue
                 for file in files:
                     if file == "go.mod":
-                        gomods.append(os.path.join(root, file))
+                        gomod = os.path.join(root, file)
+                        goipath = get_goipath(gomod)
+                        gomods.append(
+                            GoModResult(gomod=gomod, directory=root, goipath=goipath)
+                        )
                         break
     else:
         for path in args.paths:
             gomod = os.path.join(path, "go.mod")
             if not os.path.isfile(gomod):
                 sys.exit(f"{gomod!r} does not exist!")
-            gomods.append(gomod)
+            gomods.append(
+                GoModResult(gomod=gomod, directory=path, goipath=get_goipath(gomod))
+            )
     return gomods
 
 
@@ -158,11 +183,13 @@ def get_goipath(gomod: str | Path = "go.mod") -> str:
     try:
         goipath = data["Module"]["Path"]
     except KeyError:
-        sys.exit(f"Failed to retrieve Go import path from {gomod}")
+        raise ValueError(f"Failed to retrieve Go import path from {gomod}") from None
     return goipath
 
 
-def list_test_packages(args: Args, paths: Iterable[str], cwd: str = "."):
+def list_test_packages(
+    args: Args, paths: Iterable[str], cwd: str = ".", primary_goipath: str | None = None
+):
     # go list command is based on one in kubernetes Makefile.
     # The command is considered not copyrightable so the kubernetes license
     # does not apply.
@@ -192,22 +219,21 @@ def list_test_packages(args: Args, paths: Iterable[str], cwd: str = "."):
         if goipath in args.test_paths_seen:
             continue
         args.test_paths_seen.add(goipath)
-        if goipath in args.ignore_dirs or any(
-            (goipath + "/").startswith(tree + "/") for tree in args.ignore_trees
-        ):
-            continue
-        result.append(goipath)
+        if dir_okay(args, goipath, primary_goipath):
+            result.append(goipath)
     return result
 
 
-def dogomod(args: Args, gomod: str | Path) -> int:
-    cwd = os.path.dirname(gomod)
-    goipath = get_goipath(gomod)
-    test_packages = list_test_packages(args, [goipath], cwd)
+def dogomod(args: Args, gomod: GoModResult, primary_goipath: str | None) -> int:
+    test_packages = list_test_packages(
+        args, [gomod.goipath], gomod.directory, primary_goipath
+    )
     if not test_packages:
-        eprint(f"No test packages for {goipath} in directory {cwd}")
+        eprint(
+            f"No test packages found for {gomod.goipath} in directory {gomod.directory}"
+        )
     if args.list_only:
-        print(f"# {gomod}")
+        print(f"# {gomod.gomod}")
         print("\n".join(test_packages))
         return 0
     extra_args = args.extra_args
@@ -228,7 +254,28 @@ def main() -> None:
         sys.exit("G0111MODULE=off is not supported by %gocheck2. Use %gocheck instead!")
     args = parseargs()
     go_mods = find_go_mods(args)
-    results = {gomod: dogomod(args, gomod) for gomod in go_mods}
+    if not go_mods:
+        sys.exit("No go.mod files found!")
+    # We need to determine the root directory's go module so we can apply
+    # ignore patterns that reference relative paths like the old %gocheck did.
+    # This is imperfect, because with Go modules, the directory structure does
+    # not have to match go module paths.
+    # For example, in the etcd project:
+    #  go.mod in the root directory has "go.etcd.io/etcd/v3" but api/go.mod has
+    #  "go.etcd.io/etcd/api/v3," not "go.etcd.io/etcd/v3/api."
+    # This means that passing "-t api" will not work.
+    # Instead, it's necessary to use the full path (-t go.etcd.io/etcd/v3/api)
+    # or to use -F (no-follow) to avoid recursion into Go "submodules"
+    if args.paths[0] == ".":
+        primary_goipath = go_mods[0].goipath
+    elif os.path.exists("go.mod"):
+        primary_goipath = get_goipath()
+    else:
+        primary_goipath = None
+    # TODO: Do something (e.g.,show pass/fail stats by Go modules) with the
+    # gomod dict keys or just make this into a simple list of dogomod() return
+    # values.
+    results = {gomod: dogomod(args, gomod, primary_goipath) for gomod in go_mods}
     sys.exit(max(results.values()))
 
 
