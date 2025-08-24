@@ -40,6 +40,9 @@ Recommends:     askalono-cli
 Recommends:     go-vendor-tools+scancode
 Recommends:     go-vendor-tools+all
 
+# Used by the gocheck2 macro
+Requires:       go-rpm-macros
+
 
 %global common_description %{expand:
 go-vendor-tools provides tools and macros for handling Go library vendoring in
