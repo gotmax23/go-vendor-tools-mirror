@@ -25,7 +25,7 @@ ln -sr ./*.tar* "${temp}"
 (! "${command[@]}" --path "${temp}/fzf2.spec" report --verify-spec)
 # Update invalid spec
 "${command[@]}" --path "${temp}/fzf2.spec" report --update-spec
-diff "fzf.spec" "${temp}/fzf2.spec"
+diff -u "fzf.spec" "${temp}/fzf2.spec"
 (cd "${temp}" && rm -r ./*)
 # Run again in a temporary directory with unpacked sources
 name="fzf-0.46.1"
