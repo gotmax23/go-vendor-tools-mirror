@@ -14,4 +14,5 @@
 EOF\
 )"
 
-%gocheck2(-) GOCHECK2_GOTEST_FLAGS=%{_gocheck2_gotest_flags_shescaped} %__gocheck2 %**
+# Use PYTHONUNBUFFERED=1 to avoid issues with out-of-order output in mock.
+%gocheck2(-) GOCHECK2_GOTEST_FLAGS=%{_gocheck2_gotest_flags_shescaped} PYTHONUNBUFFERED=1 %__gocheck2 %**
