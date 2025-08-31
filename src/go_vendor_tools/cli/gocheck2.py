@@ -266,6 +266,7 @@ def dogomod(args: Args, gomod: GoModResult, primary_goipath: str | None) -> int:
         eprint(
             f"No test packages found for {gomod.goipath} in directory {gomod.directory}"
         )
+        return 0
     print(f"# {gomod.gomod}: {gomod.goipath}")
     if args.list_only:
         print("\n".join(test_packages))
