@@ -102,7 +102,7 @@ diff -u gocheck_expected1.1.txt gocheck_gotten1.1.txt
 %{gocheck2 -L -d src/util} | tee gocheck_gotten1.1.txt
 diff -u gocheck_expected1.1.txt gocheck_gotten1.1.txt
 
-%gocheck2 -s TestBroken
+%gocheck2 -s TestBroken -s TestSomethingElseBroken
 %gocheck2 && exit $? || true
 
 %files -f %{go_vendor_license_filelist}

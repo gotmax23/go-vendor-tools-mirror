@@ -276,8 +276,8 @@ def dogomod(args: Args, gomod: GoModResult, primary_goipath: str | None) -> int:
         extra_args.extend(("-tags", tags))
     if gotest_flags := os.environ.get("GOCHECK2_GOTEST_FLAGS"):
         extra_args.extend(shlex.split(gotest_flags))
-    for skip in args.test_skips:
-        extra_args.extend(("-skip", skip))
+    if args.test_skips:
+        extra_args.extend(("-skip", "|".join(args.test_skips)))
     cmd = ["go", "test", *extra_args, *test_packages]
     eprint(f"$ {shlex.join(cmd)}")
     proc = subprocess.run(cmd, check=False, cwd=gomod.directory)
