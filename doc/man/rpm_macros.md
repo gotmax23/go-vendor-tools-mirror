@@ -120,7 +120,10 @@ the project, unless `-F` is passed.
   This accepts either an import path or a path relative to the go import path of
   the go.mod in the current directory.
   Using a full import path is recommended.
-- `-s TESTNAME` — Skip individual test names.
+- `-s TEST_NAME_REGEX` — Skip test names that match a regex.
+  This is passed to `go test -skip` and can be repeated.
+  When repeated, values are joined with `|` (regex alternation operator) and
+  passed on to `-skip` as a single value.
   (New in `%gocheck2`)
 - `-F` — Don't find go.mod files in subdirectories. See description above.
   (New in `%gocheck2`)
