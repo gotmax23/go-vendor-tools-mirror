@@ -2,11 +2,16 @@
 # PYTHON_ARGCOMPLETE_OK
 # Copyright (C) 2025 Maxwell G <maxwell@gtmx.me>
 # SPDX-License-Identifier: MIT
+
 # TODO: Once this code stablizies, we should consider moving it into
 # go-rpm-macros.
 
+# TODO: Add unit tests. This is currently 92% covered, but only by integration
+# tests.
+
+
 """
-Rewritten gocheck2 that avoids failing fast and works with GOMODULESMODE enabled.
+Rewritten gocheck2 that avoids failing fast and works with GO111MODULE enabled.
 This is meant to be run using the %gocheck2 macro and not directly.
 """
 
@@ -54,20 +59,27 @@ def get_parser() -> argparse.ArgumentParser:
         action="store_false",
         dest="follow",
     )
-    # parser.add_argument("-I", "--ignore", nargs="*", help="Ignore individual tests")
+    parser.add_argument(
+        "-s",
+        "--skip",
+        action="append",
+        help="Skip individual test function names. Can be repeated.",
+    )
     parser.add_argument(
         "-d",
         "--directory",
         action="append",
         help="Exclude the files contained in DIRECTORY non-recursively."
-        " This accepts either an import path or a subdirectory of %%goipath.",
+        " This accepts either an import path or a path relative to"
+        " the go import path of the go.mod in the current directory.",
     )
     parser.add_argument(
         "-t",
         "--tree",
         action="append",
         help="Exclude the files contained in DIRECTORY recursively."
-        " This accepts either an import path or a subdirectory of %%goipath.",
+        " This accepts either an import path or a path relative to"
+        " the go import path of the go.mod in the current directory.",
     )
     parser.add_argument(
         "-L",
@@ -77,9 +89,9 @@ def get_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("extra_args", nargs="*")
     if HAS_ARGCOMPLETE:
-        argcomplete.autocomplete(  # pyright: ignore[reportPossiblyUnboundVariable]
-            parser
-        )
+        # fmt: off
+        argcomplete.autocomplete(parser) # pyright: ignore[reportPossiblyUnboundVariable]
+        # fmt: on
     return parser
 
 
@@ -96,6 +108,7 @@ def parseargs() -> Args:
         list_only=ns.list,
         extra_args=ns.extra_args or [],
         follow=ns.follow,
+        test_skips=ns.skip or [],
     )
 
 
@@ -106,13 +119,16 @@ class Args:
         ignore_dirs: See -d in the argparser
         ignore_trees: See -t in the argparser
         list_only: See -L in the argparser
+        test_skips: See -s in the argparser
         extra_args: Extra arguments to pass to go test.
+        follow: Whether to search for go.mod in subdirectories and run tests there
+        paths: Directories to find go.mod file in
     """
 
     ignore_dirs: set[str]
     ignore_trees: set[str]
     list_only: bool
-    # ignored_tests: list[str]
+    test_skips: list[str]
     extra_args: list[str]
     follow: bool
     paths: list[str]
@@ -146,33 +162,51 @@ def dir_okay(args: Args, path: str, goipath: str | None = None) -> bool:
     return True
 
 
-def find_go_mods(args: Args) -> list[GoModResult]:
+# args.follow is True
+def _find_go_mods_follow(args: Args) -> list[GoModResult]:
     gomods: list[GoModResult] = []
-    if args.follow:
-        for path in args.paths:
-            for root, dirnames, files in os.walk(path):
-                for dirname in list(dirnames):
-                    dirpath = os.path.join(root, dirname)
-                    if not dir_okay(args, dirpath):
-                        dirnames.remove(dirname)
-                        continue
-                for file in files:
-                    if file == "go.mod":
-                        gomod = os.path.join(root, file)
-                        goipath = get_goipath(gomod)
-                        gomods.append(
-                            GoModResult(gomod=gomod, directory=root, goipath=goipath)
-                        )
-                        break
-    else:
-        for path in args.paths:
-            gomod = os.path.join(path, "go.mod")
-            if not os.path.isfile(gomod):
-                sys.exit(f"{gomod!r} does not exist!")
-            gomods.append(
-                GoModResult(gomod=gomod, directory=path, goipath=get_goipath(gomod))
-            )
+    for path in args.paths:
+        for root, dirnames, files in os.walk(path):
+            for dirname in list(dirnames):
+                dirpath = os.path.join(root, dirname)
+                if not dir_okay(args, dirpath):
+                    dirnames.remove(dirname)
+                    continue
+            for file in files:
+                if file == "go.mod":
+                    gomod = os.path.join(root, file)
+                    goipath = get_goipath(gomod)
+                    gomods.append(
+                        GoModResult(gomod=gomod, directory=root, goipath=goipath)
+                    )
+                    break
+            # https://book.pythontips.com/en/latest/for_-_else.html
+            else:
+                if root != str(path):
+                    continue
+                if path == ".":
+                    msg = "No go.mod found in current directory"
+                else:
+                    msg = f"No go.mod found in {path}"
+                sys.exit(msg)
     return gomods
+
+
+# args.follow is False
+def _find_go_mods_nofollow(args: Args) -> list[GoModResult]:
+    gomods: list[GoModResult] = []
+    for path in args.paths:
+        gomod = os.path.join(path, "go.mod")
+        if not os.path.isfile(gomod):
+            sys.exit(f"{gomod!r} does not exist!")
+        gomods.append(
+            GoModResult(gomod=gomod, directory=path, goipath=get_goipath(gomod))
+        )
+    return gomods
+
+
+def find_go_mods(args: Args) -> list[GoModResult]:
+    return _find_go_mods_follow(args) if args.follow else _find_go_mods_nofollow(args)
 
 
 def get_goipath(gomod: str | Path = "go.mod") -> str:
@@ -232,8 +266,8 @@ def dogomod(args: Args, gomod: GoModResult, primary_goipath: str | None) -> int:
         eprint(
             f"No test packages found for {gomod.goipath} in directory {gomod.directory}"
         )
+    print(f"# {gomod.gomod}: {gomod.goipath}")
     if args.list_only:
-        print(f"# {gomod.gomod}")
         print("\n".join(test_packages))
         return 0
     extra_args = args.extra_args
@@ -241,9 +275,11 @@ def dogomod(args: Args, gomod: GoModResult, primary_goipath: str | None) -> int:
         extra_args.extend(("-tags", tags))
     if gotest_flags := os.environ.get("GOCHECK2_GOTEST_FLAGS"):
         extra_args.extend(shlex.split(gotest_flags))
+    for skip in args.test_skips:
+        extra_args.extend(("-skip", skip))
     cmd = ["go", "test", *extra_args, *test_packages]
     eprint(f"$ {shlex.join(cmd)}")
-    proc = subprocess.run(cmd, check=False)
+    proc = subprocess.run(cmd, check=False, cwd=gomod.directory)
     if proc.returncode != 0:
         eprint(f"Command failed with rc {proc.returncode}!")
     return proc.returncode
@@ -264,15 +300,21 @@ def main() -> None:
     #  go.mod in the root directory has "go.etcd.io/etcd/v3" but api/go.mod has
     #  "go.etcd.io/etcd/api/v3," not "go.etcd.io/etcd/v3/api."
     # This means that passing "-t api" will not work.
-    # Instead, it's necessary to use the full path (-t go.etcd.io/etcd/v3/api)
-    # or to use -F (no-follow) to avoid recursion into Go "submodules"
-    if args.paths[0] == ".":
+    # Instead, it's necessary to use the full path (-t go.etcd.io/etcd/v3/api).
+    if go_mods[0].directory == ".":
         primary_goipath = go_mods[0].goipath
     elif os.path.exists("go.mod"):
         primary_goipath = get_goipath()
     else:
+        # TODO: Should this be made an error? Should we require the directory
+        # gocheck2 is run from to have a go.mod instead of allowing it to be in
+        # a subdirectory?
+        eprint(
+            "WARNING: No go.mod file found in CWD."
+            " -d and -t flags may not work properly."
+        )
         primary_goipath = None
-    # TODO: Do something (e.g.,show pass/fail stats by Go modules) with the
+    # TODO: Do something (e.g., show pass/fail stats by Go modules) with the
     # gomod dict keys or just make this into a simple list of dogomod() return
     # values.
     results = {gomod: dogomod(args, gomod, primary_goipath) for gomod in go_mods}
