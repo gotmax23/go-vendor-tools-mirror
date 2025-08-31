@@ -262,11 +262,12 @@ def dogomod(args: Args, gomod: GoModResult, primary_goipath: str | None) -> int:
     test_packages = list_test_packages(
         args, [gomod.goipath], gomod.directory, primary_goipath
     )
+    print(f"# {gomod.gomod}: {gomod.goipath}")
     if not test_packages:
         eprint(
             f"No test packages found for {gomod.goipath} in directory {gomod.directory}"
         )
-    print(f"# {gomod.gomod}: {gomod.goipath}")
+        return 0
     if args.list_only:
         print("\n".join(test_packages))
         return 0
