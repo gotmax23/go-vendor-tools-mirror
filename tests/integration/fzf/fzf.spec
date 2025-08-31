@@ -21,6 +21,7 @@ Source2:        expected-licenses.list
 Source3:        go-vendor-tools.toml
 Source4:        gocheck_expected1.txt
 Source5:        gocheck_expected2.txt
+Source6:        test_test.go
 
 ExclusiveArch:  %{golang_arches_future}
 
@@ -33,6 +34,7 @@ BuildRequires:  go-vendor-tools
 %autosetup -p1 -n fzf-%{version}
 %setup -q -T -D -b1 -n fzf-%{version}
 cp -p %{S:4} %{S:5} .
+cp -p %{S:6} src/
 
 %generate_buildrequires
 %go_vendor_license_buildrequires -c %{S:3}
@@ -100,7 +102,8 @@ diff -u gocheck_expected1.1.txt gocheck_gotten1.1.txt
 %{gocheck2 -L -d src/util} | tee gocheck_gotten1.1.txt
 diff -u gocheck_expected1.1.txt gocheck_gotten1.1.txt
 
-%gocheck2
+%gocheck2 -s TestBroken
+%gocheck2 && exit $? || true
 
 %files -f %{go_vendor_license_filelist}
 %doc doc ADVANCED.md BUILD.md CHANGELOG.md README-VIM.md README.md

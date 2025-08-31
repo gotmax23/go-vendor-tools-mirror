@@ -4,7 +4,11 @@
 version = 1
 
 [[annotations]]
-path = ["tests/pytests/test_data/**", "tests/integration/fzf/gocheck_expected*.txt"]
+path = [
+  "tests/pytests/test_data/**",
+  "tests/integration/fzf/gocheck_expected*.txt",
+  "tests/integration/fzf/test_test.go",
+]
 precedence = "override"
 SPDX-FileCopyrightText = "None"
 SPDX-License-Identifier = "LicenseRef-Not-Copyrightable"
