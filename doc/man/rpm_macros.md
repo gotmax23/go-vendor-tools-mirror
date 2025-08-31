@@ -161,6 +161,9 @@ assuming that CWD is the root of the current Go module.
     -s TestSomethingElse3
 }
 %gocheck2 %{ignores}
+
+# Pass extra arguments (-v in this case) directly to go test
+%gocheck2 -- -v
 ```
 
 ## Variable macros
