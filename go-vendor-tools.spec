@@ -40,8 +40,12 @@ Recommends:     askalono-cli
 Recommends:     go-vendor-tools+scancode
 Recommends:     go-vendor-tools+all
 
-# Used by the gocheck2 macro
-Requires:       go-rpm-macros
+# NOTE(gotmax23): Remove this for now.
+# Packages should still explicitly require go-rpm-macros, and the license
+# scanning in this package could potentially be useful outside of the Go ecosystem,
+# so it might be nice to avoid dependning on go-rpm-macros in this package.
+# Buildflags from go-rpm-macros are used by %%gocheck2 defined in this package.
+# Requires:       go-rpm-macros
 
 
 %global common_description %{expand:
