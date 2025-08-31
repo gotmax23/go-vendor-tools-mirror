@@ -238,8 +238,7 @@ def list_test_packages(
         cmd.extend(("-tags", tags))
     cmd.extend(f"{goipath}/..." for goipath in paths)
     del paths  # Used up iterable
-    eprint(f"$ cd {shlex.quote(cwd)}")
-    eprint(f"$ {shlex.join(cmd)}")
+    eprint(f"({cwd}) $ {shlex.join(cmd)}")
     proc = subprocess.run(
         cmd,
         check=True,
@@ -279,7 +278,7 @@ def dogomod(args: Args, gomod: GoModResult, primary_goipath: str | None) -> int:
     if args.test_skips:
         extra_args.extend(("-skip", "|".join(args.test_skips)))
     cmd = ["go", "test", *extra_args, *test_packages]
-    eprint(f"$ {shlex.join(cmd)}")
+    eprint(f"({gomod.directory}) $ {shlex.join(cmd)}")
     proc = subprocess.run(cmd, check=False, cwd=gomod.directory)
     if proc.returncode != 0:
         eprint(f"Command failed with rc {proc.returncode}!")
