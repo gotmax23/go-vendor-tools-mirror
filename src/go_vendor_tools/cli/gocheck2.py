@@ -95,6 +95,10 @@ def get_parser() -> argparse.ArgumentParser:
     return parser
 
 
+def normpath_set(data: Iterable[str] | None) -> set[str]:
+    return {os.path.normpath(p) for p in data} if data else set()
+
+
 def parseargs() -> Args:
     ns = get_parser().parse_args()
     if ns.path:
@@ -103,8 +107,8 @@ def parseargs() -> Args:
                 sys.exit(f"Invalid absolute path: {path!r}. Paths must be relative!")
     return Args(
         paths=ns.path or ["."],
-        ignore_dirs=set(ns.directory) if ns.directory else set(),
-        ignore_trees=set(ns.tree) if ns.tree else set(),
+        ignore_dirs=normpath_set(ns.directory),
+        ignore_trees=normpath_set(ns.tree),
         list_only=ns.list,
         extra_args=ns.extra_args or [],
         follow=ns.follow,
@@ -169,9 +173,10 @@ def _find_go_mods_follow(args: Args) -> list[GoModResult]:
         for root, dirnames, files in os.walk(path):
             for dirname in list(dirnames):
                 dirpath = os.path.join(root, dirname)
-                if not dir_okay(args, dirpath):
+                if dirpath.removeprefix("./") in args.ignore_trees:
                     dirnames.remove(dirname)
-                    continue
+            if root.removeprefix("./") in args.ignore_dirs:
+                continue
             for file in files:
                 if file == "go.mod":
                     gomod = os.path.join(root, file)
