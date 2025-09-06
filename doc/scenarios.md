@@ -142,11 +142,24 @@ go2rpm was used to generate the original specfile using vendored dependencies.
     go_vendor_archive create --config go-vendor-tools.toml foo.spec
     ```
 
+    or
+
+    ```bash
+    go_vendor_archive create -c go-vendor-tools.toml foo.spec
+    ```
+
 1. Verify the license expression in the specfile.
 
     ```bash
-    go_vendor_license --config go-vendor-tools.toml \
-        report --update-spec --prompt --autofill=auto foo.spec 
+    go_vendor_license --config go-vendor-tools.toml --path foo.spec \
+        report --update-spec --prompt --autofill=auto
+    ```
+
+    or
+
+    ```bash
+    go_vendor_license -c go-vendor-tools.toml -C foo.spec \
+        report --update-spec --prompt --autofill=auto
     ```
 
     This command will perform a license scan, prompt for any licenses the
@@ -162,7 +175,7 @@ go2rpm was used to generate the original specfile using vendored dependencies.
     mechanism to update packages.
 
     ```bash
-    go_vendor_license --config go-vendor-tools.toml report --verify-spec foo.spec
+    go_vendor_license --config go-vendor-tools.toml --path foo.spec report --verify-spec
     ```
 
     This command will error out if the detected license expression has changed
