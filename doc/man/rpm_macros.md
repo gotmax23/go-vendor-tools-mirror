@@ -91,6 +91,81 @@ This can be customized by passing a custom license expression.
 
 - `%*` — SPDX license expression. Defaults to `%{LICENSE}`.
 
+### `%gocheck2`
+
+!!! warning
+    This is an experimental macro added in v0.9.0 and may move to the
+    go-rpm-macros project or be subject to other breaking changes in the future.
+
+This macro is a GO111MODULE-enabled replacement for `%gocheck` with roughly
+the same interface.
+
+The `%gocheck2` macro does not read the `%goipath` variable or support `-z`
+options like `%gocheck` did.
+Instead, gocheck2 honors go.mod files and reads the import path from the go.mod
+file in the current directory.
+Additionally, gocheck2 will find any go.mod files in subdirectories of the
+current working directory and run tests for any of these "submodules" found in
+the project, unless `-F` is passed.
+
+#### Options
+
+- `-d PATH` — Exclude the files contained in PATH *non-recursively*.
+  Can be repeated.
+  This accepts either an import path or a path relative to the go import path of
+  the go.mod in the current directory.
+  Using a full import path is recommended.
+- `-t PATH` — Exclude the files contained in PATH *recursively*.
+  Can be repeated.
+  This accepts either an import path or a path relative to the go import path of
+  the go.mod in the current directory.
+  Using a full import path is recommended.
+- `-s TEST_NAME_REGEX` — Skip test names that match a regex.
+  This is passed to `go test -skip` and can be repeated.
+  When repeated, values are joined with `|` (regex alternation operator) and
+  passed on to `-skip` as a single value.
+  (New in `%gocheck2`)
+- `-F` — Don't find go.mod files in subdirectories. See description above.
+  (New in `%gocheck2`)
+
+#### Arguments
+
+- `-- EXTRA_ARG...` — To pass extra arguments directly to `go test`, add them
+  after a `--` separator.
+
+#### Examples
+
+``` spec
+# Basic usage
+%gocheck2
+
+# Exclude everything under %{goipath}/e2e
+# (Assumes goipath has already been defined)
+%gocheck2 -t %{goipath}/e2e
+
+# Exclude everything under the e2e directory,
+assuming that CWD is the root of the current Go module.
+# Using the syntax in the previous example is recommended.
+%gocheck2 -t e2e
+
+# Skip specific tests in addition to the e2e tree
+%gocheck2 -t e2e -s TestSomething -s TestSomethingElse
+
+# Skip several tests.
+# The name of the ignores macro is not significant; it can be named anything.
+%global ignores %{shrink:
+    -s TestSomething
+    -s TestSomethingElse
+    -s TestSomethingElse1
+    -s TestSomethingElse2
+    -s TestSomethingElse3
+}
+%gocheck2 %{ignores}
+
+# Pass extra arguments (-v in this case) directly to go test
+%gocheck2 -- -v
+```
+
 ## Variable macros
 
 ### `%__go_vendor_license`
