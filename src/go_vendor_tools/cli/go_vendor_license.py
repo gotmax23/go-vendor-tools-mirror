@@ -710,7 +710,7 @@ def report_command(args: argparse.Namespace) -> None:
                 go_mod_dir,
             )
         )
-        if prompt:
+        if prompt or autofill_detector:
             license_data = fill_missing_licenses(
                 license_data, loaded, autofill_detector, prompt
             )

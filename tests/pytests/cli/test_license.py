@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import re
 import sys
 from io import StringIO
 from pathlib import Path
@@ -30,7 +31,7 @@ def test_need_tomlkit(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(utils, "HAS_TOMLKIT", False)
     with pytest.raises(
         MissingDependencyError,
-        match="tomlkit is required for this action. Please install it!",
+        match=re.escape("tomlkit is required for this action. Please install it!"),
     ):
         go_vendor_license.need_tomlkit()
 
