@@ -34,7 +34,7 @@ def config1_broken(test_data: Path) -> BaseConfig:
 def get_available_detectors() -> list[type[LicenseDetector]]:
     # TODO(anyone): Allow enforcing "strict mode" if any detectors are missing
     # This can be a env var and then enabled in the noxfile.
-    available, missing = gd({}, CONFIG1["licensing"])
+    available, _missing = gd({}, CONFIG1["licensing"])
     # HACK: We initialize the classes using a test config to check if they are
     # available and then return the base class so that it can be reinitialized
     return [type(d) for d in available.values()]
