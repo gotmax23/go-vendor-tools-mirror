@@ -24,9 +24,9 @@ import os
 import shlex
 import subprocess
 import sys
-from collections.abc import Iterable
-from functools import partial
+from collections.abc import Iterable, Sequence
 from pathlib import Path
+from typing import Any
 
 try:
     import argcomplete
@@ -35,7 +35,12 @@ except ImportError:
 else:
     HAS_ARGCOMPLETE = True
 
-eprint = partial(print, file=sys.stderr)
+
+# Using a partial breaks pytest capsys
+def eprint(*args: object, **kwargs: Any) -> None:
+    kwargs.setdefault("file", sys.stderr)
+    kwargs.setdefault("flush", True)
+    return print(*args, **kwargs)
 
 
 def get_parser() -> argparse.ArgumentParser:
@@ -146,6 +151,12 @@ class GoModResult:
     goipath: str
 
 
+def logrun(cmd: Sequence[object], cwd: str = ".") -> None:
+    r = "$ " if cwd == "." else f"({cwd}) $ "
+    r += shlex.join(map(str, cmd))
+    eprint(r)
+
+
 def dir_okay(args: Args, path: str, goipath: str | None = None) -> bool:
     """
     Check if a directory is ignored.
@@ -216,7 +227,7 @@ def find_go_mods(args: Args) -> list[GoModResult]:
 
 def get_goipath(gomod: str | Path = "go.mod") -> str:
     cmd: list[str] = ["go", "mod", "edit", "-json", str(gomod)]
-    eprint(f"$ {shlex.join(cmd)}")
+    logrun(cmd)
     proc = subprocess.run(cmd, stdout=subprocess.PIPE, text=True, check=False)
     data = json.loads(proc.stdout) if proc.returncode == 0 else {}
     try:
@@ -243,7 +254,7 @@ def list_test_packages(
         cmd.extend(("-tags", tags))
     cmd.extend(f"{goipath}/..." for goipath in paths)
     del paths  # Used up iterable
-    eprint(f"({cwd}) $ {shlex.join(cmd)}")
+    logrun(cmd, cwd)
     proc = subprocess.run(
         cmd,
         check=True,
@@ -283,7 +294,7 @@ def dogomod(args: Args, gomod: GoModResult, primary_goipath: str | None) -> int:
     if args.test_skips:
         extra_args.extend(("-skip", "|".join(args.test_skips)))
     cmd = ["go", "test", *extra_args, *test_packages]
-    eprint(f"({gomod.directory}) $ {shlex.join(cmd)}")
+    logrun(cmd, gomod.directory)
     proc = subprocess.run(cmd, check=False, cwd=gomod.directory)
     if proc.returncode != 0:
         eprint(f"Command failed with rc {proc.returncode}!")
