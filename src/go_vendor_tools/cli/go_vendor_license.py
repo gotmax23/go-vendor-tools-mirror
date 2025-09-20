@@ -666,7 +666,9 @@ def report_command(args: argparse.Namespace) -> None:
     mode: str = args.mode
     verify: str | None = args.verify
     write_json: Path | None = args.write_json
-    write_config: bool = args.write_config or args.prompt
+    write_config: bool = (
+        args.write_config or args.prompt or autofill_detector is not None
+    )
     prompt: bool = args.prompt
     config_path: Path | None = args.config_path
     use_archive: bool = args.use_archive
