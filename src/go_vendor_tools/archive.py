@@ -11,6 +11,25 @@ import os
 import tarfile
 from collections.abc import Collection, Sequence
 from pathlib import Path, PurePath
+from typing import TYPE_CHECKING
+
+_TarFile = tarfile.TarFile
+if not TYPE_CHECKING:
+    try:
+        from zstarfile import ZSPlainTarfile as _TarFile
+    except ModuleNotFoundError:
+        pass
+
+
+class OurTarFile(_TarFile):
+    """
+    Tarfile that defaults to tar filter
+    """
+
+    # Use tar_filter, not data_filter.
+    # See https://gitlab.com/fedora/sigs/go/go-vendor-tools/-/issues/84.
+    if hasattr(tarfile, "tar_filter"):
+        extraction_filter = staticmethod(tarfile.tar_filter)
 
 
 ### normalize_file_permissions is derived from flit_core
