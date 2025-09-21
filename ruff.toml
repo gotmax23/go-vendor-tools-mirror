@@ -35,6 +35,10 @@ ignore = [
     "PLR2004",
     # Too many arguments to function call
     "PLR0913",
+    # Use `contextlib.suppress(ModuleNotFoundError)` instead of `try`-`except`-`pass`
+    # This requires an additional import and has a performance penalty.
+    # Meh.
+    "SIM105",
 ]
 
 [lint.extend-per-file-ignores]

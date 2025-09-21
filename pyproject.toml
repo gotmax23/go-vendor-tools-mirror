@@ -31,7 +31,6 @@ classifiers = [
 dependencies = [
     "license_expression",
     "tomli; python_version<'3.11'",
-    "zstarfile",
 ]
 requires-python = ">=3.9"
 
@@ -45,6 +44,7 @@ all = [
     "argcomplete",
     "specfile",
     "tomlkit",
+    "zstarfile",
 ]
 # Dependencies for the scancode backend
 scancode = [
@@ -152,6 +152,9 @@ enabled = false
 [tool.coverage.run]
 source = [
     "go_vendor_tools",
+]
+omit = [
+    "src/go_vendor_tools/_zstarfile_extra.py",
 ]
 
 [tool.coverage.paths]
