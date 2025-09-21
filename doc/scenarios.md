@@ -3,7 +3,7 @@ Copyright (C) 2024 Maxwell G <maxwell@gtmx.me>
 SPDX-License-Identifier: MIT
 -->
 
-<!--- pyml disable-num-lines 111 code-block-style-->
+<!-- pyml disable-num-lines 111 code-block-style -->
 
 # Scenarios
 
