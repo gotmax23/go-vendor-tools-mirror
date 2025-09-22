@@ -20,11 +20,9 @@ from itertools import chain
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, ClassVar
 
-from zstarfile import ZSTarfile
-from zstarfile.extra import open_write_compressed
-
 from go_vendor_tools import __version__
-from go_vendor_tools.archive import add_files_to_archive
+from go_vendor_tools._zstarfile_extra import open_write_compressed
+from go_vendor_tools.archive import OurTarFile, add_files_to_archive
 from go_vendor_tools.cli.utils import catch_vendor_tools_error
 from go_vendor_tools.config.archive import (
     get_go_dependency_update_commands,
@@ -193,7 +191,7 @@ def parseargs(argv: list[str] | None = None) -> CreateArchiveArgs | OverrideArgs
         "--compression",
         dest="compression_type",
         metavar="COMPRESSION_TYPE",
-        help=f"Choices: {list(ZSTarfile.OPEN_METH)}",
+        help=f"Choices: {list(OurTarFile.OPEN_METH)}",
         default=argparse.SUPPRESS,
     )
     create_subparser.add_argument("--write-config", action="store_true")

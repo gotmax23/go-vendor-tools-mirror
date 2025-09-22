@@ -17,10 +17,9 @@ from textwrap import dedent
 from typing import IO, Any, NamedTuple, cast
 
 from license_expression import ExpressionError
-from zstarfile import ZSTarfile
 
 from go_vendor_tools import __version__
-from go_vendor_tools.archive import get_toplevel_directory
+from go_vendor_tools.archive import OurTarFile, get_toplevel_directory
 from go_vendor_tools.cli.utils import (
     HAS_TOMLKIT,
     catch_vendor_tools_error,
@@ -635,14 +634,14 @@ def handle_alternative_sources_and_spec(
         if is_archive:
             tmp = Path(es.enter_context(TemporaryDirectory()))
             # Extract the first archive
-            with ZSTarfile.open(directories[0]) as tar:
+            with OurTarFile.open(directories[0]) as tar:
                 first_toplevel = get_toplevel_directory(tar)
                 if not first_toplevel:
                     sys.exit(f"{directories[0]} does not have a top-level directory!")
                 print(f"Extracting {directories[0]}", file=sys.stderr)
                 tar.extractall(tmp)
             for directory in directories[1:]:
-                with ZSTarfile.open(directory) as tar:
+                with OurTarFile.open(directory) as tar:
                     toplevel = get_toplevel_directory(tar)
                     print(f"Extracting {directory}", file=sys.stderr)
                     tar.extractall(
