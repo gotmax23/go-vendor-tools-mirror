@@ -1,0 +1,6 @@
+# ./go.mod: github.com/junegunn/fzf
+github.com/junegunn/fzf/brokendir
+github.com/junegunn/fzf/src
+github.com/junegunn/fzf/src/algo
+github.com/junegunn/fzf/src/tui
+github.com/junegunn/fzf/src/util

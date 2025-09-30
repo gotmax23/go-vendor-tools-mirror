@@ -21,7 +21,8 @@ Source2:        expected-licenses.list
 Source3:        go-vendor-tools.toml
 Source4:        gocheck_expected1.txt
 Source5:        gocheck_expected2.txt
-Source6:        test_test.go
+Source6:        gocheck_expected3.txt
+Source7:        test_test.go
 
 ExclusiveArch:  %{golang_arches_future}
 
@@ -33,8 +34,8 @@ BuildRequires:  go-vendor-tools
 %prep
 %autosetup -p1 -n fzf-%{version}
 %setup -q -T -D -b1 -n fzf-%{version}
-cp -p %{S:4} %{S:5} .
-cp -p %{S:6} src/
+cp -p %{S:4} %{S:5} %{S:6} .
+cp -p %{S:7} src/
 
 %generate_buildrequires
 %go_vendor_license_buildrequires -c %{S:3}
@@ -59,6 +60,18 @@ test "$(cat buildrequires)" = "trivy"
 %go_vendor_license_check -d trivy -c %{S:3}
 
 diff -u "%{S:2}" "$(pwd)/licenses.list"
+
+# This is here to test handling of build tags.
+# See below.
+mkdir brokendir
+cat <<EOF >brokendir/broken_test.go
+//go:build brokendir
+package brokendir
+import "testing"
+func TestBrokenDir(t *testing.T) {
+    t.Error("This test should fail when -tag brokendir is passed")
+}
+EOF
 
 %{gocheck2 -L} | tee gocheck_gotten1.txt
 diff -u gocheck_expected1.txt gocheck_gotten1.txt
@@ -103,6 +116,15 @@ diff -u gocheck_expected1.1.txt gocheck_gotten1.1.txt
 diff -u gocheck_expected1.1.txt gocheck_gotten1.1.txt
 
 %gocheck2 -s TestBroken -s TestSomethingElseBroken
+%gocheck2 && exit $? || true
+
+# When brokendir tag is enabled, %%goipath/brokendir should be included in the
+# go list output, and the TestBrokenDir() should run and then fail.
+GO_BUILDTAGS=brokendir %{gocheck2 -L -s 'TestBroken' -s 'TestSomethingElseBroken'} | tee gocheck_gotten3.txt
+diff -u gocheck_expected3.txt gocheck_gotten3.txt
+rm src/test_test.go
+# GO_BUILDTAGS can be added before the gocheck2 macro or exported separately.
+export GO_BUILDTAGS=brokendir
 %gocheck2 && exit $? || true
 
 %files -f %{go_vendor_license_filelist}
