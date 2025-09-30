@@ -49,9 +49,11 @@ _LICENSE_GLOBS: Sequence[str] = (
     "MIT-*[0-9]*",
     "MPL-*[0-9]*",
     "OFL-*[0-9]*",
-    # Additional
+    # New patterns added by go-vendor-tools
     "Li[cs]ense",
     "Li[cs]ense.*",
+    "*-license.txt",
+    "*-bsd.txt",
 )
 # _LICENSE_PATTERNS =
 _LICENSE_PATTERN = re.compile(
@@ -62,6 +64,7 @@ _LICENSE_EXCLUDE_PATTERN = re.compile(
     r"""
     (
         .*\.go|         # Some projects have license.go files that are code
+        .*\.py|         # Some projects have license.py files that are code
         (?!)            # Dummy regex to allow a trailing "|"
     )""",
     flags=re.VERBOSE,
