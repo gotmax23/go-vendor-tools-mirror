@@ -9,9 +9,9 @@ import argparse
 import dataclasses
 import os
 import shlex
-import shutil
 import subprocess
 import sys
+import tarfile
 import tempfile
 from collections.abc import Callable, Iterable, Sequence
 from contextlib import ExitStack
@@ -249,7 +249,8 @@ def create_archive(args: CreateArchiveArgs) -> None:
         if _already_checked_is_file or args.path.is_file():
             print(f"* Treating {args.path} as an archive. Unpacking...")
             cwd = Path(stack.enter_context(tempfile.TemporaryDirectory()))
-            shutil.unpack_archive(args.path, cwd)
+            with tarfile.open(args.path) as tf:
+                tf.extractall(cwd, filter="data")
             cwd /= next(cwd.iterdir())
         root_cwd = cwd
         # TODO: test go_mod_dir support
