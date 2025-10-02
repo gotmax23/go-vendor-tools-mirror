@@ -4,7 +4,7 @@
 
 %bcond manpages 1
 # Whether to build the scancode extra
-%bcond scancode %[ %{defined fedora} && v"0%{?python3_version}" < v"3.14" ]
+%bcond scancode %{defined fedora}
 # Only run scancode tests (and install scancode at buildtime) when arch is not i386
 %bcond scancode_tests %[ %{with scancode} && "%{_arch}" != "i386"]
 
@@ -40,11 +40,11 @@ Recommends:     askalono-cli
 Recommends:     go-vendor-tools+scancode
 Recommends:     go-vendor-tools+all
 
-# NOTE(gotmax23): Remove this for now.
+# NOTE(gotmax23): Buildflags from go-rpm-macros are used by %%gocheck2 defined
+# in this package, but we don't want to depend on it directly.
 # Packages should still explicitly require go-rpm-macros, and the license
 # scanning in this package could potentially be useful outside of the Go ecosystem,
-# so it might be nice to avoid dependning on go-rpm-macros in this package.
-# Buildflags from go-rpm-macros are used by %%gocheck2 defined in this package.
+# so it would be nice to avoid dependning on go-rpm-macros in this package.
 # Requires:       go-rpm-macros
 
 
