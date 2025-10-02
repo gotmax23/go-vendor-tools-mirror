@@ -8,6 +8,10 @@ srpm_build_deps:
   - pipx
   - rpmdevtools
   - /usr/bin/unshare
+# This messes up wait-for-copr, since each merge commit has a different commit
+# hash and then fclogr calculates a different NVR than what the actual package
+# built.
+merge_pr_in_ci: false
 packages:
   # Main package
   go-vendor-tools:
