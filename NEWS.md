@@ -5,6 +5,41 @@ SPDX-License-Identifier: MIT
 
 # NEWS
 
+## 0.9.0 - 2025-10-02 <a id='0.9.0'></a>
+
+### Added
+
+- **Add `%gocheck2` helper as module-enabled `%gocheck` alternative (!58).**
+  This addresses a major blocker preventing packagers from migrating their
+  packages to use modules mode (`%global gomodulesmode GO111MODULE=on`).
+  `%gocheck2` mostly preserves `%gocheck`'s behavior but also has functionality
+  to skip individual tests (removing the need to maintain complex awk pipelines
+  to add `t.Skip()` invocations to test functions).
+  See the [gocheck2 documentation] for more information.
+  Note that this is an experimental macro and may move to the go-rpm-macros
+  project or be subject to other breaking changes in the future.
+- license: allow `--autofill` when `--prompt` is not passed. This is useful for
+  non-interactive usage of `go_vendor_archive`.
+- Use the `tarfile.tar_filter` to unpack tar archives (#84).
+- Add additional license file search patterns.
+
+[gocheck2 documentation]: https://fedora.gitlab.io/sigs/go/go-vendor-tools/man/rpm_macros/#gocheck2
+
+### Changed
+
+- Make zstarfile dependency optional. The helper functions we use from zstarfile
+  are now vendored. zstarfile is still pulled in via the `all` extra
+  (or the `go-vendor-tools+all` RPM package), and it will be used to
+  unpack `tar.zst` and `tar.lz4` archives if it's available.
+
+### Removed
+
+- Remove support for unpacking zip archives in `go_vendor_archive`.
+  `go_vendor_license` has never supported zip archives and `go_vendor_archive`
+  also only supports writing vendor archives as tar files, so adding extra
+  complexity to keep zip archive support in this one place and also work around
+  changes to the Python `tarfile` module was not deemed worthwhile.
+
 ## 0.8.0 - 2025-07-17 <a id='0.8.0'></a>
 
 ### Added
