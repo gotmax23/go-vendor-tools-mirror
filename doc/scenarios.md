@@ -175,12 +175,15 @@ go2rpm was used to generate the original specfile using vendored dependencies.
     mechanism to update packages.
 
     ```bash
-    go_vendor_license --config go-vendor-tools.toml --path foo.spec report --verify-spec
+    go_vendor_license --config go-vendor-tools.toml --path foo.spec report --autofill=auto --verify-spec
     ```
 
     This command will error out if the detected license expression has changed
     so that the package maintainer can double check the changes and update the
     `License:` tag in the specfile.
+    The autofill functionality will be used to update the manual license
+    entries, if necessary, but the command will still error if adding new manual
+    license entries changes the overall License expression.
 
 1. Continue with your normal package update workflow, preform a test build, and
    upload the new sources to the lookaside cache.
