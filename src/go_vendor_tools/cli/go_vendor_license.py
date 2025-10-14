@@ -432,8 +432,8 @@ def print_licenses(
             "The following license files that were specified in the configuration"
             " have changed:",
         )
-    if mode in ("all", "expression"):
-        print()
+        if mode in ("all", "expression"):
+            print()
     print(results.license_expression)
     red_if_true(
         results.unknown_license_keys,
