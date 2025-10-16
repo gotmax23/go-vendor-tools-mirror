@@ -144,7 +144,7 @@ the project, unless `-F` is passed.
 %gocheck2 -t %{goipath}/e2e
 
 # Exclude everything under the e2e directory,
-assuming that CWD is the root of the current Go module.
+# assuming that CWD is the root of the current Go module.
 # Using the syntax in the previous example is recommended.
 %gocheck2 -t e2e
 
