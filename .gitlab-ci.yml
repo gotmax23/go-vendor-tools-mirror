@@ -34,6 +34,7 @@ test:
     - >-
       sudo dnf install
       --setopt=install_weak_deps=0 -y
+      clang
       gcc-c++
       git-core
       go-rpm-macros
