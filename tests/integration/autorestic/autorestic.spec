@@ -54,13 +54,13 @@ BuildRequires:  python3-devel
 
 %install
 install -Dpm 0755 -t %{buildroot}%{_bindir} autorestic
-%go_vendor_license_install -c %{S:2}
+%go_vendor_license_install -c %{S:2} -M
 # TODO(gotmax23): Better support for multiple license files
 # (this is needed by this contrived test case and, for example, packages with multiple
 # vendor archives)
 %if %scancode
     %global go_vendor_license_filelist licenses.list.scancode
-    %go_vendor_license_install -c %{S:4}
+    %go_vendor_license_install -c %{S:4} -M
     %global go_vendor_license_filelist licenses.list
 %endif
 
