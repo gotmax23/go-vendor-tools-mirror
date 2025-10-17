@@ -6,6 +6,7 @@ from __future__ import annotations
 import contextlib
 import os
 import shlex
+import time
 from collections.abc import Iterable, Iterator, Sequence
 from glob import iglob
 from pathlib import Path
@@ -143,6 +144,9 @@ def integration(session: nox.Session) -> None:
 
 @nox.session(name="integration-test-build")
 def integration_test_build(session: nox.Session):
+    temp = Path(session.create_tmp()).resolve()
+    temp /= str(round(time.time()))
+    temp.mkdir()
     install(session, *get_test_deps(), "coverage[toml]", editable=True)
     packages_env = os.environ.get("PACKAGES")
     packages = shlex.split(packages_env) if packages_env else INTEGRATION_PACKAGES
@@ -152,6 +156,8 @@ def integration_test_build(session: nox.Session):
         assert coverage_command[0]
         rpm_eval = Path("rpmeval.sh").resolve()
         for package in packages:
+            package_tmp = temp / package
+            package_tmp.mkdir()
             with session.chdir(Path("tests/integration/", package)):
                 # fmt: off
                 session.run(
@@ -162,12 +168,26 @@ def integration_test_build(session: nox.Session):
                     "-D", f"__gocheck2 {gocheck2_coverage_command}",
                     "-D", f"_specdir {Path.cwd()}",
                     "-D", f"_sourcedir {Path.cwd()}",
+                    "-D", f"_rpmdir {package_tmp}",
                     "--nodeps",
                     "-ba", f"{package}.spec",
                     env=cov_env|{"RPM": "rpmbuild"},
                     external=True,
                 )
                 # fmt: on
+                post_build = Path("integration-post-build.sh")
+                if post_build.is_file():
+                    files = session.run(
+                        "find",
+                        package_tmp,
+                        "-name",
+                        "*.rpm",
+                        silent=True,
+                        external=True,
+                    )
+                    file_list = str(files).splitlines()
+                    print("Got:", file_list)
+                    session.run("bash", "-x", post_build, *file_list, external=True)
 
 
 @nox.session
