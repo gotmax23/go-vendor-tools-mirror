@@ -73,6 +73,20 @@ class Evaluator:
 evaluator = Evaluator()
 
 
+def test_go_vendor_license_install():
+    assert (
+        evaluator("%go_vendor_license_install", defines={"NAME": "foo"}).stdout
+        == "go_vendor_license install --destdir %{buildroot} --install-directory /usr/share/licenses/foo --filelist licenses.list\n"  # noqa: E501
+    )
+
+
+def test_go_vendor_license_install_M():
+    assert (
+        evaluator("%go_vendor_license_install -M", defines={"NAME": "foo"}).stdout
+        == "go_vendor_license install --destdir %{buildroot} --install-directory /usr/share/licenses/foo --filelist licenses.list -M\n"  # noqa: E501
+    )
+
+
 def test_go_vendor_license_check_disabled():
     assert not (
         evaluator(
