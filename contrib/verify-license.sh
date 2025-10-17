@@ -6,15 +6,17 @@
 
 set -euo pipefail
 
+HERE="$(dirname "$(readlink -f "${0}")")"
+ROOT="$(dirname "$HERE")"
+
 _path="$(command -v go_vendor_license 2>/dev/null || :)"
 _default_path="pipx run --spec ../../../[specfile] go_vendor_license"
 GO_VENDOR_LICENSE="${GO_VENDOR_LICENSE:-${_path:-${_default_path}}}"
 IFS=" " read -r -a command <<< "${GO_VENDOR_LICENSE}"
 
-
 set -x
 license_home="${GO_VENDOR_LICENSE_HOME:-"$(pwd)"}"
-license="$(rpmspec -q --srpm --qf "%{LICENSE}\n" "${license_home}"/*.spec)"
+license="$(RPM=rpmspec "$ROOT/rpmeval.sh" -q --srpm --qf "%{LICENSE}\n" "${license_home}"/*.spec)"
 set +x
 if [ -n "${GO_VENDOR_CONFIG-}" ]; then
     command+=("--config" "${GO_VENDOR_CONFIG}")
