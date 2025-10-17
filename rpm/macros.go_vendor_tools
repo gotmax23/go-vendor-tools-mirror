@@ -28,7 +28,7 @@
 #        Separate KEY=VALUE pairs with ";" to pass multiple options.
 # TODO(gotmax23): Consider adding support for --ignore-* options (the short flags),
 # but we want to discourage packagers from disabling license checks.
-%go_vendor_license_install(c:n:d:D:) %{shrink:
+%go_vendor_license_install(c:n:d:D:M) %{shrink:
     %{__go_vendor_license}
     %{-c:--config %{-c*}}
     %{-d:--detector %{-d*}}
@@ -37,6 +37,7 @@
     --destdir %{buildroot}
     --install-directory %{_defaultlicensedir}/%{?-n*}%{!?-n:%{NAME}}
     --filelist %{go_vendor_license_filelist}
+    %{-M}
 }
 
 # Compatibility with shescape that's not available on EL 9.
