@@ -41,3 +41,4 @@
 %license /usr/share/licenses/not-fzf/vendor/golang.org/x/term/PATENTS
 %license /usr/share/licenses/not-fzf/vendor/golang.org/x/text/LICENSE
 %license /usr/share/licenses/not-fzf/vendor/golang.org/x/text/PATENTS
+%license /usr/share/licenses/not-fzf/vendor/modules.txt
