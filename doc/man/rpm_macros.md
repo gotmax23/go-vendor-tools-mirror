@@ -36,6 +36,9 @@ Generate requirements needed for the selected license backend.
 
 Install all license files of both the main package and vendored sources into
 the package's license directory.
+`%go_vendor_license_install` also marks `vendor/modules.txt` with `%license`
+for the go_mod_vendor generator that automatically creates `bundled(golang())`
+Provides.
 
 This default license directory is `%{_defaultlicensedir}/NAME` where `NAME`
 is the name of the main package.
