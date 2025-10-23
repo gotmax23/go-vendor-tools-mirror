@@ -73,6 +73,7 @@ jobs:
     trigger: pull_request
     skip_build: true
     tmt_plan: "/plans/pypi-test"
+    identifier: pypi-test
     tf_extra_params: &tf_extra_params
       environments:
         tmt:
@@ -97,6 +98,7 @@ jobs:
   - job: tests
     trigger: pull_request
     tmt_plan: "/plans/rpm-test"
+    identifier: rpm-test
     tf_extra_params: *tf_extra_params
     packages:
       - go-vendor-tools
@@ -124,12 +126,14 @@ jobs:
     branch: main
     skip_build: true
     tmt_plan: "/plans/pypi-test"
+    identifier: pypi-test
     tf_extra_params: *tf_extra_params
 
   - job: tests
     trigger: commit
     branch: main
     tmt_plan: "/plans/rpm-test"
+    identifier: rpm-test
     tf_extra_params: *tf_extra_params
     packages:
       - go-vendor-tools
