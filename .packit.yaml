@@ -69,6 +69,39 @@ jobs:
           - https://dl.fedoraproject.org/pub/epel/testing/10/Everything/$basearch
     trigger: pull_request
 
+  - job: tests
+    trigger: pull_request
+    skip_build: true
+    tmt_plan: "/plans/pypi-test"
+    tf_extra_params: &tf_extra_params
+      environments:
+        tmt:
+          extra_args:
+            prepare:
+              - --insert
+              - -h
+              - install
+              - --copr
+              - '@go-sig/go-vendor-tools-dev'
+              - --order
+              - '35'
+    targets: &tf_targets
+      fedora-all-x86_64: {}
+      epel-9-x86_64:
+        distros:
+          - centos-stream-9
+      epel-10-x86_64:
+        distros:
+          - centos-stream-10
+
+  - job: tests
+    trigger: pull_request
+    tmt_plan: "/plans/rpm-test"
+    tf_extra_params: *tf_extra_params
+    packages:
+      - go-vendor-tools
+    targets: *tf_targets
+
   - job: copr_build
     packages:
       - go-vendor-tools
@@ -85,3 +118,19 @@ jobs:
     project: go-vendor-tools-dev
     trigger: commit
     branch: main
+
+  - job: tests
+    trigger: commit
+    branch: main
+    skip_build: true
+    tmt_plan: "/plans/pypi-test"
+    tf_extra_params: *tf_extra_params
+
+  - job: tests
+    trigger: commit
+    branch: main
+    tmt_plan: "/plans/rpm-test"
+    tf_extra_params: *tf_extra_params
+    packages:
+      - go-vendor-tools
+    targets: *tf_targets

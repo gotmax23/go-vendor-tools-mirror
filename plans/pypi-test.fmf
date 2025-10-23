@@ -1,0 +1,74 @@
+summary: Run unit and integration tests (PyPI)
+description: Run tests using the go-vendor-tools wheel and dependencies from PyPI
+environment:
+  NOX_DEFAULT_VENV_BACKEND: uv
+  UV_PYTHON_DOWNLOADS: never
+prepare:
+    - how: shell
+      script:
+        - echo "PATH=$HOME/.local/bin:$PATH" > $TMT_PLAN_ENVIRONMENT_FILE
+      order: 40
+    - how: install
+      package:
+        - /usr/bin/unshare
+        - askalono-cli
+        - gcc-c++
+        - go-rpm-macros
+        - golang-bin
+        - libicu-devel
+        - libxml2-devel
+        - libxslt-devel
+        - python3-devel
+        - rpm-build
+        - rpmdevtools
+        - trivy
+        - uv
+      order: 41
+    - how: shell
+      script:
+        - uv tool install nox
+        - nox -e test integration integration-test-build --install-only -- --cov
+    - how: shell
+      order: 100
+      script: dnf list --installed | tee $TMT_TEST_DATA/packages.txt
+adjust:
+  - when: distro == fedora
+    because: Extra Python interpreters and UV are only available on Fedora
+    prepare+:
+      - how: install
+        order: 42
+        package:
+        - python3.9
+        - python3.10-devel
+        - python3.11-devel
+        - python3.12-devel
+        - python3.13-devel
+        - uv
+  - when: distro != fedora
+    because: Alt Pythons and UV not available; EPEL is needed
+    prepare+:
+      - how: feature
+        epel: enabled
+        order: 38
+      - how: install
+        package:
+          - epel-rpm-macros
+        order: 39
+      - how: shell
+        script:
+          - curl -LsSf https://astral.sh/uv/install.sh | UV_NO_MODIFY_PATH=1 sh
+        order: 42
+discover:
+  how: shell
+  tests:
+    - name: Unit tests
+      test: nox -Re test -- --cov -v
+    - name: Integration tests
+      test: nox -xRe integration integration-test-build
+    - name: Collect and report coverage
+      test: nox -Re coverage
+    - name: Copy coverage data
+      test: cp -pr coverage.xml htmlcov $TMT_TEST_DATA
+execute:
+  how: tmt
+  exit-first: true
