@@ -51,8 +51,8 @@ jobs:
   - job: copr_build
     packages:
       - go-vendor-tools
-      - autorestic
-      - fzf
+      # - autorestic
+      # - fzf
     targets:
       fedora-all-x86_64:
         # Extra dependencies (trivy, python-zstarfile) not packaged in Fedora
@@ -66,7 +66,6 @@ jobs:
         # Extra dependencies (trivy, python-zstarfile) not packaged in Fedora
         additional_repos:
           - "copr://@go-sig/go-vendor-tools-dev"
-          - https://dl.fedoraproject.org/pub/epel/testing/10/Everything/$basearch
     trigger: pull_request
 
   - job: tests

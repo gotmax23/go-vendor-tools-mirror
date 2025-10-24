@@ -3,7 +3,7 @@ description: Run tests using the packaged go-vendor-tools and RPM dependencies
 prepare:
     - how: install
       package:
-        - askalono
+        - askalono-cli
         - go-rpm-macros
         - go-vendor-tools
         - go-vendor-tools+all
