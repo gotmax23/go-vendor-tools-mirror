@@ -327,6 +327,16 @@ def get_parser() -> argparse.ArgumentParser:
     install_parser.add_argument(
         "--filelist", dest="install_filelist", type=Path, required=True
     )
+    install_parser.add_argument(
+        "-M",
+        "--no-install-modules-txt",
+        action="store_false",
+        default=True,
+        dest="install_modules_txt",
+        help="Don't install vendor/modules.txt. By default, this file is copied"
+        " to the license directory so the go_mod_vendor generator will create"
+        " bundled(golang()) Provides.",
+    )
     install_parser.set_defaults(detector_find_only=True)
     # TODO(gotmax23): Should we support writing JSON from the install command
     # or just reading it?
@@ -803,6 +813,7 @@ def install_command(args: argparse.Namespace) -> None:
     install_directory: Path = args.install_directory
     install_filelist: Path = args.install_filelist
     global_config: BaseConfig = args.global_config
+    install_modules_txt: bool = args.install_modules_txt
     del args
     go_mod_dir = global_config["general"]["go_mod_dir"]
 
@@ -810,6 +821,15 @@ def install_command(args: argparse.Namespace) -> None:
         directory,
         get_go_module_dirs(directory, relative_paths=True, go_mod_dir=go_mod_dir),
     )
+    modules_dot_txt = Path(go_mod_dir or ".", "vendor/modules.txt")
+    if install_modules_txt:
+        if modules_dot_txt.is_file():
+            license_files.append(modules_dot_txt)
+        else:
+            # NOTE(gotmax23): This is treated as an error for now.
+            # Packagers can opt-out by passing -M.
+            # If we need to, we can make this check more flexible in the fututre.
+            sys.exit("ERROR: No modules.txt file found")
     copy_licenses(
         directory,
         license_files,

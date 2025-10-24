@@ -7,6 +7,7 @@ Helpers for working with specfiles
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
 from typing import TYPE_CHECKING, Protocol, TypeVar, cast
 
@@ -74,8 +75,17 @@ class VendorSpecfile:
         """
         if not HAS_SPECFILE:
             raise ImportError("This functionality requires python3-specfile!")
+
+        # For testing purposes only!
+        extra_macros: list[tuple[str, str | None]] = []
+        if os.environ.get("__GVT_TEST_MACROS"):
+            for macro in ("go_vendor_license_install", "go_vendor_license_check"):
+                extra_macros.append((macro, ""))  # noqa: PERF401
+
         try:
-            self._spec = specfile.Specfile(spec_path, autosave=True)
+            self._spec = specfile.Specfile(
+                spec_path, autosave=True, macros=extra_macros
+            )
         except SpecfileException as exc:
             raise VendorToolsError(
                 f"Failed to parse specfile {spec_path}: {exc}"

@@ -48,6 +48,7 @@ test:
       rpm-build
       rpmdevtools
       /usr/bin/unshare
+      wget
     # Only test alternative Python interpreters on one release to avoid
     # resource wastage
     - >-
