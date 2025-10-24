@@ -29,7 +29,7 @@ prepare:
         - nox -e test integration integration-test-build --install-only -- --cov
     - how: shell
       order: 100
-      script: dnf list --installed | tee $TMT_TEST_DATA/packages.txt
+      script: dnf list --installed | tee $TMT_PLAN_DATA/packages.txt
 adjust:
   - when: distro == fedora
     because: Extra Python interpreters are only available on Fedora
