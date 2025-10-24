@@ -22,7 +22,7 @@ prepare:
         - ln -s /tmp/nox/bin/nox /usr/bin/nox
     - how: shell
       order: 100
-      script: dnf list --installed | tee $TMT_TEST_DATA/packages.txt
+      script: dnf list --installed | tee $TMT_PLAN_DATA/packages.txt
 adjust:
   - when: distro == fedora
     because: "Scancode is available on Fedora"
@@ -46,7 +46,7 @@ discover:
   how: shell
   tests:
     - name: Unit tests
-      test: nox --no-install --no-venv -e test -- --cov -v
+      test: nox --no-install --no-venv -e test -- --cov
     - name: Integration tests
       test: nox --no-install --no-venv -e integration integration-test-build
     - name: Collect and report coverage

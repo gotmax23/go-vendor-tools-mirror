@@ -22,7 +22,6 @@ prepare:
         - rpm-build
         - rpmdevtools
         - trivy
-        - uv
       order: 41
     - how: shell
       script:
@@ -33,7 +32,7 @@ prepare:
       script: dnf list --installed | tee $TMT_TEST_DATA/packages.txt
 adjust:
   - when: distro == fedora
-    because: Extra Python interpreters and UV are only available on Fedora
+    because: Extra Python interpreters are only available on Fedora
     prepare+:
       - how: install
         order: 42
@@ -43,6 +42,12 @@ adjust:
         - python3.11-devel
         - python3.12-devel
         - python3.13-devel
+  - when: distro == fedora or distro == centos-stream-10
+    because: We want to use Fedora-packaged UV when it's available
+    prepare+:
+      - how: install
+        order: 42
+        package:
         - uv
   - when: distro != fedora
     because: Alt Pythons and UV not available; EPEL is needed
@@ -56,7 +61,7 @@ adjust:
         order: 39
       - how: shell
         script:
-          - curl -LsSf https://astral.sh/uv/install.sh | UV_NO_MODIFY_PATH=1 sh
+          - which uv || curl -LsSf https://astral.sh/uv/install.sh | UV_NO_MODIFY_PATH=1 sh
         order: 42
 discover:
   how: shell

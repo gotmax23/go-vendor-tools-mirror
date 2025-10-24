@@ -86,14 +86,21 @@ jobs:
               - '@go-sig/go-vendor-tools-dev'
               - --order
               - '35'
-    targets: &tf_targets
-      fedora-all-x86_64: {}
+    # We can get away only running pypi-test on Rawhide and EL.
+    # We run rpm-test everywhere; it's the same checks, just one with PyPI deps
+    # and the other with RPM deps.
+    targets: &tf_targets_pypi_test
+      fedora-rawhide-x86_64: {}
       epel-9-x86_64:
         distros:
           - centos-stream-9
       epel-10-x86_64:
         distros:
           - centos-stream-10
+    # Even though we're running with skip_build, not specifying packages causes this to run
+    # three times for each target.
+    packages:
+      - go-vendor-tools
 
   - job: tests
     trigger: pull_request
@@ -102,7 +109,14 @@ jobs:
     tf_extra_params: *tf_extra_params
     packages:
       - go-vendor-tools
-    targets: *tf_targets
+    targets: &tf_targets_rpm_test
+      fedora-all-x86_64: {}
+      epel-9-x86_64:
+        distros:
+          - centos-stream-9
+      epel-10-x86_64:
+        distros:
+          - centos-stream-10
 
   - job: copr_build
     packages:
@@ -120,6 +134,7 @@ jobs:
     project: go-vendor-tools-dev
     trigger: commit
     branch: main
+      - go-vendor-tools
 
   - job: tests
     trigger: commit
@@ -128,6 +143,7 @@ jobs:
     tmt_plan: "/plans/pypi-test"
     identifier: pypi-test
     tf_extra_params: *tf_extra_params
+    targets: *tf_targets_pypi_test
 
   - job: tests
     trigger: commit
@@ -137,4 +153,4 @@ jobs:
     tf_extra_params: *tf_extra_params
     packages:
       - go-vendor-tools
-    targets: *tf_targets
+    targets: *tf_targets_rpm_test
