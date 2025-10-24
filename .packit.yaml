@@ -73,9 +73,12 @@ jobs:
     skip_build: true
     tmt_plan: "/plans/pypi-test"
     identifier: pypi-test
+    # TODO(gotmax23): Is this something we actually want?
+    # The initial motivation was to make it possible to make changes to
+    # go-vendor-tools and go-rpm-macros at the same time
     tf_extra_params: &tf_extra_params
       environments:
-        tmt:
+        - tmt:
           extra_args:
             prepare:
               - --insert
