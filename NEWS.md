@@ -5,6 +5,14 @@ SPDX-License-Identifier: MIT
 
 # NEWS
 
+## 0.10.0 - 2025-10-31 <a id='0.10.0'></a>
+
+### Added
+
+- Automatically install `vendor/modules.txt` with `%go_vendor_license_install`.
+  Packagers should remove manual `%license vendor/modules.txt` entries once
+  this new release goes stable.
+
 ## 0.9.0 - 2025-10-02 <a id='0.9.0'></a>
 
 ### Added
