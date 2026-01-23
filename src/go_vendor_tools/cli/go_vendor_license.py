@@ -139,13 +139,11 @@ def _fmt_oneline_help(text: str) -> str:
 def _add_json_argument(parser: argparse.ArgumentParser, **kwargs) -> None:
     our_kwargs: dict[str, Any] = {
         "type": Path,
-        "help": _fmt_oneline_help(
-            """\
+        "help": _fmt_oneline_help("""\
         Write license data to a JSON file.
         This data is not yet considered stable and is only intended for
         go2rpm's internal usage and for testing purposes.
-        """
-        ),
+        """),
     }
     kwargs = our_kwargs | kwargs
     parser.add_argument("--write-json", **kwargs)
@@ -165,8 +163,7 @@ def get_parser() -> argparse.ArgumentParser:
         type=Path,
         dest="directory",
         action="append",
-        help=dedent(
-            """
+        help=dedent("""
         Can be one of the following:
 
         1. Top-level directory with a go.mod file and vendor directory
@@ -175,8 +172,7 @@ def get_parser() -> argparse.ArgumentParser:
            top of one another.
         3. Path to a specfile.
            The paths to Source0 and Source1 will be automatically unpacked.
-        """
-        ),
+        """),
     )
     parser.add_argument("--use-archive", action="store_true", help="See --path.")
     parser.add_argument(
@@ -229,13 +225,11 @@ def get_parser() -> argparse.ArgumentParser:
         "-U",
         "--ignore-unknown-licenses",
         action="store_true",
-        help=_fmt_oneline_help(
-            """
+        help=_fmt_oneline_help("""
         Whether to ignore invalid license expressions unknown to
         go-vendor-tools, whether they are specified manually in the config or
         emitted by a license backend.
-        """
-        ),
+        """),
     )
     report_parser.add_argument(
         "--subpackage-name",
