@@ -59,7 +59,7 @@ codeqa = [
     "shellcheck-py",
 ]
 formatters = [
-    "black",
+    "black >= 26, < 27",
     "isort",
 ]
 typing = [
