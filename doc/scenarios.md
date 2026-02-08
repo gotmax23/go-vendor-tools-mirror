@@ -58,7 +58,7 @@ version. The go-vendor-tools configuration is stored in `go-vendor-tools.toml`.
     go_vendor_archive override --config go-vendor-tools.toml google.golang.org/protobuf v1.33.0
     ```
 
-1. Use the `go_vendor_archive create` command to re-generate the configuration file.
+1. Use the `go_vendor_archive create` command to re-generate the vendor archive.
 
     ```bash
     go_vendor_archive create --config go-vendor-tools.toml foo.spec
