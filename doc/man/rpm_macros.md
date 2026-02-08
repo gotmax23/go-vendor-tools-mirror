@@ -182,22 +182,14 @@ You shouldn't need to touch this.
 !!! info
     Added in v0.7.0
 
+!!! warning
+    Using this macro in individual specfiles is not recommended.
+    Per the Fedora Packaging Guidelines, `%go_vendor_license_check` SHOULD be run in `%check`
+    and should not be disabled on a per-specfile basis.
+    In downstream packaging scenarios where even the askalono backend is unavailable,
+    the `%go_vendor_license_check_disable` macro can be set in the macros file
+    globally.
+
 Set this macro to `1` to disable `%go_vendor_license_check` (it will expand to
 nothing in this mode) and make sure that `%go_vendor_license_buildrequires` only
 installs the dependencies for `%go_vendor_license_install`.
-
-This can be used in a conditional with the scancode backend which is not
-available in EPEL or on 32-bit systems.
-
-#### Example
-
-`go2rpm` includes the following when scancode is enabled to disable license
-checking on if license checking has been disabled globally, on RHEL, or on i386:
-
-``` spec
-# scancode has a lot of dependencies, so it can be disabled for a faster build
-# or when its deps are unavailable.
-%if %{defined rhel} || "%{_arch}" == "i386"
-%global go_vendor_license_check_disable 1
-%endif
-```
