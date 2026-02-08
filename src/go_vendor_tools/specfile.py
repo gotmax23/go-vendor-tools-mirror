@@ -108,7 +108,7 @@ class VendorSpecfile:
             raise se
         return value
 
-    @license.setter
+    @license.setter  # noqa: A003
     def license(self, value: str) -> None:
         with self.tags() as tags:
             try:
