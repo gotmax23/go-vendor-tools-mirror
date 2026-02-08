@@ -37,6 +37,9 @@ this directory from the root of the source archive.
 
 > **Environment variable**: `GO_VENDOR_LICENSE_DETECTOR`
 
+!!! tip
+    New packages should use the default askalono backend.
+
 Explicitly choose a license detector.
 Currently supported detectors are:
 
@@ -46,17 +49,26 @@ Currently supported detectors are:
    [manual license entries](#licensing--licenses).
    askalono is very slim and takes up less space than the other backends,
    speeding up package builds.
-   askalono will support packages in ELN once #3 is implemented.
-   For packages with many dependencies, consider scancode to avoid having to
-   maintain a large number of manual license entries.
 2. scancode — the most powerful backend.
    Uses the `scancode-toolkit` Python library.
    scancode pulls in a lot of dependencies, but it is very thorough and can
    detect more complex cases.
-   scancode will support packages in ELN once #3 is implemented.
+
+    !!! tip
+        Instead of changing the default backend to scancode, it is recommended to use
+        the default askalono detector backend alongside `--autofill=auto`.
+        `--autofill` uses output from scancode to add manual license entries to
+        `go-vendor-tools.toml` for licenses that askalono was unable to detect on
+        its own.
+        This avoids extra buildtime dependencies while still benefiting from
+        scancode's more thorough detection capabilities.
+
 3. trivy — another option.
    trivy is sometimes better at detecting complex licenses than askalono.
-   Note that this backend will not be compatible with ELN.
+   Note that this backend is not compatible with ELN and is a rather large
+   binary, as it provides other complex SCA features besides license scanning.
+   trivy is still supported for current users, but for the aforementioned
+   reasons, new packages should prefer askalono.
 
 If no detector is specified, `go_vendor_license` will attempt to load the first
 available license detector from first to last in the above list.
