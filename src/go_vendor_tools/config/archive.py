@@ -11,6 +11,8 @@ import os
 from collections.abc import Iterator
 from typing import Any, Mapping, TypedDict, cast
 
+from go_vendor_tools.exceptions import ConfigError
+
 from .utils import get_envvar_boolean
 
 DEFAULT_USE_TOP_LEVEL_DIR = False
@@ -32,6 +34,7 @@ class ArchiveConfig(TypedDict):
     dependency_overrides: dict[str, str]
     compresslevel: int | None
     compression_type: str | None
+    include_files: list[str]
 
 
 def create_archive_config(config: dict[str, Any] | None = None) -> ArchiveConfig:
@@ -50,6 +53,11 @@ def create_archive_config(config: dict[str, Any] | None = None) -> ArchiveConfig
     if config["compresslevel"] is not None:
         config["compresslevel"] = int(config["compresslevel"])
     config.setdefault("compression_type", None)
+    for idx, file in enumerate(config.setdefault("include_files", [])):
+        if os.path.isabs(file):
+            raise ConfigError(
+                f"archive.include_files[{idx}]: absolute path {file} is not allowed!"
+            )
     return cast(ArchiveConfig, config)
 
 

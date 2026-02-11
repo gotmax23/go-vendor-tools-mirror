@@ -61,6 +61,9 @@ test "$(cat buildrequires)" = "trivy"
 
 diff -u "%{S:2}" "$(pwd)/licenses.list"
 
+# Check that archive.include_files works
+test -f test_include_files.txt
+
 # This is here to test handling of build tags.
 # See below.
 mkdir brokendir
