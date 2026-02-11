@@ -289,12 +289,14 @@ def create_archive(args: CreateArchiveArgs) -> None:
         except ValueError as exc:
             sys.exit(f"Invalid --output value: {exc}")
         print("Creating archive...")
+        include_files = list(map(Path, args.config["archive"]["include_files"]))
         add_files_to_archive(
             tf,
             root_cwd,
             paths_with_go_mod_dir(
                 ARCHIVE_FILES if not use_go_work else GO_WORK_ARCHIVE_FILES, go_mod_dir
-            ),
+            )
+            + include_files,
             top_level_dir=args.use_top_level_dir,
             optional_files=paths_with_go_mod_dir(
                 OPTIONAL_FILES if not use_go_work else GO_WORK_OPTIONAL_FILES,

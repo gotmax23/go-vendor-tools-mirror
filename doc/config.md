@@ -204,6 +204,12 @@ By default, the compression type is detected based on the extension of
 Compression level as an integer for compression algorithms that support the
 setting
 
+#### `include_files` (list of strings) {: #archive--include_files }
+
+List of relative paths to extra files to include in the vendor archive.
+By default, only `go.mod`, `go.sum`, `go.work`, `go.work.sum`, and `vendor/`
+are included in the vendor archive.
+
 [^1]: This is done for security reasons. `pre_commands` and `post_commands` can
     run arbitrary code, so we do not want to blindly load configuration from
     the current working directory.
