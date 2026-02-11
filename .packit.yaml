@@ -52,8 +52,8 @@ jobs:
   - job: copr_build
     packages:
       - go-vendor-tools
-      - autorestic
-      - fzf
+      # - autorestic
+      # - fzf
     targets:
       fedora-all-x86_64:
         # Extra dependencies (trivy, python-zstarfile) not packaged in Fedora
@@ -67,8 +67,59 @@ jobs:
         # Extra dependencies (trivy, python-zstarfile) not packaged in Fedora
         additional_repos:
           - "copr://@go-sig/go-vendor-tools-dev"
-          - https://dl.fedoraproject.org/pub/epel/testing/10/Everything/$basearch
     trigger: pull_request
+
+  - job: tests
+    trigger: pull_request
+    skip_build: true
+    tmt_plan: "/plans/pypi-test"
+    identifier: pypi-test
+    # TODO(gotmax23): Is this something we actually want?
+    # The initial motivation was to make it possible to make changes to
+    # go-vendor-tools and go-rpm-macros at the same time
+    tf_extra_params: &tf_extra_params
+      environments:
+        - tmt:
+          extra_args:
+            prepare:
+              - --insert
+              - -h
+              - install
+              - --copr
+              - '@go-sig/go-vendor-tools-dev'
+              - --order
+              - '35'
+    # We can get away only running pypi-test on Rawhide and EL.
+    # We run rpm-test everywhere; it's the same checks, just one with PyPI deps
+    # and the other with RPM deps.
+    targets: &tf_targets_pypi_test
+      fedora-rawhide-x86_64: {}
+      epel-9-x86_64:
+        distros:
+          - centos-stream-9
+      epel-10-x86_64:
+        distros:
+          - centos-stream-10
+    # Even though we're running with skip_build, not specifying packages causes this to run
+    # three times for each target.
+    packages:
+      - go-vendor-tools
+
+  - job: tests
+    trigger: pull_request
+    tmt_plan: "/plans/rpm-test"
+    identifier: rpm-test
+    tf_extra_params: *tf_extra_params
+    packages:
+      - go-vendor-tools
+    targets: &tf_targets_rpm_test
+      fedora-all-x86_64: {}
+      epel-9-x86_64:
+        distros:
+          - centos-stream-9
+      epel-10-x86_64:
+        distros:
+          - centos-stream-10
 
   - job: copr_build
     packages:
@@ -86,3 +137,23 @@ jobs:
     project: go-vendor-tools-dev
     trigger: commit
     branch: main
+      - go-vendor-tools
+
+  - job: tests
+    trigger: commit
+    branch: main
+    skip_build: true
+    tmt_plan: "/plans/pypi-test"
+    identifier: pypi-test
+    tf_extra_params: *tf_extra_params
+    targets: *tf_targets_pypi_test
+
+  - job: tests
+    trigger: commit
+    branch: main
+    tmt_plan: "/plans/rpm-test"
+    identifier: rpm-test
+    tf_extra_params: *tf_extra_params
+    packages:
+      - go-vendor-tools
+    targets: *tf_targets_rpm_test
