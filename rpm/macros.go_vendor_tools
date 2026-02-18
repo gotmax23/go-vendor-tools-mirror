@@ -4,6 +4,10 @@
 # Path to the go_vendor_licenses helper script
 %__go_vendor_license go_vendor_license
 
+# Disable %go_vendor_license_check on RHEL unless building for EPEL.
+# EPEL follows Fedora Packaging Guidelines where the check SHOULD run in %check.
+%go_vendor_license_check_disable %[ %{defined rhel} && %{undefined epel} ]
+
 # Generate requirements needed for the selected backend
 %go_vendor_license_buildrequires(c:d:D:) %{shrink:
     %{__go_vendor_license}
