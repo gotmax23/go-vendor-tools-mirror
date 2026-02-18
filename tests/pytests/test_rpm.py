@@ -97,6 +97,20 @@ def test_go_vendor_license_check_disabled():
     )
 
 
+def test_go_vendor_license_check_disable_rhel():
+    defines = {"rhel": "11"}
+    assert evaluator("%go_vendor_license_check_disable", defines).stdout == "1\n"
+
+
+def test_go_vendor_license_check_disable_epel():
+    defines = {"rhel": "11", "epel": "11"}
+    assert evaluator("%go_vendor_license_check_disable", defines).stdout == "0\n"
+
+
+def test_go_vendor_license_check_disable_default():
+    assert evaluator("%go_vendor_license_check_disable").stdout == "0\n"
+
+
 def test_go_vendor_license_check():
     assert (
         evaluator("%go_vendor_license_check", {"LICENSE": "MIT"}).stdout
