@@ -55,7 +55,10 @@ class Evaluator:
         for name, value in defines.items():
             cmd.extend(("--define", f"{name} {value}"))
         for name in undefines:
-            cmd.extend(("-E", f"%undefine {name}"))
+            rhelepel = {"rhel", "epel"}
+            if not defines.keys() & rhelepel:
+                undefines = [*undefines, *rhelepel]
+            cmd.extend(("--undefine", name))
         if isinstance(exps, str):
             cmd.extend(("-E", exps))
         else:
@@ -99,7 +102,11 @@ def test_go_vendor_license_check_disabled():
 
 def test_go_vendor_license_check_disable_rhel():
     defines = {"rhel": "11"}
-    assert evaluator("%go_vendor_license_check_disable", defines).stdout == "1\n"
+    undefines = ["epel"]
+    assert (
+        evaluator("%go_vendor_license_check_disable", defines, undefines).stdout
+        == "1\n"
+    )
 
 
 def test_go_vendor_license_check_disable_epel():
