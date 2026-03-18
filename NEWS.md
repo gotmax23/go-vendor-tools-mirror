@@ -5,6 +5,14 @@ SPDX-License-Identifier: MIT
 
 # NEWS
 
+## 0.11.0 - 2026-03-18 <a id='0.11.0'></a>
+
+- Defined `%go_vendor_license_check_disable` for `%rhel` builds to disable
+license checking, as none of the license detector backends will be supported in RHEL.
+License checking is still enabled for `%epel` builds.
+- Removed unstable warning from docs now that Guidelines have been improved
+- Made multiple clarifications and typo fixes throughout the docs
+
 ## 0.10.0 - 2025-10-31 <a id='0.10.0'></a>
 
 ### Added
