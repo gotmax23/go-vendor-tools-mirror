@@ -3,6 +3,12 @@
 
 [archive]
 use_top_level_dir = true
+pre_commands = [
+    ["touch", "test_include_files.txt"],
+]
+include_files = [
+    "test_include_files.txt"
+]
 
 [licensing]
 detector = "askalono"
