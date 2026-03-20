@@ -5,9 +5,14 @@
 use_top_level_dir = true
 pre_commands = [
     ["touch", "test_include_files.txt"],
+    # Add fixtures for %gocheck2 integration testing
+    # and also make sure $GVT_CWD is set properly
+    ["mkdir", "brokendir"],
+    ["bash", "-xeuc", "echo $GVT_CWD; cp -vp $GVT_CWD/broken_test.go brokendir/"],
 ]
 include_files = [
-    "test_include_files.txt"
+    "test_include_files.txt",
+    "brokendir/",
 ]
 
 [licensing]

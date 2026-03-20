@@ -64,17 +64,9 @@ diff -u "%{S:2}" "$(pwd)/licenses.list"
 # Check that archive.include_files works
 test -f test_include_files.txt
 
-# This is here to test handling of build tags.
-# See below.
-mkdir brokendir
-cat <<EOF >brokendir/broken_test.go
-//go:build brokendir
-package brokendir
-import "testing"
-func TestBrokenDir(t *testing.T) {
-    t.Error("This test should fail when -tag brokendir is passed")
-}
-EOF
+# This file is generated in pre_commands to simulate a test failure.
+# Make sure it exists.
+test -f brokendir/broken_test.go
 
 %{gocheck2 -L} | tee gocheck_gotten1.txt
 diff -u gocheck_expected1.txt gocheck_gotten1.txt
