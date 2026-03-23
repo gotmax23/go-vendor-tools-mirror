@@ -75,7 +75,6 @@ typing = [
     "releaserr",
 ]
 test = [
-    "go-vendor-tools[all]",
     "pytest",
     "pytest-mock",
 ]
