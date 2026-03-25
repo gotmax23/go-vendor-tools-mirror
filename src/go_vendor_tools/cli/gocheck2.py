@@ -191,10 +191,11 @@ def _find_go_mods_follow(args: Args) -> list[GoModResult]:
             for file in files:
                 if file == "go.mod":
                     gomod = os.path.join(root, file)
-                    goipath = get_goipath(gomod)
-                    gomods.append(
-                        GoModResult(gomod=gomod, directory=root, goipath=goipath)
-                    )
+                    goipath = try_get_goipath(gomod)
+                    if goipath is not None:
+                        gomods.append(
+                            GoModResult(gomod=gomod, directory=root, goipath=goipath)
+                        )
                     break
             # https://book.pythontips.com/en/latest/for_-_else.html
             else:
@@ -215,9 +216,10 @@ def _find_go_mods_nofollow(args: Args) -> list[GoModResult]:
         gomod = os.path.join(path, "go.mod")
         if not os.path.isfile(gomod):
             sys.exit(f"{gomod!r} does not exist!")
-        gomods.append(
-            GoModResult(gomod=gomod, directory=path, goipath=get_goipath(gomod))
-        )
+        goipath = try_get_goipath(gomod)
+        if goipath is None:
+            continue
+        gomods.append(GoModResult(gomod=gomod, directory=path, goipath=goipath))
     return gomods
 
 
@@ -225,14 +227,45 @@ def find_go_mods(args: Args) -> list[GoModResult]:
     return _find_go_mods_follow(args) if args.follow else _find_go_mods_nofollow(args)
 
 
-def get_goipath(gomod: str | Path = "go.mod") -> str:
+def try_get_goipath(gomod: str | Path = "go.mod") -> str | None:
+    """
+    Return the module path from go.mod, or None if the file is unusable.
+
+    An empty or whitespace-only go.mod is valid for ``go mod edit -json`` but
+    yields an empty module path, which would make ``go list example.com/...``
+    expand to ``/...`` and fail. Skip such files with a warning instead.
+    """
+    gomod_path = Path(gomod)
+    if not gomod_path.is_file():
+        eprint(f"WARNING: skipping {gomod}: not a regular file")
+        return None
+    if gomod_path.stat().st_size == 0:
+        eprint(f"WARNING: skipping {gomod}: empty go.mod (no module declaration)")
+        return None
     cmd: list[str] = ["go", "mod", "edit", "-json", str(gomod)]
     logrun(cmd)
-    proc = subprocess.run(cmd, stdout=subprocess.PIPE, text=True, check=False)
-    data = json.loads(proc.stdout) if proc.returncode == 0 else {}
+    proc = subprocess.run(
+        cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, check=False
+    )
+    if proc.returncode != 0:
+        err = proc.stderr.strip() or proc.stdout.strip() or "(no output)"
+        eprint(f"WARNING: skipping {gomod}: go mod edit failed: {err}")
+        return None
     try:
+        data = json.loads(proc.stdout)
         goipath = data["Module"]["Path"]
-    except KeyError:
+    except (KeyError, json.JSONDecodeError):
+        eprint(f"WARNING: skipping {gomod}: could not read module path from go.mod")
+        return None
+    if not str(goipath).strip():
+        eprint(f"WARNING: skipping {gomod}: empty module path in go.mod")
+        return None
+    return goipath
+
+
+def get_goipath(gomod: str | Path = "go.mod") -> str:
+    goipath = try_get_goipath(gomod)
+    if goipath is None:
         raise ValueError(f"Failed to retrieve Go import path from {gomod}") from None
     return goipath
 
@@ -317,19 +350,22 @@ def main() -> None:
     #  "go.etcd.io/etcd/api/v3," not "go.etcd.io/etcd/v3/api."
     # This means that passing "-t api" will not work.
     # Instead, it's necessary to use the full path (-t go.etcd.io/etcd/v3/api).
+    primary_goipath: str | None
     if go_mods[0].directory == ".":
         primary_goipath = go_mods[0].goipath
-    elif os.path.exists("go.mod"):
-        primary_goipath = get_goipath()
     else:
-        # TODO: Should this be made an error? Should we require the directory
-        # gocheck2 is run from to have a go.mod instead of allowing it to be in
-        # a subdirectory?
-        eprint(
-            "WARNING: No go.mod file found in CWD."
-            " -d and -t flags may not work properly."
-        )
-        primary_goipath = None
+        # Root module path for -d / -t: only available if CWD has a go.mod we
+        # can read (missing file, empty file, and invalid module line all leave
+        # us without a path; try_get_goipath warns when a file exists but fails).
+        primary_goipath = try_get_goipath() if os.path.exists("go.mod") else None
+        if primary_goipath is None:
+            # TODO: Should this be made an error? Should we require the directory
+            # gocheck2 is run from to have a go.mod instead of allowing it to be in
+            # a subdirectory?
+            eprint(
+                "WARNING: Could not determine the Go module path from go.mod in CWD."
+                " -d and -t flags may not work properly."
+            )
     # TODO: Do something (e.g., show pass/fail stats by Go modules) with the
     # gomod dict keys or just make this into a simple list of dogomod() return
     # values.
