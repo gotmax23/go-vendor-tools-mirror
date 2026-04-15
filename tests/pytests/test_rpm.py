@@ -13,11 +13,20 @@ from collections.abc import Sequence
 from pathlib import Path
 from typing import NamedTuple
 
+from go_vendor_tools.config.utils import get_envvar_boolean
+
 PARENT = Path(__file__).resolve().parent.parent.parent
 # e.g. MACRO_DIR=%{buildroot}%{_rpmmacrodir} \
 #      pytest
 # MACRO_DIR="" MACRO_LUA_DIR="" to only use system paths
 MACRO_DIR = str(os.environ.get("MACRO_DIR", PARENT / "rpm"))
+CHECK_DISABLE_MACRO = "go_vendor_license_check_disable"
+# Functionality to force CHECK_DISABLE_MACRO to be disabled so that tests
+# behave the same way in Fedora ELN and RHEL that don't run license tests by default.
+# This var is set in %check in go-vendor-tools.spec.
+FORCE_LICENSE_CHECK_ENABLE = get_envvar_boolean(
+    "GVTT_FORCE_LICENSE_CHECK_ENABLE", False
+)
 
 
 class Result(NamedTuple):
@@ -49,15 +58,24 @@ class Evaluator:
         defines: dict[str, str] | None = None,
         undefines: Sequence[str] = (),
         should_fail: bool = False,
+        *,
+        force_license_check_enable=FORCE_LICENSE_CHECK_ENABLE,
     ) -> Result:
         cmd: list[str] = ["rpm", *self.macros_path]
-        defines = defines or {}
+        if defines is not None:
+            defines = defines.copy()
+        else:
+            defines = {}
+        if (
+            force_license_check_enable
+            and CHECK_DISABLE_MACRO not in defines
+            and CHECK_DISABLE_MACRO not in undefines
+        ):
+            print(f"Setting {CHECK_DISABLE_MACRO} to 0")
+            defines[CHECK_DISABLE_MACRO] = "0"
         for name, value in defines.items():
             cmd.extend(("--define", f"{name} {value}"))
         for name in undefines:
-            rhelepel = {"rhel", "epel"}
-            if not defines.keys() & rhelepel:
-                undefines = [*undefines, *rhelepel]
             cmd.extend(("--undefine", name))
         if isinstance(exps, str):
             cmd.extend(("-E", exps))
@@ -102,16 +120,28 @@ def test_go_vendor_license_check_disabled():
 
 def test_go_vendor_license_check_disable_rhel():
     defines = {"rhel": "11"}
-    undefines = ["epel"]
     assert (
-        evaluator("%go_vendor_license_check_disable", defines, undefines).stdout
+        evaluator(
+            "%go_vendor_license_check_disable",
+            defines,
+            ["fedora", "epel"],
+            force_license_check_enable=False,
+        ).stdout
         == "1\n"
     )
 
 
 def test_go_vendor_license_check_disable_epel():
     defines = {"rhel": "11", "epel": "11"}
-    assert evaluator("%go_vendor_license_check_disable", defines).stdout == "0\n"
+    assert (
+        evaluator(
+            "%go_vendor_license_check_disable",
+            defines,
+            ["fedora"],
+            force_license_check_enable=False,
+        ).stdout
+        == "0\n"
+    )
 
 
 def test_go_vendor_license_check_disable_default():

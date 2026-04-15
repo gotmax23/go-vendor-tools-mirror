@@ -114,6 +114,9 @@ install -Dpm 0644 zsh_completions/* -t %{buildroot}%{zsh_completions_dir}/
 
 
 %check
+%if %{defined rhel} && %{undefined epel}
+export GVTT_FORCE_LICENSE_CHECK_ENABLE=1
+%endif
 export MACRO_DIR=%{buildroot}%{_rpmmacrodir}
 %pytest
 
