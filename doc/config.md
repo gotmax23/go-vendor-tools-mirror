@@ -136,7 +136,13 @@ Whether to use the Google Go module proxy to download modules.
 Downloading modules manually is quite slow, so—unless you have privacy
 concerns—using the module proxy is recommended.
 
-#### `pre_commands` (list of list of strings) {: #archive--pre_commands }
+#### Command hooks
+
+`pre_commands` and `post_commands` allow running extra commands in the source
+tree during the process of generating the vendored archive.
+Commands are passed as lists of strings.
+
+##### `pre_commands` (list of list of strings) {: #archive--pre_commands }
 
 Commands to run in the temporary source tree used to create the archive before
 downloading the vendored dependencies.
@@ -152,7 +158,7 @@ pre_commands = [
 ]
 ```
 
-#### `post_commands` (list of list of strings) {: #archive--post_commands }
+##### `post_commands` (list of list of strings) {: #archive--post_commands }
 
 Commands to run after downloading the vendored dependencies.
 Changes made to the `vendor` directory will be reflected in the final vendor
@@ -175,6 +181,26 @@ post_commands = [
     ["echo", "Another command to show that multiple commands can be run here"],
 ]
 ```
+
+##### More details
+
+It is also possible to run commands in a shell like so:
+
+```toml
+# Or pre_commands...
+post_commands = [
+    ["bash", "-xeuo", "pipefail", "-c",
+    '''
+    echo "Hello world"
+    patch -p1 -i "$GVT_CWD/license.patch"
+    '''],
+]
+```
+
+- `$GVT_CWD` is defined for both `pre_commands` and `post_commands` as the current
+working directory from which `go_vendor_archive` was invoked.
+This can be used to apply patches or copy other files from the distgit checkout
+into the vendor archive.
 
 #### `tidy` (boolean) {: #archive--tidy }
 
