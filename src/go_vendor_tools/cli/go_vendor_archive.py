@@ -232,6 +232,7 @@ def paths_with_go_mod_dir(paths: Iterable[Path], go_mod_dir: str | None) -> list
 
 
 def create_archive(args: CreateArchiveArgs) -> None:
+    orig_cwd = os.getcwd()
     go_mod_dir = args.config["general"]["go_mod_dir"]
     _already_checked_is_file = False
     cwd = args.path
@@ -255,7 +256,8 @@ def create_archive(args: CreateArchiveArgs) -> None:
         # TODO: test go_mod_dir support
         if go_mod_dir:
             cwd /= go_mod_dir
-        env = os.environ | GO_PROXY_ENV if args.use_module_proxy else None
+        env = os.environ | GO_PROXY_ENV if args.use_module_proxy else os.environ.copy()
+        env["GVT_CWD"] = orig_cwd
         runner = partial(subprocess.run, cwd=cwd, check=True, env=env)
         pre_commands = chain(
             args.config["archive"]["pre_commands"],
@@ -263,6 +265,7 @@ def create_archive(args: CreateArchiveArgs) -> None:
                 args.config["archive"]["dependency_overrides"]
             ),
         )
+
         for command in pre_commands:
             run_command(runner, command)
         use_go_work = (cwd / "go.work").is_file()
