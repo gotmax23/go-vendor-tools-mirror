@@ -649,9 +649,7 @@ def handle_alternative_sources_and_spec(
                     toplevel = get_toplevel_directory(tar)
                     print(f"Extracting {directory}", file=sys.stderr)
                     tar.extractall(
-                        tmp
-                        if (toplevel and toplevel != go_mod_dir)
-                        else tmp / first_toplevel
+                        tmp if (toplevel and not go_mod_dir) else tmp / first_toplevel
                     )
             yield tmp / first_toplevel, spec
 
