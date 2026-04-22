@@ -6,6 +6,7 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
+import pytest
 from pytest_mock import MockerFixture
 
 from go_vendor_tools.cli.go_vendor_archive import (
@@ -15,6 +16,7 @@ from go_vendor_tools.cli.go_vendor_archive import (
     override_command,
 )
 from go_vendor_tools.config.base import create_base_config, load_config
+from go_vendor_tools.exceptions import ConfigError
 
 if sys.version_info >= (3, 11):
     import tomllib
@@ -60,6 +62,14 @@ def test_vendor_archive_base(mocker: MockerFixture, tmp_path: Path) -> None:
     ]
     calls = [list(c.args[1]) for c in patched_run_command.call_args_list]
     assert expected_calls == calls
+
+
+def test_load_config_missing_file_raises(tmp_path: Path) -> None:
+    missing = tmp_path / "go-vendor-tools.toml"
+    with pytest.raises(
+        ConfigError, match=r"Configuration file does not exist:.*--write-config"
+    ):
+        load_config(missing, allow_missing=False)
 
 
 def test_vendor_archive_write_config(tmp_path: Path) -> None:
