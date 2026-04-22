@@ -5,6 +5,22 @@ SPDX-License-Identifier: MIT
 
 # NEWS
 
+## 0.12.0 - 2026-04-22 <a id='0.12.0'></a>
+
+### New features
+
+- Allow including extra files in vendor archives.
+See <https://fedora.gitlab.io/sigs/go/go-vendor-tools/config/#archive--include_files>.
+- Set `GVT_CWD` env var for archive `pre_commands` and `post_commands`.
+This allows referencing the directory from which `go_vendor_archive` was called.
+See <https://fedora.gitlab.io/sigs/go/go-vendor-tools/config/#more-details>.
+
+### Fixes
+
+- Fix vendor archive unpacking in `go_vendor_license report` when `go_mod_dir`
+is set
+- Fix test failures and FTBFS on ELN
+
 ## 0.11.0 - 2026-03-18 <a id='0.11.0'></a>
 
 - Defined `%go_vendor_license_check_disable` for `%rhel` builds to disable
