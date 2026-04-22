@@ -13,6 +13,7 @@ from typing import TYPE_CHECKING, Any, TypedDict, cast
 
 from go_vendor_tools.config.archive import ArchiveConfig, create_archive_config
 from go_vendor_tools.config.general import GeneralConfig, create_general_config
+from go_vendor_tools.exceptions import ConfigError
 
 from .licenses import LicenseConfig, create_license_config
 
@@ -50,6 +51,18 @@ def load_config(
         config = None
     if not config:
         return create_base_config()
-    with open(config, "rb") as fp:
-        data = tomllib.load(fp)
+    config_path = Path(config)
+    try:
+        with open(config_path, "rb") as fp:
+            data = tomllib.load(fp)
+    except FileNotFoundError:
+        resolved = config_path.expanduser().resolve()
+        raise ConfigError(
+            f"Configuration file does not exist: {resolved}. "
+            "Pass --write-config to use default settings and create the file."
+        ) from None
+    except OSError as err:
+        raise ConfigError(f"Failed to open config file {config_path}: {err}") from None
+    except tomllib.TOMLDecodeError as err:
+        raise ConfigError(f"Failed to parse {config_path}: {err}") from None
     return create_base_config(data)
