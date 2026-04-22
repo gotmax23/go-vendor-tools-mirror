@@ -179,6 +179,7 @@ def test_generate_buildrequires_no_check_trivy(capsys: pytest.CaptureFixture):
 
 
 def test_license_explicit(test_data: Path, tmp_path: Path) -> None:
+    pytest.importorskip("tomlkit", reason="requires tomlkit")
     case_dir = test_data / "case1"
     licenses_dir = case_dir / "licenses"
     with open(case_dir / "config.toml", "rb") as fp:

@@ -6,6 +6,7 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
+import pytest
 from pytest_mock import MockerFixture
 
 from go_vendor_tools.cli.go_vendor_archive import (
@@ -63,6 +64,7 @@ def test_vendor_archive_base(mocker: MockerFixture, tmp_path: Path) -> None:
 
 
 def test_vendor_archive_write_config(tmp_path: Path) -> None:
+    pytest.importorskip("tomlkit", reason="requires tomlkit")
     args = CreateArchiveArgs.construct(
         subcommand="create",
         path=tmp_path,
@@ -80,6 +82,7 @@ def test_vendor_archive_write_config(tmp_path: Path) -> None:
 
 
 def test_vendor_archive_override(tmp_path: Path) -> None:
+    pytest.importorskip("tomlkit", reason="requires tomlkit")
     config_path = tmp_path / "config.toml"
     args = OverrideArgs(
         config_path=config_path, import_path="golang.org/x/sys", version="v0.6.0"
