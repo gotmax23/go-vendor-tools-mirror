@@ -1,0 +1,58 @@
+summary: Run unit and integration tests (RPM)
+description: Run tests using the packaged go-vendor-tools and RPM dependencies
+prepare:
+    - how: install
+      package:
+        - askalono-cli
+        - go-rpm-macros
+        - go-vendor-tools
+        - go-vendor-tools+all
+        - python3-pip
+        - python3-pytest
+        - python3-pytest-cov
+        - python3-pytest-mock
+        - rpm-build
+        - rpmdevtools
+        - trivy
+    - how: shell
+      script:
+        - mkdir -p /tmp/nox
+        - python3 -m venv /tmp/nox
+        - /tmp/nox/bin/pip install nox
+        - ln -s /tmp/nox/bin/nox /usr/bin/nox
+    - how: shell
+      order: 100
+      script: dnf list --installed | tee $TMT_PLAN_DATA/packages.txt
+adjust:
+  - when: distro == fedora
+    because: "Scancode is available on Fedora"
+    prepare+:
+      - how: install
+        package:
+          - go-vendor-tools+scancode
+  - when: distro != fedora
+    because: EPEL is needed; scancode is not available
+    prepare+:
+      - how: feature
+        epel: enabled
+        order: 38
+      - how: install
+        package:
+          - epel-rpm-macros
+        order: 39
+    environment+:
+      NO_SCANCODE: "true"
+discover:
+  how: shell
+  tests:
+    - name: Unit tests
+      test: nox --no-install --no-venv -e test -- --cov
+    - name: Integration tests
+      test: nox --no-install --no-venv -e integration integration-test-build
+    - name: Collect and report coverage
+      test: nox --no-install --no-venv -e coverage
+    - name: Copy coverage data
+      test: cp -pr coverage.xml htmlcov $TMT_TEST_DATA
+execute:
+  how: tmt
+  exit-first: true
