@@ -56,7 +56,7 @@ def load_config(
         with open(config_path, "rb") as fp:
             data = tomllib.load(fp)
     except FileNotFoundError:
-        resolved = config_path.expanduser().resolve()
+        resolved = config_path.resolve()
         raise ConfigError(
             f"Configuration file does not exist: {resolved}. "
             "Pass --write-config to use default settings and create the file."
