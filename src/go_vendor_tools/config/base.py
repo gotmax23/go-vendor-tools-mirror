@@ -55,14 +55,14 @@ def load_config(
     try:
         with open(config_path, "rb") as fp:
             data = tomllib.load(fp)
-    except FileNotFoundError:
+    except FileNotFoundError as err:
         resolved = config_path.resolve()
         raise ConfigError(
             f"Configuration file does not exist: {resolved}. "
             "Pass --write-config to use default settings and create the file."
-        ) from None
+        ) from err
     except OSError as err:
-        raise ConfigError(f"Failed to open config file {config_path}: {err}") from None
+        raise ConfigError(f"Failed to open config file {config_path}: {err}") from err
     except tomllib.TOMLDecodeError as err:
-        raise ConfigError(f"Failed to parse {config_path}: {err}") from None
+        raise ConfigError(f"Failed to parse {config_path}: {err}") from err
     return create_base_config(data)
