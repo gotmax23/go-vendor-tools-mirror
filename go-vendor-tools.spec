@@ -28,6 +28,7 @@ BuildRequires:  python3-devel
 
 # Test dependencies
 BuildRequires:  askalono-cli
+BuildRequires:  golang-bin
 BuildRequires:  trivy
 
 %if %{with manpages}
