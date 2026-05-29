@@ -64,9 +64,9 @@ test:
     - export GO_VENDOR_ARCHIVE_USE_MODULE_PROXY=1
     - |
       if [ "${ERROR_ON_MISSING_INTERPRETERS}" = "true" ]; then
-        pipx run nox -e test --error-on-missing-interpreters -- --cov
+        pipx run nox -e all test --error-on-missing-interpreters -- --cov
       else
-        pipx run nox -e test --no-error-on-missing-interpreters -- --cov
+        pipx run nox -e all test --no-error-on-missing-interpreters -- --cov
       fi
     - pipx run nox -e integration
     - >-

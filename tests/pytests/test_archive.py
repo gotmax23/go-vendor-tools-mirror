@@ -73,6 +73,7 @@ def test_load_config_missing_file_raises(tmp_path: Path) -> None:
 
 
 def test_vendor_archive_write_config(tmp_path: Path) -> None:
+    pytest.importorskip("tomlkit", reason="requires tomlkit")
     args = CreateArchiveArgs.construct(
         subcommand="create",
         path=tmp_path,
@@ -90,6 +91,7 @@ def test_vendor_archive_write_config(tmp_path: Path) -> None:
 
 
 def test_vendor_archive_override(tmp_path: Path) -> None:
+    pytest.importorskip("tomlkit", reason="requires tomlkit")
     config_path = tmp_path / "config.toml"
     args = OverrideArgs(
         config_path=config_path, import_path="golang.org/x/sys", version="v0.6.0"
